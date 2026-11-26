@@ -62,8 +62,8 @@ final class PaymentManager: ObservableObject {
             guard oldValue != currentTier else { return }
             AppSettings.shared.currentTier = currentTier
             objectWillChange.send()
-            // Auto-add Pausely Pro to subscription list when user upgrades
-            if oldValue == .free && currentTier > .free {
+            // Auto-add or reconcile Pausely Pro in the list on upgrade and on Monthly ↔ Annual switches.
+            if currentTier > .free {
                 Task { await autoAddPauselyProIfNeeded() }
             }
         }
@@ -130,6 +130,10 @@ final class PaymentManager: ObservableObject {
         let before = currentTier
         currentTier = Self.resolveTier(storeKit: await StoreKitManager.shared.entitledTier(), hasGrant: hasProGrant)
         if before > .free, currentTier == .free { await endPauselyLine() }
+        // Reschedule reminders when Pro lapses or resumes so Pause Plan vs. standard renewal reminders stay truthful.
+        if (before > .free) != (currentTier > .free) {
+            await ReminderScheduler.shared.reschedule(SubscriptionStore.shared.subscriptions)
+        }
     }
 
     /// Pro comes from an active App Store subscription (a billing grace period counts: StoreKit keeps
@@ -191,22 +195,30 @@ final class PaymentManager: ObservableObject {
         )
     }
 
-    /// A line that is already there, brought in step with the App Store's price and currency.
+    /// A line that is already there, brought in step with the App Store's price, currency, billing
+    /// cycle, and (when switching between Monthly and Annual) renewal date and trial status.
     /// Earlier versions could add it at US launch prices for any country.
     static func corrected(_ line: Subscription, to own: StoreKitManager.OwnSubscription) -> Subscription? {
         let frequency: BillingFrequency = own.tier == .proAnnual ? .yearly : .monthly
-        guard line.amount != own.price || line.currency != own.currency || line.billingFrequency != frequency else { return nil }
+        let switchedPlan = line.billingFrequency != frequency
+        guard switchedPlan || line.amount != own.price || line.currency != own.currency else { return nil }
         var fixed = line
         fixed.amount = own.price
         fixed.currency = own.currency
         fixed.billingFrequency = frequency
+        if switchedPlan {
+            if let renews = own.renews { fixed.nextBillingDate = renews }
+            fixed.status = own.isTrial ? .trial : .active
+            fixed.trialEndsAt = own.isTrial ? own.renews : nil
+        }
         return fixed
     }
 
     /// Adds Pausely Pro to the list once, when the App Store has stated its price and a verified
     /// purchase exists. Until both are known nothing is added (a person given Pro on their account
     /// pays nothing, so gets no line); this runs again at launch, when prices load and when Pro begins.
-    func autoAddPauselyProIfNeeded() async {
+    /// Pass `readdIfRemoved: true` on an explicit Win-Back free-days claim so its reminder always fires.
+    func autoAddPauselyProIfNeeded(readdIfRemoved: Bool = false) async {
         guard currentTier > .free else { return }
         let store = SubscriptionStore.shared
         guard let own = await StoreKitManager.shared.ownSubscription(for: currentTier) else { return }
@@ -216,7 +228,7 @@ final class PaymentManager: ObservableObject {
             let endedHere = UserDefaults.standard.string(forKey: pauselyLineEndedKey) == existing.id.uuidString
             // Started again only for a purchase the App Store reports now: Pro given on the account
             // charges nothing, and the last purchase it remembers may be long over.
-            if endedHere, await StoreKitManager.shared.entitledTier() != nil,
+            if (endedHere || readdIfRemoved), await StoreKitManager.shared.entitledTier() != nil,
                let restarted = Self.restarted(line, to: own, endedByTheApp: true, now: Date()) {
                 line = restarted
                 UserDefaults.standard.removeObject(forKey: pauselyLineEndedKey)
@@ -225,9 +237,14 @@ final class PaymentManager: ObservableObject {
             UserDefaults.standard.set(true, forKey: pauselyProAutoAddedKey)
             return
         }
-        // Added once. If the person removed it, or tracks it under their own name, it stays that way.
-        guard !UserDefaults.standard.bool(forKey: pauselyProAutoAddedKey),
-              !store.subscriptions.contains(where: { $0.name.lowercased().contains("pausely") }) else { return }
+        // Added once. If the person removed it, or tracks it under their own name, it stays that way
+        // unless they just explicitly claimed a Win-Back free trial that promises a reminder.
+        if !readdIfRemoved {
+            guard !UserDefaults.standard.bool(forKey: pauselyProAutoAddedKey),
+                  !store.subscriptions.contains(where: { $0.name.lowercased().contains("pausely") }) else { return }
+        } else {
+            guard !store.subscriptions.contains(where: { $0.name.lowercased().contains("pausely") }) else { return }
+        }
 
         do {
             _ = try await store.addSubscription(Self.pauselyLine(own))

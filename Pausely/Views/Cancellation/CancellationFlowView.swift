@@ -58,14 +58,29 @@ struct MailComposeSheet: UIViewControllerRepresentable {
 /// opening their mail app, copying, or sharing. Works even when Apple Mail is not configured.
 struct EmailDraftSheet: View {
     let draft: CancelConcierge.Draft
+    var locked: Bool = false
+    var paywallContext: PaywallContext = PaywallContext(trigger: .cancelConcierge)
     @Environment(\.dismiss) private var dismiss
     @Environment(\.openURL) private var openURL
     @Environment(\.dynamicTypeSize) private var typeSize
+    @ObservedObject private var paymentManager = PaymentManager.shared
     @State private var showingMailCompose = false
+    @State private var showingPaywall = false
     @State private var copied = false
+
+    private var isLocked: Bool { locked && !paymentManager.isUnlocked(.cancelConcierge) }
 
     private var fullText: String {
         "\(draft.subject)\n\n\(draft.body)"
+    }
+
+    private var splitBody: (preview: String, rest: String) {
+        let paragraphs = draft.body.components(separatedBy: "\n\n")
+        guard paragraphs.count > 1 else { return (draft.body, "") }
+        // Show only the personalized greeting unredacted so Free users see real tailoring without giving away the full draft.
+        let lead = paragraphs.prefix(1).joined(separator: "\n\n")
+        let rest = paragraphs.dropFirst(1).joined(separator: "\n\n")
+        return (lead, rest)
     }
 
     var body: some View {
@@ -98,11 +113,32 @@ struct EmailDraftSheet: View {
 
                         Perforation()
 
-                        Text(verbatim: draft.body)
-                            .font(.subheadline)
-                            .foregroundStyle(Color.paperInk)
-                            .fixedSize(horizontal: false, vertical: true)
-                            .textSelection(.enabled)
+                        if isLocked {
+                            let parts = splitBody
+                            Text(verbatim: parts.preview)
+                                .font(.subheadline)
+                                .foregroundStyle(Color.paperInk)
+                                .fixedSize(horizontal: false, vertical: true)
+                            if !parts.rest.isEmpty {
+                                Perforation()
+                                Text(verbatim: parts.rest)
+                                    .font(.subheadline)
+                                    .foregroundStyle(Color.paperMuted)
+                                    .fixedSize(horizontal: false, vertical: true)
+                                    .redacted(reason: .placeholder)
+                                    .accessibilityHidden(true)
+                                Text("Pre-filled with your plan, charge, and written confirmation request. Unlock with Pausely Pro to read, copy, or send.")
+                                    .font(.footnote)
+                                    .foregroundStyle(Color.paperMuted)
+                                    .fixedSize(horizontal: false, vertical: true)
+                            }
+                        } else {
+                            Text(verbatim: draft.body)
+                                .font(.subheadline)
+                                .foregroundStyle(Color.paperInk)
+                                .fixedSize(horizontal: false, vertical: true)
+                                .textSelection(.enabled)
+                        }
                     }
                 }
                 .padding(.top, 16)
@@ -127,27 +163,38 @@ struct EmailDraftSheet: View {
             .padding(.bottom, 16)
         } actions: {
             VStack(spacing: 10) {
-                Button {
-                    Feel.selection()
-                    if MFMailComposeViewController.canSendMail() {
-                        showingMailCompose = true
-                    } else if let mailto = CancelConcierge.mailtoURL(for: draft) {
-                        openURL(mailto) { accepted in
-                            if !accepted { copyDraft() }
-                        }
-                    } else {
-                        copyDraft()
+                if isLocked {
+                    Button {
+                        Feel.selection()
+                        showingPaywall = true
+                    } label: {
+                        Text("Unlock and send with Pro")
                     }
-                } label: {
-                    Text("Open in mail")
-                }
-                .buttonStyle(.ink)
-                .accessibilityIdentifier("openInMailButton")
-
-                if typeSize.isAccessibilitySize {
-                    VStack(spacing: 10) { secondaryButtons }
+                    .buttonStyle(.ink)
+                    .accessibilityIdentifier("unlockEmailDraftButton")
                 } else {
-                    HStack(spacing: 10) { secondaryButtons }
+                    Button {
+                        Feel.selection()
+                        if MFMailComposeViewController.canSendMail() {
+                            showingMailCompose = true
+                        } else if let mailto = CancelConcierge.mailtoURL(for: draft) {
+                            openURL(mailto) { accepted in
+                                if !accepted { copyDraft() }
+                            }
+                        } else {
+                            copyDraft()
+                        }
+                    } label: {
+                        Text("Open in mail")
+                    }
+                    .buttonStyle(.ink)
+                    .accessibilityIdentifier("openInMailButton")
+
+                    if typeSize.isAccessibilitySize {
+                        VStack(spacing: 10) { secondaryButtons }
+                    } else {
+                        HStack(spacing: 10) { secondaryButtons }
+                    }
                 }
             }
             .padding(.horizontal, Layout.margin)
@@ -161,6 +208,9 @@ struct EmailDraftSheet: View {
             MailComposeSheet(subject: draft.subject, body: draft.body) {
                 showingMailCompose = false
             }
+        }
+        .sheet(isPresented: $showingPaywall) {
+            StoreKitUpgradeView(context: paywallContext)
         }
     }
 

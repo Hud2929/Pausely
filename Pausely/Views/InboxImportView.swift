@@ -124,7 +124,7 @@ struct InboxImportView: View {
                 ProviderSheet(onChoose: { showingProviders = false }, onAppPassword: openIMAP, onCancel: { showingProviders = false })
             }
             .sheet(isPresented: $showingPaywall) {
-                StoreKitUpgradeView()
+                StoreKitUpgradeView(trigger: .unlimitedSubscriptions)
             }
             .sheet(item: $addingByHand) { AddSubscriptionView(startName: $0.name) }
         }

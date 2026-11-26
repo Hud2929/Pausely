@@ -38,7 +38,7 @@ final class CurrencyManager: ObservableObject, @unchecked Sendable {
     /// Where live rates come from. The app asks exchangerate-api.com; tests put their own answer here.
     var loadLiveRates: () async throws -> ExchangeRateResponse = {
         guard let url = URL(string: AppConfig.exchangeRatesURL) else { throw URLError(.badURL) }
-        let (data, _) = try await CurrencyManager.session.data(from: url)
+        let (data, _) = try await CurrencyManager.session.safeData(for: URLRequest(url: url))
         return try JSONDecoder().decode(ExchangeRateResponse.self, from: data)
     }
 
@@ -325,4 +325,38 @@ struct Currency: Identifiable, Hashable {
 struct ExchangeRateResponse: Decodable {
     let rates: [String: Double]
     let base: String
+}
+
+extension URLSession {
+    /// Performs a data request via `dataTask(with:completionHandler:)` so failed or timed-out
+    /// requests never hit the iOS 26.5 Foundation `NSURLSession.data(for:delegate:)` SIGTRAP.
+    nonisolated func safeData(for request: URLRequest) async throws -> (Data, URLResponse) {
+        let holder = OSAllocatedUnfairLock<URLSessionDataTask?>(initialState: nil)
+        return try await withTaskCancellationHandler {
+            try await withCheckedThrowingContinuation { continuation in
+                let task = self.dataTask(with: request) { data, response, error in
+                    holder.withLock { $0 = nil }
+                    if let error {
+                        continuation.resume(throwing: error)
+                    } else if let data, let response {
+                        continuation.resume(returning: (data, response))
+                    } else {
+                        continuation.resume(throwing: URLError(.unknown))
+                    }
+                }
+                let cancelled = holder.withLock { slot -> Bool in
+                    if Task.isCancelled { return true }
+                    slot = task
+                    return false
+                }
+                if cancelled {
+                    continuation.resume(throwing: CancellationError())
+                } else {
+                    task.resume()
+                }
+            }
+        } onCancel: {
+            holder.withLock { $0 }?.cancel()
+        }
+    }
 }

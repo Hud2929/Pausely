@@ -96,12 +96,12 @@ final class VerdictAndSavingsTests: XCTestCase {
 
         let noRenewals = ReminderPlanner.plan(for: [netflix, trial], now: now, calendar: cal,
                                               preferences: .init(renewals: false, trials: true))
-        XCTAssertTrue(noRenewals.allSatisfy { $0.kind == .trialEnding })
+        XCTAssertTrue(noRenewals.allSatisfy { $0.kind == .trialHeadsUp || $0.kind == .trialEnding })
         XCTAssertFalse(noRenewals.isEmpty)
 
         let noTrials = ReminderPlanner.plan(for: [netflix, trial], now: now, calendar: cal,
                                             preferences: .init(renewals: true, trials: false))
-        XCTAssertFalse(noTrials.contains { $0.kind == .trialEnding })
+        XCTAssertFalse(noTrials.contains { $0.kind == .trialHeadsUp || $0.kind == .trialEnding })
         XCTAssertFalse(noTrials.isEmpty)
     }
 

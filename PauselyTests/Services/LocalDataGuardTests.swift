@@ -17,7 +17,10 @@ final class LocalDataGuardTests: XCTestCase {
         "exchange_rates_date": "the day those rates were fetched",
         "renewalAlerts": "a reminder switch of this iPhone",
         "trialEndingAlerts": "a reminder switch of this iPhone",
+        "savingsMilestoneAlerts": "a reminder switch of this iPhone",
         "hasCompletedOnboarding": "the first-run screens were seen on this iPhone",
+        "hasSeenFirstRunPaywall": "the optional day-zero Pro offer after first run was shown at most once on this iPhone",
+        "pendingFirstRunPlan": "first run just finished and should present curation + plan once on arrival",
         "lastSeenVersion": "What's New was shown for this version",
         "install_marker": "tells a fresh install from a relaunch",
         "review_requests_this_year": "how often this iPhone was asked for a review",
@@ -25,6 +28,7 @@ final class LocalDataGuardTests: XCTestCase {
         "review_current_year": "how often this iPhone was asked for a review",
         "review_first_chance": "when this iPhone could first have been asked for a review",
         "review_receipt_milestone_last": "how often this iPhone was asked for a review",
+        "review_decision_milestone_last": "how often this iPhone was asked for a review",
         "current_subscription_tier": "the plan the App Store confirmed for the Apple Account on this iPhone",
         "pending_first_run_tally": "made before any account exists; joins the list of whoever signs in next, then cleared",
         "age_gate_device_passed": "someone confirmed their age on this iPhone before an account existed",
@@ -130,7 +134,17 @@ final class LocalDataGuardTests: XCTestCase {
     func testSigningOutHidesTheListAndKeepsTheCopyOnTheIPhone() async throws {
         let sandbox = StoreSandbox()
         let store = SubscriptionStore.shared
-        _ = try await store.addSubscription(Subscription(name: "Netflix", amount: 15.49, billingFrequency: .monthly))
+        let now = Date()
+        let renewal = Calendar.billing.date(byAdding: .day, value: 10, to: now)
+        let netflix = Subscription(name: "Netflix", amount: 15.49,
+                                   billingFrequency: .monthly,
+                                   nextBillingDate: renewal)
+        _ = try await store.addSubscription(netflix)
+        await store.updateSubscriptionStatus(id: netflix.id, status: .cancelled)
+        // Confirm Savings Receipt actually has data while signed in, so the signed-out check is meaningful.
+        let signedInFeed = WidgetDataStore.feed(for: store.subscriptions, now: now, includeAccountDetails: !store.isHidden)
+        XCTAssertFalse(signedInFeed.onTrackText.isEmpty)
+
         let saved = AppSettings.shared.cachedSubscriptions
         XCTAssertFalse(saved.isEmpty)
 
@@ -139,7 +153,11 @@ final class LocalDataGuardTests: XCTestCase {
         XCTAssertEqual(store.subscriptions, [])
         XCTAssertEqual(store.totalMonthlySpend, 0)
         XCTAssertEqual(AppSettings.shared.cachedSubscriptions, saved, "The copy on the iPhone waits for the same person to sign back in")
-        XCTAssertEqual(WidgetDataStore.feed(for: store.subscriptions, now: Date()).charges, [])
+        let signedOutFeed = WidgetDataStore.feed(for: store.subscriptions, now: now, includeAccountDetails: !store.isHidden)
+        XCTAssertEqual(signedOutFeed.charges, [])
+        XCTAssertEqual(signedOutFeed.savedSoFarText, "")
+        XCTAssertEqual(signedOutFeed.onTrackText, "")
+        XCTAssertEqual(signedOutFeed.pauseTurnName, "")
 
         // A Shortcut can still try to add. It is refused, and the copy on the iPhone stays whole.
         do {

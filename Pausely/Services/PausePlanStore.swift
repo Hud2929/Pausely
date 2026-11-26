@@ -101,6 +101,9 @@ final class PausePlanStore: ObservableObject {
         plan = created
         syncState = state
         save()
+        if self === Self.shared {
+            WidgetDataStore.shared.publish(subscriptions: SubscriptionStore.shared.subscriptions)
+        }
         await ReminderScheduler.shared.reschedule(SubscriptionStore.shared.subscriptions)
         if self === Self.shared {
             await PausePlanSync.shared.push(state)
@@ -113,6 +116,9 @@ final class PausePlanStore: ObservableObject {
         plan = nil
         syncState = state
         save()
+        if self === Self.shared {
+            WidgetDataStore.shared.publish(subscriptions: SubscriptionStore.shared.subscriptions)
+        }
         await ReminderScheduler.shared.reschedule(SubscriptionStore.shared.subscriptions)
         if self === Self.shared {
             await PausePlanSync.shared.push(state)
@@ -127,6 +133,9 @@ final class PausePlanStore: ObservableObject {
         plan = normalized.plan
         save()
         if changed {
+            if self === Self.shared {
+                WidgetDataStore.shared.publish(subscriptions: SubscriptionStore.shared.subscriptions)
+            }
             Task { await ReminderScheduler.shared.reschedule(SubscriptionStore.shared.subscriptions) }
         }
     }

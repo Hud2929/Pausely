@@ -7,19 +7,36 @@ struct PriceSheet: View {
     let placeholder: Decimal?
     let currency: String
     var frequency: BillingFrequency = .monthly
+    /// When provided (e.g. from screenshot review), also lets the person adjust the billing cycle.
+    var onSaveFrequency: ((BillingFrequency) -> Void)? = nil
     let onSave: (Decimal) -> Void
 
     @Environment(\.dismiss) private var dismiss
     @Environment(\.dynamicTypeSize) private var typeSize
     @Environment(\.layoutDirection) private var direction
     @State private var text = ""
+    @State private var selectedFrequency: BillingFrequency
     @State private var formHeight: CGFloat = 0
     @FocusState private var focused: Bool
 
+    init(name: String, placeholder: Decimal?, currency: String, frequency: BillingFrequency = .monthly,
+         onSaveFrequency: ((BillingFrequency) -> Void)? = nil, onSave: @escaping (Decimal) -> Void) {
+        self.name = name
+        self.placeholder = placeholder
+        self.currency = currency
+        self.frequency = frequency
+        self.onSaveFrequency = onSaveFrequency
+        self.onSave = onSave
+        _selectedFrequency = State(initialValue: frequency)
+    }
+
     private var amount: Decimal? { AmountText.parse(text, currency: currency) }
+    private var canSave: Bool { amount != nil || (onSaveFrequency != nil && placeholder != nil && selectedFrequency != frequency && text.trimmingCharacters(in: .whitespaces).isEmpty) }
+
+    private var activeFrequency: BillingFrequency { onSaveFrequency != nil ? selectedFrequency : frequency }
 
     private var questionTitle: String {
-        switch frequency {
+        switch activeFrequency {
         case .monthly: return L10n.string("What do you pay for \(name) each month?")
         case .yearly: return L10n.string("What do you pay for \(name) each year?")
         case .weekly: return L10n.string("What do you pay for \(name) each week?")
@@ -29,7 +46,7 @@ struct PriceSheet: View {
     }
 
     private var priceAccessibilityLabel: String {
-        switch frequency {
+        switch activeFrequency {
         case .monthly: return L10n.string("Price each month")
         case .yearly: return L10n.string("Price each year")
         case .weekly: return L10n.string("Price each week")
@@ -89,12 +106,39 @@ struct PriceSheet: View {
             .frame(minHeight: 56)
             .background(Color.inkLifted, in: RoundedRectangle(cornerRadius: Layout.tileRadius, style: .continuous))
 
+            if onSaveFrequency != nil {
+                HStack(spacing: 12) {
+                    Text("Billing cycle")
+                        .font(.subheadline)
+                        .foregroundStyle(Color.inkTextMuted)
+                    Spacer(minLength: 8)
+                    Picker("Billing cycle", selection: $selectedFrequency) {
+                        ForEach(BillingFrequency.allCases) { freq in
+                            Text(verbatim: freq.displayName).tag(freq)
+                        }
+                    }
+                    .pickerStyle(.menu)
+                    .tint(Color.inkText)
+                    .labelsHidden()
+                    .accessibilityLabel(Text("Billing cycle"))
+                    .accessibilityIdentifier("priceFrequencyPicker")
+                }
+                .padding(.horizontal, 16)
+                .frame(maxWidth: .infinity, minHeight: 52)
+                .background(Color.inkLifted, in: RoundedRectangle(cornerRadius: Layout.tileRadius, style: .continuous))
+            }
+
             Button {
-                if let amount { onSave(amount) }
+                if let amount {
+                    onSave(amount)
+                } else if let placeholder, onSaveFrequency != nil {
+                    onSave(placeholder)
+                }
+                if let onSaveFrequency { onSaveFrequency(selectedFrequency) }
                 dismiss()
             } label: { Text("Save") }
                 .buttonStyle(.ink)
-                .disabled(amount == nil)
+                .disabled(!canSave)
                 .accessibilityIdentifier("priceSaveButton")
         }
         .padding(.horizontal, Layout.margin)

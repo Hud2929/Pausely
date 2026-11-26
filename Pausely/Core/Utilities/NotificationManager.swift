@@ -145,6 +145,8 @@ final class NotificationDelegate: NSObject, UNUserNotificationCenterDelegate, Se
             break
         case _ where (info["type"] as? String)?.hasPrefix("pause_plan") == true:
             await VerdictCenter.shared.openPausePlan()
+        case _ where (info["type"] as? String) == "savings_avoided":
+            await VerdictCenter.shared.openSavingsReceipt()
         default:
             // A tap on the reminder, or "Review": open the decision for that subscription.
             if let subscriptionId { await VerdictCenter.shared.open(subscriptionId: subscriptionId) }

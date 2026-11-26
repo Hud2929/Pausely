@@ -42,7 +42,7 @@ struct SubscriptionManagementView: View {
                 }
                 decisionGroup
                 factsCard
-                if current.calculatedNextBillingDate != nil, current.renewsAutomatically {
+                if RenewalDecisions.upcomingCharge(for: current, now: Date()) != nil, current.renewsAutomatically {
                     CancelTimingCard(subscription: current)
                 }
                 toolsGroup
@@ -249,7 +249,8 @@ struct SubscriptionManagementView: View {
 
     @ViewBuilder
     private var decisionGroup: some View {
-        if let pending = RenewalDecisions.pending(for: current, kept: RenewalDecisions.keptKeys(in: eventLog.events), now: Date()) {
+        if !pausePlanStore.contains(current.id),
+           let pending = RenewalDecisions.pending(for: current, kept: RenewalDecisions.keptKeys(in: eventLog.events), now: Date()) {
             let days = Calendar.billing.calendarDays(from: Date(), to: pending.date)
             let when = L10n.relativeDay(days)
             VStack(spacing: 0) {
@@ -408,9 +409,22 @@ struct SubscriptionManagementView: View {
         case .edit:
             SubscriptionEditView(subscription: current)
         case .paywall:
-            StoreKitUpgradeView()
+            StoreKitUpgradeView(context: PaywallContext(
+                trigger: .unlimitedSubscriptions,
+                serviceName: current.name,
+                serviceChargeAmount: current.amount,
+                serviceChargeCurrency: current.currency
+            )) {
+                Task {
+                    if await store.startAgain(id: current.id) { Feel.selection() }
+                }
+            }
         case .cancel:
-            CancelSubscriptionFlow(subscription: current)
+            if current.isPausely {
+                PauselyRetentionSheet(isTrial: current.status == .trial)
+            } else {
+                CancelSubscriptionFlow(subscription: current)
+            }
         case .priceHistory:
             PriceHistoryView(subscription: current)
         case .usage:
@@ -434,9 +448,17 @@ private struct UsageSheet: View {
     @ObservedObject private var screenTimeManager = UsageLog.shared
     @State private var showInput = false
 
-    private var minutes: Int { screenTimeManager.getCurrentMonthUsage(for: subscription) }
+    private var usage: UsageLog.Usage? { screenTimeManager.getUsage(for: subscription) }
+    private var minutes: Int { usage?.minutesUsed ?? 0 }
     private var costPerHour: Decimal? {
         screenTimeManager.calculateCostPerHour(for: subscription)
+    }
+
+    private var usageValueText: String {
+        guard let usage else { return L10n.string("Not entered") }
+        guard usage.minutesUsed > 0 else { return L10n.string("Not used this month") }
+        return Duration.seconds(usage.minutesUsed * 60)
+            .formatted(.units(allowed: [.hours, .minutes], width: .abbreviated).locale(L10n.locale))
     }
 
     /// What the person says they used it, and what that makes an hour cost. No score, no verdict:
@@ -464,11 +486,7 @@ private struct UsageSheet: View {
 
                 PaperSlip(tornTop: true, tornBottom: true) {
                     VStack(alignment: .leading, spacing: 10) {
-                        ProofLine(label: L10n.string("This month"),
-                                  value: minutes > 0
-                                    ? Duration.seconds(minutes * 60).formatted(.units(allowed: [.hours, .minutes], width: .abbreviated).locale(L10n.locale))
-                                    : L10n.string("Not entered"),
-                                  emphasised: true)
+                        ProofLine(label: L10n.string("This month"), value: usageValueText, emphasised: true)
                         ProofLine(label: L10n.string("It costs"), value: subscription.billingFrequency.pricedShort(subscription.chargeText))
                         if let costPerHour {
                             Perforation()
@@ -480,7 +498,7 @@ private struct UsageSheet: View {
                 .padding(.top, 24)
 
                 Button { showInput = true } label: {
-                    Text(minutes > 0 ? L10n.string("Change this month's hours") : L10n.string("Enter this month's hours"))
+                    Text(usage != nil ? L10n.string("Change this month's hours") : L10n.string("Enter this month's hours"))
                 }
                 .buttonStyle(.ink)
                 .padding(.top, 20)

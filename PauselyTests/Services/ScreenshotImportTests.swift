@@ -335,4 +335,92 @@ final class ScreenshotImportTests: XCTestCase {
         XCTAssertNil(list[0].doubt)
         XCTAssertTrue(newlyEligible.contains("candle"))
     }
+
+    // MARK: - Hardening regressions (2026-11-24)
+
+    func testFrequencyPrecedenceBiweeklySemiannualAndLocalizedSlashes() {
+        XCTAssertEqual(ScreenshotParser.extractFrequency(in: "$15.00 biweekly"), .biweekly)
+        XCTAssertEqual(ScreenshotParser.extractFrequency(in: "$15.00 bi-weekly"), .biweekly)
+        XCTAssertEqual(ScreenshotParser.extractFrequency(in: "$49.99 semi-annual"), .semiannual)
+        XCTAssertEqual(ScreenshotParser.extractFrequency(in: "$49.99 biannual"), .semiannual)
+        XCTAssertEqual(ScreenshotParser.extractFrequency(in: "$19.99 / month"), .monthly)
+        XCTAssertEqual(ScreenshotParser.extractFrequency(in: "89,99 €/jahr"), .yearly)
+        XCTAssertEqual(ScreenshotParser.extractFrequency(in: "89,90 €/an"), .yearly)
+        XCTAssertEqual(ScreenshotParser.extractFrequency(in: "110,00 €/año"), .yearly)
+        XCTAssertEqual(ScreenshotParser.extractFrequency(in: "¥9,900/年"), .yearly)
+        XCTAssertEqual(ScreenshotParser.extractFrequency(in: "299.99 ر.س./سنة"), .yearly)
+    }
+
+    func testTwoPriceLinesTrailingCurrencyCodeAndDurationRejection() {
+        let now = day(2026, 11, 23)
+        let lines = [
+            "Subscriptions",
+            "ACTIVE",
+            "Duolingo",
+            "$6.99/mo · Billed $83.88/year",
+            "Free trial for 7 days, renews Dec 14",
+            "Netflix",
+            "Was $22.99  Now $15.49 CAD/month",
+            "7-day free trial",
+            "Pinterest",
+            "$9.99/month",
+            "Balance",
+            "$69.99/year",
+            "ChatGPT Plus",
+            "$20.00/month",
+        ]
+        let items = ScreenshotParser.parse(lines: lines, defaultCurrency: "USD", now: now, calendar: calendar)
+        let byName = Dictionary(items.map { ($0.name.lowercased(), $0) }, uniquingKeysWith: { a, _ in a })
+
+        XCTAssertEqual(byName["duolingo"]?.amount, Decimal(string: "83.88"), "billed annual total pairs with yearly")
+        XCTAssertEqual(byName["duolingo"]?.frequency, .yearly)
+        XCTAssertEqual(byName["duolingo"]?.trialEndsAt, day(2026, 12, 14), "must find Dec 14 after 'for 7'")
+
+        XCTAssertEqual(byName["netflix"]?.amount, Decimal(string: "15.49"), "active price wins over Was price")
+        XCTAssertEqual(byName["netflix"]?.currency, "CAD", "trailing CAD code overrides bare $")
+        XCTAssertNil(byName["netflix"]?.trialEndsAt, "'7-day free trial' with no explicit date must not invent a date")
+
+        XCTAssertNotNil(byName["pinterest"], "Pinterest must not be filtered as 'interest'")
+        XCTAssertNotNil(byName["balance"], "Balance app in Apple Subscriptions must not be filtered as bank balance")
+        XCTAssertEqual(byName["chatgpt plus"]?.category, SubscriptionCategory.aiTools.displayName,
+                       "category must normalize to AI & Creativity")
+    }
+
+    func testArabicRTLPriceFirstRowAndPastYearBankDateRollover() {
+        // RTL Arabic screenshot where left-aligned price appears before right-aligned name.
+        let rtlPage: [ScreenshotParser.TextObservation] = [
+            .init(text: "الاشتراكات", boundingBox: CGRect(x: 0.65, y: 0.90, width: 0.28, height: 0.03)),
+            .init(text: "نشطة", boundingBox: CGRect(x: 0.78, y: 0.84, width: 0.14, height: 0.025)),
+            .init(text: "٤٩٫٩٩ ر.س./شهر", boundingBox: CGRect(x: 0.06, y: 0.76, width: 0.35, height: 0.025)),
+            .init(text: "Netflix", boundingBox: CGRect(x: 0.70, y: 0.76, width: 0.22, height: 0.025)),
+            .init(text: "يتجدد ١٤ ديسمبر ٢٠٢٦", boundingBox: CGRect(x: 0.45, y: 0.72, width: 0.45, height: 0.02)),
+        ]
+        let rtlItems = ScreenshotParser.parse(pages: [rtlPage], defaultCurrency: "SAR", now: day(2026, 11, 23), calendar: calendar)
+        XCTAssertEqual(rtlItems.count, 1)
+        XCTAssertEqual(rtlItems.first?.name, "Netflix")
+        XCTAssertEqual(rtlItems.first?.amount, Decimal(string: "49.99"))
+        XCTAssertEqual(rtlItems.first?.currency, "SAR")
+        XCTAssertEqual(rtlItems.first?.renewalDate, day(2026, 12, 14))
+
+        // Past bank charge "Dec 20" viewed on Jan 5, 2027 must roll back to Dec 20, 2026 (not Dec 20, 2027).
+        let bankItems = ScreenshotParser.parse(lines: ["Transactions", "Dec 20  NETFLIX.COM  -$19.99"],
+                                               defaultCurrency: "USD", now: day(2027, 1, 5), calendar: calendar)
+        XCTAssertEqual(bankItems.first?.renewalDate, day(2026, 12, 20))
+    }
+
+    func testGooglePlayListSetsGooglePlayMethodNotAppleAndMergeBatchReturnsPriceFilled() {
+        let gpItems = ScreenshotParser.parse(lines: ["Google Play", "Subscriptions", "ACTIVE", "Spotify", "$11.99/month"],
+                                             defaultCurrency: "USD", now: day(2026, 11, 23), calendar: calendar)
+        XCTAssertEqual(gpItems.first?.paymentMethod, "Google Play")
+
+        var list = [ScreenshotParser.DetectedItem(id: "netflix", name: "Netflix", category: "Entertainment",
+                                                  amount: nil, currency: "USD", frequency: .monthly,
+                                                  renewalDate: day(2026, 12, 14), trialEndsAt: nil, isCancelled: false)]
+        let batch2 = [ScreenshotParser.DetectedItem(id: "netflix", name: "Netflix", category: "Entertainment",
+                                                    amount: Decimal(string: "19.99"), currency: "USD", frequency: .monthly,
+                                                    renewalDate: nil, trialEndsAt: nil, isCancelled: false)]
+        let newlyEligible = ScreenshotParser.mergeBatch(batch2, into: &list, defaultCurrency: "USD")
+        XCTAssertEqual(list.first?.amount, Decimal(string: "19.99"))
+        XCTAssertTrue(newlyEligible.contains("netflix"), "newly price-filled row must become eligible for selection")
+    }
 }

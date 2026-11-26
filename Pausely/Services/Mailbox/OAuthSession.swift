@@ -81,7 +81,7 @@ enum OAuthSession {
         request.httpMethod = "POST"
         request.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
         request.httpBody = Data(formEncode(form).utf8)
-        let (data, response) = try await URLSession.shared.data(for: request)
+        let (data, response) = try await URLSession.shared.safeData(for: request)
         let status = (response as? HTTPURLResponse)?.statusCode ?? 0
         struct Payload: Decodable {
             let access_token: String?
@@ -286,7 +286,7 @@ enum MailboxHTTP {
             try Task.checkCancellation()
             var authorized = request
             authorized.setValue("Bearer \(current)", forHTTPHeaderField: "Authorization")
-            let (data, response) = try await URLSession.shared.data(for: authorized)
+            let (data, response) = try await URLSession.shared.safeData(for: authorized)
             let http = response as? HTTPURLResponse
             #if DEBUG
             diagnostics.noteSent()

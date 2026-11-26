@@ -47,7 +47,7 @@ enum CancelConcierge {
             L10n.string("Hello \(subscription.name) Support,"),
             L10n.string("Please cancel my \(subscription.name) subscription (\(price)) effective immediately, and turn off auto-renewal so no further charges are billed."),
         ]
-        if let renewal = subscription.nextRenewal(onOrAfter: now, calendar: calendar) {
+        if let renewal = RenewalDecisions.upcomingCharge(for: subscription, now: now, calendar: calendar)?.date {
             let day = DayText.date(renewal, locale: locale)
             paragraphs.append(L10n.string("My next scheduled renewal date is \(day). Please confirm cancellation in writing before that date."))
         } else {

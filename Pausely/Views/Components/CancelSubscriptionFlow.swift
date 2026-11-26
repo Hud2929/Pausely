@@ -19,7 +19,6 @@ struct CancelSubscriptionFlow: View {
     @State private var isSaving = false
     @State private var cancelled = false
     @State private var showingReceipt = false
-    @State private var showingPaywall = false
     @State private var previewDraft: PresentedDraft?
     /// Asked when "I cancelled it" is tapped for a subscription with no renewal day: the receipt counts the
     /// charges avoided from that day, and without it a $14.95 cancellation was "$0.00" (2026-11-23).
@@ -65,9 +64,14 @@ struct CancelSubscriptionFlow: View {
                                onUnknown: { askingNextCharge = false; Task { await markCancelled() } })
                 .presentationDetents([.large])
         }
-        .sheet(isPresented: $showingPaywall) { StoreKitUpgradeView(trigger: .cancelConcierge) }
         .sheet(item: $previewDraft) { item in
-            EmailDraftSheet(draft: item.draft)
+            EmailDraftSheet(draft: item.draft, locked: !conciergeUnlocked,
+                            paywallContext: PaywallContext(
+                                trigger: .cancelConcierge,
+                                serviceName: subscription.name,
+                                serviceChargeAmount: subscription.amount,
+                                serviceChargeCurrency: subscription.currency
+                            ))
         }
         .task { await difficulty.loadIfNeeded() }
     }
@@ -274,10 +278,8 @@ struct CancelSubscriptionFlow: View {
     }
 
     private func openEmailDraft(_ draft: CancelConcierge.Draft) {
-        guard conciergeUnlocked else {
-            showingPaywall = true
-            return
-        }
+        // Show the real personalized subject and opening lines first so Free users see the draft
+        // before deciding whether to unlock sending/copying with Pro.
         previewDraft = PresentedDraft(draft: draft)
     }
 
@@ -293,6 +295,7 @@ struct CancelSubscriptionFlow: View {
             VStack(spacing: 10) {
                 Button { showingReceipt = true } label: { Text("See your Savings Receipt") }
                     .buttonStyle(.ink)
+                ShareCancelledButton(subscriptionId: subscription.id, identifier: "cancelShareSavingsButton")
                 Button { dismiss() } label: { Text("Done") }
                     .buttonStyle(.ink(.quiet))
                     .accessibilityIdentifier("cancelDoneButton")

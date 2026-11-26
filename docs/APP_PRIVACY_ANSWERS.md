@@ -29,11 +29,14 @@ confirmation is five fields on the `profiles` row (`AgeConsentManager`).
   (`AccountMemory`) and never sent.
 - **How long a subscription was used.** The hours are typed in by the person and stay on the iPhone
   (`UsageLog`). Pausely does not read Screen Time.
-- **History, the Savings Receipt and the Pause Plan.** On the iPhone only.
+- **History, the Savings Receipt and the Pause Plan.** Stored locally under iOS hardware data protection, and synced to your Supabase account when signed in so reinstalling or switching devices preserves them (covered by **Other User Content** above; kept on-device only in optional guest mode).
 - Location, contacts, photos, audio, health, browsing or search history, device or advertising
   identifiers, purchase history (payments are Apple's), diagnostics, crash data, performance data.
 
 ## Things that look like collection but are not
+
+- **Import from screenshots (optional):** Screenshots selected from Photos are read purely in memory on
+  the device using Apple's Vision framework and are never saved to disk or sent to Pausely's servers.
 
 - **Find in Email** (switched off in release builds): mail is read on the iPhone, and only the name,
   amount and date of each charge are kept, on the iPhone. Nothing from a mailbox reaches Pausely's

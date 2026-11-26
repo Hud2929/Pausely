@@ -37,6 +37,8 @@ struct PauselyApp: App {
         // UI tests pass --reset-state to start from a first launch, whatever an earlier run left behind.
         if LaunchFlag.isSet("--reset-state") {
             UserDefaults.standard.removeObject(forKey: "hasCompletedOnboarding")
+            UserDefaults.standard.removeObject(forKey: "hasSeenFirstRunPaywall")
+            UserDefaults.standard.removeObject(forKey: "pendingFirstRunPlan")
             PendingTally.clear()
             TallyImporter.clearWaiting()
         }
@@ -105,6 +107,13 @@ struct RootView: View {
                     #if DEBUG
                     DebugLaunchRouter.screen()
                     #endif
+                } else if authManager.needsNewPassword {
+                    // A reset code or link was accepted: render directly at root (instead of a
+                    // colliding fullScreenCover over SignInView) so choosing a new password always appears.
+                    NewPasswordView()
+                        .readableWidth()
+                        .preferredColorScheme(.dark)
+                        .transition(.opacity)
                 } else if needsAgeGate, let uid = authManager.currentUser?.id {
                     AgeGateView(
                         onPassed: { Task { await ageConsent.recordConsent(userId: uid) } },
@@ -166,6 +175,12 @@ struct RootView: View {
             .sheet(isPresented: $signingIn) { SignInView() }
             .onReceive(NotificationCenter.default.publisher(for: .openSignUpDoor)) { _ in signingUp = true }
             .onReceive(NotificationCenter.default.publisher(for: .openSignInSheet)) { _ in signingIn = true }
+            .onChange(of: authManager.needsNewPassword) { _, needed in
+                if needed {
+                    signingIn = false
+                    signingUp = false
+                }
+            }
 
             if showSplash {
                 SplashScreen()
@@ -244,12 +259,6 @@ struct RootView: View {
                 }
             }
         }
-        // A reset code or link was accepted: nothing else until the new password is chosen.
-        .fullScreenCover(isPresented: $authManager.needsNewPassword) {
-            NewPasswordView()
-                .readableWidth()
-                .preferredColorScheme(.dark)
-        }
         .errorBanner($authManager.linkProblem)
         .onOpenURL { url in
             // Account links and links to a subscription. Never logged: an account link carries a code.
@@ -270,6 +279,7 @@ struct WelcomeFlow: View {
     enum Start { case welcome, signUp, signIn }
     var start: Start = .welcome
 
+    @ObservedObject private var authManager = AuthManager.shared
     @State private var showSignUp = false
     @State private var showSignIn = false
     @State private var didApplyStart = false
@@ -278,12 +288,21 @@ struct WelcomeFlow: View {
         NavigationStack {
             WelcomeWallBody(
                 onSignUp: { showSignUp = true },
-                onSignIn: { showSignIn = true },
-                onGuest: { AuthManager.shared.enterGuestMode() }
+                onSignIn: {
+                    UserDefaults.standard.removeObject(forKey: "pendingFirstRunPlan")
+                    showSignIn = true
+                },
+                onGuest: { authManager.enterGuestMode() }
             )
             .navigationBarHidden(true)
             .signUpDoor(isOpen: $showSignUp)
             .sheet(isPresented: $showSignIn) { SignInView() }
+            .onChange(of: authManager.needsNewPassword) { _, needed in
+                if needed {
+                    showSignIn = false
+                    showSignUp = false
+                }
+            }
         }
         .onAppear {
             guard !didApplyStart else { return }

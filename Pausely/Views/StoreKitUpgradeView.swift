@@ -2,33 +2,49 @@ import SwiftUI
 import StoreKit
 
 // MARK: - StoreKit Upgrade View
-/// Trial-first paywall optimized for conversion.
-/// Leads with the free trial, states the Pausely Promise, and makes annual savings prominent.
+/// Trial-first, evidence-backed paywall built on the user's own numbers and real App Store prices.
+/// Leads with contextual ROI, places the Plan Picker and Pausely's transparent trial slip above the
+/// fold, promises only reminders that actually fire, and completes interrupted user actions on unlock.
 struct StoreKitUpgradeView: View {
-    /// Optional feature that opened this paywall, used to tailor the headline cleanly.
-    var trigger: ProFeature? = nil
+    let context: PaywallContext
+    var onUnlocked: (() -> Void)? = nil
+
+    init(trigger: ProFeature? = nil, context: PaywallContext? = nil, onUnlocked: (() -> Void)? = nil) {
+        self.context = context ?? PaywallContext(trigger: trigger)
+        self.onUnlocked = onUnlocked
+    }
 
     @Environment(\.dismiss) private var dismiss
     @Environment(\.dynamicTypeSize) private var typeSize
     @ObservedObject private var storeManager = StoreKitManager.shared
     @ObservedObject private var paymentManager = PaymentManager.shared
     @ObservedObject private var currencyManager = CurrencyManager.shared
+    private var notifications = NotificationManager.shared
+
+    private struct PlanEligibility: Equatable {
+        let trialDays: Int?
+        let winBack: StoreKitManager.FreeExtensionOffer?
+    }
 
     @State private var selectedPlan: PlanOption = .annual
-    /// True only when StoreKit offers THIS customer a 7-day free trial on the selected plan. It is never
-    /// assumed: the offer must exist in App Store Connect and the Apple Account must still be eligible
-    /// (Apple allows one trial per subscription group).
-    /// Whether the selected plan starts with a free trial for this Apple Account. Nil until the App
-    /// Store has said: the slip and the button wait for it, so nobody eligible for a trial is shown
-    /// "Subscribe" and today's price for a moment first.
-    @State private var trialAvailable: Bool?
-    private var isTrialEnabled: Bool { trialAvailable == true }
+    /// Cached StoreKit intro-trial and Win-Back eligibility per product ID so toggling Annual ↔ Monthly
+    /// is instantaneous without collapsing the trial timeline.
+    @State private var eligibilityCache: [String: PlanEligibility] = [:]
+    @State private var profile = OnboardingProfile.load()
+    private var currentEligibility: PlanEligibility? { eligibilityCache[selectedPlan.productID] }
+    private var trialDays: Int? { currentEligibility?.trialDays }
+    private var winBackOffer: StoreKitManager.FreeExtensionOffer? { currentEligibility?.winBack }
+    private var isTrialEnabled: Bool { currentEligibility != nil && (trialDays ?? 0) > 0 }
+    private var isWinBackFreeOffer: Bool { currentEligibility != nil && !isTrialEnabled && winBackOffer != nil }
+    private var startsFree: Bool { isTrialEnabled || isWinBackFreeOffer }
     /// The plan has loaded and whether it starts free is not known yet.
-    private var isCheckingOffer: Bool { selectedProduct != nil && trialAvailable == nil }
+    private var isCheckingOffer: Bool { selectedProduct != nil && currentEligibility == nil }
     @State private var notice: PaywallNotice?
     /// What "Try again" on a notice repeats.
     @State private var lastAttempt: Attempt = .purchase
     @State private var showSuccessAlert = false
+    @State private var importedWaitingNames: [String] = []
+    @State private var shouldOfferTrialReminder = false
     @AccessibilityFocusState private var focusedElement: FocusElement?
 
     private enum Attempt { case purchase, restore }
@@ -37,81 +53,66 @@ struct StoreKitUpgradeView: View {
         case title
     }
 
-    enum PlanOption {
-        case monthly, annual
+    typealias PlanOption = PaywallPlanOption
 
-        var tier: SubscriptionTier {
-            switch self {
-            case .monthly: return .pro
-            case .annual: return .proAnnual
-            }
-        }
-
-        var productID: String {
-            switch self {
-            case .monthly: return StoreKitManager.ProductID.monthly.rawValue
-            case .annual: return StoreKitManager.ProductID.annual.rawValue
-            }
-        }
-
-        var title: String {
-            switch self {
-            case .monthly: return L10n.string("Monthly")
-            case .annual: return L10n.string("Annual")
-            }
-        }
-
-        var period: String {
-            switch self {
-            case .monthly: return L10n.string("/month")
-            case .annual: return L10n.string("/year")
-            }
-        }
-
-        /// The store's price with its period ("$4.99/month"), the one place the two meet.
-        func priced(_ amount: String) -> String {
-            "\(amount)\(period)"
-        }
-
-        /// "Save N%" computed from the real App Store prices; nil until StoreKit has loaded them.
-        @MainActor var savings: String? {
-            switch self {
-            case .monthly: return nil
-            case .annual:
-                guard let percent = StoreKitManager.shared.annualSavingsPercent else { return nil }
-                return L10n.string("Save \(percent)%")
-            }
-        }
-
-        @MainActor var badge: String? { savings }
+    private var productIDsKey: String {
+        storeManager.products.map(\.id).sorted().joined(separator: ",")
     }
 
-    /// The price Apple will actually charge in this storefront. Until StoreKit has loaded the products
-    /// (the purchase button stays disabled meanwhile) it falls back to an estimate.
-    private var trialCheckID: String {
-        "\(storeManager.products.map(\.id).sorted().joined(separator: ","))|\(selectedPlan == .monthly)"
+    /// Pure helper: if the currently selected plan has neither an intro trial nor a Win-Back free offer
+    /// while the other plan DOES, auto-select the plan that holds the free offer (e.g., a lapsed Monthly
+    /// subscriber tapping "Claim free" lands directly on Monthly instead of a paid Annual plan).
+    nonisolated static func preferredPlan(current: PlanOption,
+                                          annualHasFreeOffer: Bool,
+                                          monthlyHasFreeOffer: Bool) -> PlanOption {
+        switch current {
+        case .annual:
+            return (!annualHasFreeOffer && monthlyHasFreeOffer) ? .monthly : .annual
+        case .monthly:
+            return (!monthlyHasFreeOffer && annualHasFreeOffer) ? .annual : .monthly
+        }
     }
 
-    /// Decides whether to advertise the free trial: the selected plan must carry a 7-day free-trial
-    /// introductory offer in App Store Connect and this Apple Account must still be eligible for it.
+    /// Confirms free-trial eligibility and any Apple StoreKit 2 Win-Back free extension for all loaded
+    /// plans at once and caches per product ID so switching Annual ↔ Monthly never collapses the slip.
     private func refreshTrialEligibility() async {
-        // Another plan was picked, or the plans have just loaded: what was known is for the other one.
-        trialAvailable = nil
-        guard let product = storeManager.products.first(where: { $0.id == selectedPlan.productID }) else { return }
-        // `--demo-no-trial` (DEBUG): the paywall as someone who has used their free trial sees it.
+        guard !storeManager.products.isEmpty else { return }
         if LaunchFlag.isSet("--demo-no-trial") {
-            trialAvailable = false
+            var next = eligibilityCache
+            for product in storeManager.products {
+                next[product.id] = PlanEligibility(trialDays: nil, winBack: nil)
+            }
+            eligibilityCache = next
             return
         }
-        guard let subscription = product.subscription,
-              let offer = subscription.introductoryOffer,
-              offer.paymentMode == .freeTrial else {
-            trialAvailable = false
-            return
+        var next = eligibilityCache
+        for product in storeManager.products {
+            if next[product.id] != nil { continue }
+            var foundTrial: Int?
+            if let subscription = product.subscription,
+               let offer = subscription.introductoryOffer,
+               offer.paymentMode == .freeTrial,
+               let days = PaywallCase.trialDays(value: offer.period.value, unit: offer.period.unit) {
+                if await subscription.isEligibleForIntroOffer {
+                    foundTrial = days
+                }
+            }
+            let foundWinBack: StoreKitManager.FreeExtensionOffer? = foundTrial == nil
+                ? await storeManager.freeWinBackOffer(for: product)
+                : nil
+            next[product.id] = PlanEligibility(trialDays: foundTrial, winBack: foundWinBack)
         }
-        let sevenDays = (offer.period.unit == .day && offer.period.value == 7)
-            || (offer.period.unit == .week && offer.period.value == 1)
-        trialAvailable = sevenDays ? await subscription.isEligibleForIntroOffer : false
+        eligibilityCache = next
+        let annualHasFree = (next[PlanOption.annual.productID]?.trialDays ?? 0) > 0
+            || next[PlanOption.annual.productID]?.winBack != nil
+        let monthlyHasFree = (next[PlanOption.monthly.productID]?.trialDays ?? 0) > 0
+            || next[PlanOption.monthly.productID]?.winBack != nil
+        let target = Self.preferredPlan(current: selectedPlan,
+                                        annualHasFreeOffer: annualHasFree,
+                                        monthlyHasFreeOffer: monthlyHasFree)
+        if target != selectedPlan {
+            selectedPlan = target
+        }
     }
 
     /// The App Store's own price for this storefront. Until it loads, "…": Pausely never shows a
@@ -123,11 +124,26 @@ struct StoreKitUpgradeView: View {
     // MARK: - The person's own numbers
 
     private var store: SubscriptionStore { SubscriptionStore.shared }
-    private var waitingCount: Int { TallyImporter.waitingLines().count }
-
     private var activeSubscriptions: [Subscription] { store.activeSubscriptions }
-
     private var selectedProduct: Product? { storeManager.product(for: selectedPlan.tier) }
+
+    /// Saved waiting lines combined with any pre-commit overflow lines passed from RevealStep or ScreenshotImportView.
+    private var effectiveWaitingLines: [TallyLine] {
+        var combined = TallyImporter.waitingLines()
+        let seen = Set(combined.map { $0.name.lowercased() })
+        for line in context.pendingWaitingLines where !seen.contains(line.name.lowercased()) {
+            combined.append(line)
+        }
+        return combined
+    }
+
+    private var waitingCount: Int { effectiveWaitingLines.count }
+
+    private var totalCountForWaiting: Int {
+        PaywallCase.totalSubscriptions(pendingTotalCount: context.pendingTotalCount,
+                                       activeCount: activeSubscriptions.count,
+                                       waitingCount: waitingCount)
+    }
 
     /// What the selected plan costs over a year, in the App Store's currency for this customer.
     private var proYearly: (amount: Decimal, currency: String)? {
@@ -136,30 +152,113 @@ struct StoreKitUpgradeView: View {
         return (selectedPlan == .annual ? product.price : product.price * 12, currency)
     }
 
-    /// True when the person got here by trying to add one more than the free plan watches.
+    /// What the annual plan itself costs in StoreKit's currency (for consistent Savings Receipt comparisons).
+    private var annualProductCost: (amount: Decimal, currency: String)? {
+        guard let product = storeManager.product(for: .proAnnual) else { return nil }
+        return (product.price, product.priceFormatStyle.currencyCode)
+    }
+
     private var atFreeLimit: Bool {
-        !paymentManager.hasRoom(in: store.subscriptions)
+        !paymentManager.hasRoom(in: store.subscriptions) || !context.pendingWaitingLines.isEmpty
+    }
+
+    /// Pause Plan rotation savings either passed by `PausePlanView` or computed strictly from eligible streaming services.
+    private var eligiblePauseSavings: (amount: Decimal, currency: String, isConverted: Bool, names: [String])? {
+        if let amount = context.pausePlanYearlySavings, let currency = context.pausePlanCurrency, amount > 0 {
+            return (amount, currency, context.pausePlanIsConverted, context.pausePlanServices)
+        }
+        return PausePlanCard.yearlySavingsInfo(in: store.subscriptions, currency: currencyManager)
+    }
+
+    private var pauseROI: PaywallCase.PausePlanROI? {
+        guard let savings = eligiblePauseSavings, let pro = proYearly else { return nil }
+        return PaywallCase.pausePlanROI(yearlySavings: savings.amount, savingsCurrency: savings.currency,
+                                        serviceNames: savings.names, proYearly: pro.amount,
+                                        proCurrency: pro.currency, rates: currencyManager.rates)
+    }
+
+    private var waitingRisk: PaywallCase.WaitingRisk? {
+        PaywallCase.waitingRisk(lines: effectiveWaitingLines,
+                                displayCurrency: context.pendingCurrency ?? currencyManager.selectedCurrency,
+                                proYearly: proYearly?.amount, proCurrency: proYearly?.currency,
+                                rates: currencyManager.rates)
+    }
+
+    /// Always computed against the annual plan so the multiple stays consistent when toggling plans.
+    private var savingsProof: PaywallCase.SavingsProof? {
+        let summary = SavingsSummary.current()
+        guard !summary.isEmpty, let annual = annualProductCost else { return nil }
+        return PaywallCase.savingsProof(onTrack: summary.onTrack, summaryCurrency: summary.currency,
+                                        isConverted: summary.totalsAreConverted, proYearly: annual.amount,
+                                        proCurrency: annual.currency, rates: currencyManager.rates)
     }
 
     private var headline: String {
-        switch trigger {
+        if context.fromSavingsReceipt, let proof = savingsProof {
+            let saved = MoneyFormat.total(proof.onTrack, proof.currency, converted: proof.isConverted,
+                                          locale: L10n.locale, wholeUnits: true)
+            return L10n.string("Your Savings Receipt is already on track to keep \(saved).")
+        }
+        switch context.trigger {
         case .pausePlan:
+            if let savings = eligiblePauseSavings {
+                let formatted = MoneyFormat.total(savings.amount, savings.currency, converted: savings.isConverted,
+                                                  locale: L10n.locale, wholeUnits: true)
+                return L10n.string("Keep about \(formatted) a year by rotating your streaming.")
+            }
             return L10n.string("Rotate streaming with Pause Plan.")
+        case .spendForecast:
+            if let saved = context.simulatorYearlySavings, let currency = context.forecastCurrency, saved > 0 {
+                let formatted = MoneyFormat.total(saved, currency, converted: context.forecastIsConverted,
+                                                  locale: L10n.locale, wholeUnits: true)
+                return L10n.string("Test cuts worth about \(formatted) a year before your next charge.")
+            }
+            if let month = context.forecastPeakMonth, let peak = context.forecastPeakAmount,
+               let currency = context.forecastCurrency, peak > 0 {
+                let formatted = MoneyFormat.total(peak, currency, converted: context.forecastIsConverted,
+                                                  locale: L10n.locale, wholeUnits: true)
+                return L10n.string("Your heaviest month is \(month) (\(formatted)). See all 12 months ahead.")
+            }
+            return L10n.string("See every renewal spike across the next 12 months.")
         case .batchScreenshotImport:
-            return L10n.string("Import up to 10 screenshots at once.")
+            return L10n.string("Import up to \(ScreenshotImportReadyView.proBatch) screenshots at once.")
         case .cancelConcierge:
+            if let name = context.serviceName, !name.isEmpty {
+                return L10n.string("Send a ready-to-go email for \(name).")
+            }
             return L10n.string("Draft cancellation and refund emails in seconds.")
         case .unlimitedSubscriptions, .none:
             break
         }
         if waitingCount > 0 {
-            return L10n.sentences([L10n.string("You pay for \(activeSubscriptions.count + waitingCount) subscriptions."),
+            if let risk = waitingRisk {
+                let formatted = MoneyFormat.total(risk.yearlyAmount, risk.currency, converted: risk.isConverted,
+                                                  locale: L10n.locale, wholeUnits: true)
+                return L10n.string("Track all \(totalCountForWaiting) subscriptions — \(formatted) a year is unwatched.")
+            }
+            return L10n.sentences([L10n.string("You pay for \(totalCountForWaiting) subscriptions."),
                                    L10n.string("The free plan tracks \(FreeTier.subscriptionLimit).")])
         }
-        if atFreeLimit { return L10n.string("The free plan tracks \(FreeTier.subscriptionLimit). Pausely Pro tracks all of them.") }
+        if atFreeLimit {
+            if let name = context.serviceName, !name.isEmpty {
+                return L10n.string("Track \(name) and every other subscription you pay for.")
+            }
+            return L10n.string("The free plan tracks \(FreeTier.subscriptionLimit). Pausely Pro tracks all of them.")
+        }
+        if let proof = savingsProof {
+            let saved = MoneyFormat.total(proof.onTrack, proof.currency, converted: proof.isConverted,
+                                          locale: L10n.locale, wholeUnits: true)
+            return L10n.string("Your Savings Receipt is already on track to keep \(saved).")
+        }
+        if context.fromFirstRunReveal, let savings = eligiblePauseSavings {
+            let formatted = MoneyFormat.total(savings.amount, savings.currency, converted: savings.isConverted,
+                                              locale: L10n.locale, wholeUnits: true)
+            return L10n.string("Keep about \(formatted) a year by rotating your streaming.")
+        }
         guard !activeSubscriptions.isEmpty else { return L10n.string("Pausely Pro tracks every subscription you have.") }
-        let yearly = MoneyFormat.string(activeSubscriptions.annualTotal(), currencyManager.selectedCurrency,
-                                        locale: L10n.locale, wholeUnits: true)
+        let yearly = MoneyFormat.total(activeSubscriptions.annualTotal(), currencyManager.selectedCurrency,
+                                       converted: activeSubscriptions.isConverted(to: currencyManager.selectedCurrency),
+                                       locale: L10n.locale, wholeUnits: true)
         return L10n.string("Your subscriptions cost about \(yearly) a year.")
     }
 
@@ -167,8 +266,53 @@ struct StoreKitUpgradeView: View {
         let price = selectedPlan == .annual
             ? L10n.string("Pausely Pro is \(priceText(.proAnnual)) a year.")
             : L10n.string("Pausely Pro is \(priceText(.pro)) a month.")
-        guard let pro = proYearly,
-              let comparison = PaywallCase.comparison(proYearly: pro.amount, proCurrency: pro.currency,
+        guard let pro = proYearly else { return price }
+
+        if context.fromSavingsReceipt, let proof = savingsProof {
+            let multiple = proof.multiple.formatted(.number.precision(.fractionLength(1)).locale(L10n.locale))
+            return L10n.sentences([price, L10n.string("That's already \(multiple)× what an annual Pausely Pro plan costs.")])
+        }
+        if context.trigger == .pausePlan, let roi = pauseROI {
+            if let multiple = roi.wholeMultiple {
+                return L10n.sentences([price, L10n.string("Pause Plan can return about \(multiple)× what Pro costs.")])
+            }
+            if roi.coversPro {
+                return L10n.sentences([price, L10n.string("Pause Plan can return more than a full year of Pro.")])
+            }
+        }
+        if context.trigger == .spendForecast,
+           let saved = context.simulatorYearlySavings, let currency = context.forecastCurrency,
+           let roi = PaywallCase.pausePlanROI(yearlySavings: saved, savingsCurrency: currency, serviceNames: [],
+                                              proYearly: pro.amount, proCurrency: pro.currency,
+                                              rates: currencyManager.rates) {
+            if let multiple = roi.wholeMultiple {
+                return L10n.sentences([price, L10n.string("Those cuts keep about \(multiple)× what Pro costs a year.")])
+            }
+            if roi.coversPro {
+                return L10n.sentences([price, L10n.string("Those cuts keep more than a full year of Pro.")])
+            }
+        }
+        if context.trigger == .cancelConcierge,
+           let name = context.serviceName, !name.isEmpty,
+           let amount = context.serviceChargeAmount, let currency = context.serviceChargeCurrency,
+           PaywallCase.singleChargeCoversPro(amount: amount, currency: currency,
+                                             proYearly: pro.amount, proCurrency: pro.currency,
+                                             rates: currencyManager.rates) {
+            let charge = MoneyFormat.string(amount, currency, locale: L10n.locale)
+            return L10n.sentences([price, L10n.string("One \(name) charge (\(charge)) is more than a full year of Pro.")])
+        }
+        if let risk = waitingRisk {
+            let names = Array(risk.names.prefix(3)).formatted(.list(type: .and).locale(L10n.locale))
+            let tail = risk.exceedsPro
+                ? L10n.string("Unwatched right now: \(names) — more than a full year of Pro.")
+                : L10n.string("Unwatched right now: \(names).")
+            return L10n.sentences([price, tail])
+        }
+        if let proof = savingsProof {
+            let multiple = proof.multiple.formatted(.number.precision(.fractionLength(1)).locale(L10n.locale))
+            return L10n.sentences([price, L10n.string("That's already \(multiple)× what an annual Pausely Pro plan costs.")])
+        }
+        guard let comparison = PaywallCase.comparison(proYearly: pro.amount, proCurrency: pro.currency,
                                                       subscriptions: activeSubscriptions, rates: currencyManager.rates)
         else { return price }
         let against = comparison.months == 1
@@ -177,11 +321,16 @@ struct StoreKitUpgradeView: View {
         return L10n.sentences([price, against])
     }
 
-    private var firstChargeDate: String { shortDate(daysFromToday: 7) }
-
-    /// The last day a cancellation is certain to be in time: Apple needs it at least 24 hours before
-    /// the trial ends, so the day before the first charge, not the day of it.
-    private var lastDayToCancel: String { shortDate(daysFromToday: 6) }
+    private var activeTrialDays: Int { trialDays ?? winBackOffer?.days ?? 7 }
+    /// Today is Day 1, so Day 3 is 2 calendar days from today (clamped safely for shorter trials).
+    private var day3Date: String { shortDate(daysFromToday: min(2, max(1, activeTrialDays - 3))) }
+    private var firstChargeDate: String { shortDate(daysFromToday: activeTrialDays) }
+    /// Matches `ReminderPlanner.Kind.trialHeadsUp` (two days before trial end — safely ahead of Apple's 24h cutoff).
+    private var reminderDayOffset: Int { max(1, activeTrialDays - 2) }
+    private var trialReminderDate: String { shortDate(daysFromToday: reminderDayOffset) }
+    private var reminderLeadDays: Int { max(1, activeTrialDays - reminderDayOffset) }
+    /// The last day a cancellation is certain to be in time: Apple needs it at least 24 hours before renewal.
+    private var lastDayToCancel: String { shortDate(daysFromToday: max(1, activeTrialDays - 1)) }
 
     private func shortDate(daysFromToday days: Int) -> String {
         let date = Calendar.billing.date(byAdding: .day, value: days, to: Date()) ?? Date()
@@ -211,17 +360,26 @@ struct StoreKitUpgradeView: View {
                         .font(.body)
                         .foregroundStyle(Color.inkTextMuted)
                         .fixedSize(horizontal: false, vertical: true)
-                        .padding(.top, 8)
+                        .padding(.top, 6)
 
-                    planPicker.padding(.top, 12)
+                    // Plan picker sits right under the ROI argument so both Annual/Monthly pricing and the
+                    // top of Pausely's transparent trial receipt slip are visible above the fold on standard iPhones.
+                    PaywallPlanPicker(
+                        selectedPlan: $selectedPlan,
+                        monthlyPrice: priceText(.pro),
+                        annualPrice: priceText(.proAnnual),
+                        annualPerMonth: storeManager.annualPricePerMonth,
+                        annualBadge: PlanOption.annual.badge
+                    )
+                    .padding(.top, 12)
 
-                    slip.padding(.top, 14)
+                    slip
+                        .padding(.top, 12)
+                        .padding(.bottom, linksEndThePage ? 12 : 20)
                 } else {
-                    // No price, so no sentence about one, no plans to pick between and no slip.
                     pricesMissing.padding(.top, 16)
+                    promiseFallback.padding(.top, 18).padding(.bottom, linksEndThePage ? 12 : 20)
                 }
-
-                promise.padding(.top, 18).padding(.bottom, linksEndThePage ? 12 : 20)
 
                 if linksEndThePage {
                     LineOrStack(spacing: 16, lineSpacing: 0) { footerLinks(alignment: .leading) }
@@ -235,8 +393,12 @@ struct StoreKitUpgradeView: View {
             actionBar
         }
         .inkScreen()
-        .onAppear { focusedElement = .title }
+        .onAppear {
+            focusedElement = .title
+            profile = OnboardingProfile.load()
+        }
         .task {
+            await notifications.refreshStatus()
             // Prices are the App Store's. If they can't be fetched, keep asking while this screen is open.
             var wait: UInt64 = 2
             while !Task.isCancelled {
@@ -246,11 +408,30 @@ struct StoreKitUpgradeView: View {
                 wait = min(wait * 2, 16)
             }
         }
-        .task(id: trialCheckID) { await refreshTrialEligibility() }
+        .task(id: productIDsKey) { await refreshTrialEligibility() }
         .alert(Text("You have Pausely Pro"), isPresented: $showSuccessAlert) {
-            Button("Continue", role: .cancel) { dismiss() }
+            if shouldOfferTrialReminder {
+                Button("Turn on trial reminder") {
+                    Task {
+                        _ = await notifications.requestPermission()
+                        await ReminderScheduler.shared.reschedule(SubscriptionStore.shared.subscriptions)
+                        finishUnlock()
+                    }
+                }
+            }
+            Button("Continue", role: .cancel) { finishUnlock() }
         } message: {
-            Text("Unlimited tracking, Pause Plan, batch screenshot import, and email drafts are now unlocked.")
+            if shouldOfferTrialReminder {
+                if importedWaitingNames.isEmpty {
+                    Text("Turn on notifications so Pausely can remind you before your free trial charges.")
+                } else {
+                    Text("Added \(importedWaitingNames.formatted(.list(type: .and).locale(L10n.locale))) to your list. Turn on notifications for your trial reminder.")
+                }
+            } else if importedWaitingNames.isEmpty {
+                Text("Unlimited tracking, Pause Plan, 12-month forecast & cut simulator, batch screenshot import, and email drafts are now unlocked.")
+            } else {
+                Text("Added \(importedWaitingNames.formatted(.list(type: .and).locale(L10n.locale))) to your list. All Pausely Pro features are now unlocked.")
+            }
         }
         .alert(Text(verbatim: notice?.title ?? ""), isPresented: Binding(get: { notice != nil }, set: { if !$0 { notice = nil } }),
                presenting: notice) { shown in
@@ -265,10 +446,16 @@ struct StoreKitUpgradeView: View {
         }
     }
 
+    private func finishUnlock() {
+        let callback = onUnlocked
+        dismiss()
+        callback?()
+    }
+
     /// Always visible, never delayed.
     private var closeRow: some View {
         HStack {
-            LeaveButton("Close") { dismiss() }
+            LeaveButton(context.fromFirstRunReveal ? "Not now" : "Close") { dismiss() }
                 .accessibilityIdentifier("paywallClose")
             Spacer()
         }
@@ -277,121 +464,51 @@ struct StoreKitUpgradeView: View {
 
     // MARK: - Pausely on its own slip
 
-    /// Pausely's own subscription, printed the way it prints everyone else's: what is charged, and when.
+    private var trialReminderState: OnboardingProfile.TrialReminderState {
+        if notifications.isAuthorized && notifications.delivery == .shown { return .ready }
+        if notifications.status == .notDetermined { return .notAsked }
+        return .offOrHidden
+    }
+
+    /// Pausely's own personalized Day 1 / Day 3 / Day 5 / Day 7 trial plan printed on Paper Slip,
+    /// followed by transparent `ProFeature` disclosure and the Pausely Promise.
     private var slip: some View {
-        PaperSlip(tornTop: true, tornBottom: true) {
-            VStack(alignment: .leading, spacing: 12) {
-                Text(verbatim: "Pausely Pro")
-                    .font(.question(.title3))
-
-                if isCheckingOffer {
-                    ProofLine(label: L10n.string("Today"), value: "…", emphasised: true)
-                } else if isTrialEnabled {
-                    ProofLine(label: L10n.string("Today"), value: L10n.string("Free"))
-                    ProofLine(label: firstChargeDate, value: chargeText, emphasised: true)
-                    Text(L10n.string("Cancel by \(lastDayToCancel) in Settings and you pay nothing."))
-                        .font(.footnote)
-                        .foregroundStyle(Color.paperMuted)
-                        .fixedSize(horizontal: false, vertical: true)
-                } else {
-                    ProofLine(label: L10n.string("Today"), value: chargeText, emphasised: true)
-                    if selectedPlan == .annual, let perMonth = storeManager.annualPricePerMonth {
-                        Text("That's \(perMonth) a month.")
-                            .font(.footnote)
-                            .foregroundStyle(Color.paperMuted)
-                    }
-                }
-
-                Perforation().padding(.vertical, 2)
-
-                ForEach(ProFeature.allCases) { feature in
-                    HStack(alignment: .firstTextBaseline, spacing: 10) {
-                        Image(systemName: "plus")
-                            .font(.footnote.weight(.bold))
-                            .accessibilityHidden(true)
-                        Text(verbatim: feature.title)
-                            .font(.subheadline)
-                            .fixedSize(horizontal: false, vertical: true)
-                    }
-                }
-            }
+        let yearlySpendText: String? = activeSubscriptions.isEmpty ? nil : MoneyFormat.total(
+            activeSubscriptions.annualTotal(), currencyManager.selectedCurrency,
+            converted: activeSubscriptions.isConverted(to: currencyManager.selectedCurrency),
+            locale: L10n.locale, wholeUnits: true
+        )
+        let pauseText: String? = eligiblePauseSavings.map {
+            MoneyFormat.total($0.amount, $0.currency, converted: $0.isConverted, locale: L10n.locale, wholeUnits: true)
         }
+        let steps = profile.trialPlanSteps(
+            trialDays: activeTrialDays,
+            isWinBack: isWinBackFreeOffer,
+            watchedCount: max(activeSubscriptions.count, totalCountForWaiting),
+            waitingCount: waitingCount,
+            yearlyText: yearlySpendText,
+            pauseYearlyText: pauseText,
+            reminderState: trialReminderState,
+            day3Date: day3Date,
+            reminderDate: trialReminderDate,
+            reminderLeadDays: reminderLeadDays,
+            firstChargeDate: firstChargeDate,
+            chargeText: chargeText,
+            lastDayToCancel: lastDayToCancel
+        )
+        return PaywallPlanTimeline(
+            isCheckingOffer: isCheckingOffer,
+            isTrialEnabled: isTrialEnabled,
+            isWinBackFreeOffer: isWinBackFreeOffer,
+            trialDays: activeTrialDays,
+            chargeText: chargeText,
+            steps: steps,
+            features: PaywallCase.orderedFeatures(prioritizing: context.trigger),
+            trigger: context.trigger
+        )
     }
 
-    // MARK: - Plans
-
-    private var planPicker: some View {
-        VStack(spacing: 0) {
-            planRow(.annual)
-            Hairline()
-            planRow(.monthly)
-        }
-    }
-
-    private func planRow(_ plan: PlanOption) -> some View {
-        let isOn = selectedPlan == plan
-        return Button {
-            Feel.selection()
-            withAnimation(Motion.unlessReduced(Motion.touch)) { selectedPlan = plan }
-        } label: {
-            HStack(alignment: .center, spacing: 14) {
-                Image(systemName: isOn ? "largecircle.fill.circle" : "circle")
-                    .font(.title3)
-                    .foregroundStyle(isOn ? Color.paper : Color.inkTextFaint)
-                    .accessibilityHidden(true)
-
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(verbatim: plan.title)
-                        .font(.subheadline)
-                        .foregroundStyle(Color.inkTextMuted)
-                    // A price is never split across lines: it shrinks first, and at the largest
-                    // text sizes the period and the saving move to their own lines.
-                    if typeSize.isAccessibilitySize {
-                        Text(verbatim: priceText(plan.tier))
-                            .font(.title3.weight(.semibold))
-                            .foregroundStyle(Color.inkText)
-                            .lineLimit(1)
-                            .minimumScaleFactor(0.6)
-                        Text(verbatim: plan.period)
-                            .font(.subheadline)
-                            .foregroundStyle(Color.inkTextMuted)
-                        if let badge = plan.badge { badgeView(badge) }
-                    } else {
-                        Text(verbatim: plan.priced(priceText(plan.tier)))
-                            .font(.title3.weight(.semibold))
-                            .foregroundStyle(Color.inkText)
-                            .monospacedDigit()
-                            .lineLimit(1)
-                            .minimumScaleFactor(0.7)
-                    }
-                }
-
-                Spacer(minLength: 8)
-
-                if !typeSize.isAccessibilitySize, let badge = plan.badge { badgeView(badge) }
-            }
-            .padding(.vertical, 14)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .contentShape(Rectangle())
-        }
-        .buttonStyle(.plain)
-        .accessibilityElement(children: .combine)
-        .accessibilityAddTraits(isOn ? [.isSelected] : [])
-        .accessibilityIdentifier(plan == .annual ? "planAnnual" : "planMonthly")
-    }
-
-    private func badgeView(_ text: String) -> some View {
-        Text(verbatim: text)
-            .font(.footnote.weight(.semibold))
-            .foregroundStyle(Color.inkText)
-            .padding(.horizontal, 10)
-            .padding(.vertical, 4)
-            .overlay(Capsule().stroke(Color.outline, lineWidth: 1))
-    }
-
-    // MARK: - The Promise
-
-    private var promise: some View {
+    private var promiseFallback: some View {
         VStack(alignment: .leading, spacing: 6) {
             Text(LocalizedStringKey("The Pausely Promise"))
                 .font(.subheadline.weight(.semibold))
@@ -437,8 +554,10 @@ struct StoreKitUpgradeView: View {
                 } label: {
                     if (storeManager.isLoading && selectedProduct != nil) || isCheckingOffer {
                         ProgressView().tint(Color.paperInk)
+                    } else if isWinBackFreeOffer, let offer = winBackOffer {
+                        Text("Claim \(offer.days) more days free")
                     } else {
-                        Text(isTrialEnabled ? L10n.string("Start free trial") : L10n.string("Subscribe"))
+                        Text(isTrialEnabled ? L10n.string("Start \(activeTrialDays)-day free trial") : L10n.string("Subscribe"))
                     }
                 }
                 .buttonStyle(.ink)
@@ -448,10 +567,10 @@ struct StoreKitUpgradeView: View {
                 Group {
                     if isCheckingOffer {
                         Text(verbatim: " ")
-                    } else if isTrialEnabled {
+                    } else if startsFree {
                         Text("After your free trial, you'll be charged \(chargeText) unless you cancel at least 24 hours before the trial ends.")
                     } else {
-                        Text("Renews automatically. To cancel, open Settings, tap your name, then Subscriptions.")
+                        Text("You'll be charged \(chargeText). Renews automatically unless you cancel at least 24 hours before the end of the current period in Settings › Subscriptions.")
                     }
                 }
                 .font(.caption)
@@ -459,8 +578,6 @@ struct StoreKitUpgradeView: View {
                 .multilineTextAlignment(.center)
                 .fixedSize(horizontal: false, vertical: true)
             } else {
-                // Nothing can be bought without a price. The one thing to do is ask again (it was a
-                // greyed-out "Subscribe" above a caption-size underlined line).
                 Button {
                     Task { await storeManager.loadProducts() }
                 } label: {
@@ -470,7 +587,6 @@ struct StoreKitUpgradeView: View {
                 .disabled(prices == .loading)
                 .accessibilityIdentifier("paywallTryAgain")
             }
-
 
             if !linksEndThePage {
                 LineOrStack(spacing: 16, lineSpacing: 0, centred: true) { footerLinks(alignment: .center) }
@@ -486,9 +602,7 @@ struct StoreKitUpgradeView: View {
     }
 
     /// Where the button stays at the bottom edge, the three links end the page instead of sitting
-    /// under it: there they held three more rows at the edge whenever they did not fit on one line
-    /// (German at any text size, English one size up), and the bar covered half the screen. Where
-    /// the button follows the content (accessibility sizes, iPad) they come after it, as before.
+    /// under it. Where the button follows the content (accessibility sizes, iPad) they come after it.
     private var linksEndThePage: Bool {
         ActionScreen<EmptyView, EmptyView>.pinsActions(at: typeSize, onPad: UIDevice.current.userInterfaceIdiom == .pad)
     }
@@ -510,12 +624,13 @@ struct StoreKitUpgradeView: View {
     }
 
     // MARK: - Actions
+
     private func attemptPurchase() async {
         guard let product = storeManager.product(for: selectedPlan.tier) else { return }
         lastAttempt = .purchase
-        let outcome = await storeManager.purchase(product)
+        let outcome = await storeManager.purchase(product, winBackOffer: isWinBackFreeOffer ? winBackOffer?.offer : nil)
         if outcome == .purchased {
-            await welcomeToPro()
+            await welcomeToPro(startedTrial: startsFree, isWinBack: isWinBackFreeOffer)
         } else {
             notice = PaywallNotice.after(outcome)
         }
@@ -525,16 +640,22 @@ struct StoreKitUpgradeView: View {
         lastAttempt = .restore
         let outcome = await storeManager.restorePurchases()
         if outcome == .restored {
-            await welcomeToPro()
+            await welcomeToPro(startedTrial: false, isWinBack: false)
         } else {
             notice = PaywallNotice.after(outcome)
         }
     }
 
-    private func welcomeToPro() async {
+    private func welcomeToPro(startedTrial: Bool, isWinBack: Bool) async {
         Feel.landed()
+        let waiting = TallyImporter.waitingLines().map(\.name)
         // Pro tracks everything: the lines that didn't fit under the free limit join the list.
         await TallyImporter.importWaiting(into: SubscriptionStore.shared)
+        // Ensure Pausely's own trial/return line is in the store before offering the reminder toggle.
+        await PaymentManager.shared.autoAddPauselyProIfNeeded(readdIfRemoved: isWinBack)
+        await notifications.refreshStatus()
+        importedWaitingNames = waiting
+        shouldOfferTrialReminder = startedTrial && notifications.status == .notDetermined
         showSuccessAlert = true
     }
 }

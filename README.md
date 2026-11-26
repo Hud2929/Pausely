@@ -14,15 +14,15 @@ renewal and asks one question each time: keep it or cancel it.
 - **On-device screenshot import**: pick screenshots of Apple Subscriptions or recurring charges to
   import services, prices, and renewal dates without uploading images or connecting a bank.
 - **Pause Plan**: rotate streaming services one month at a time instead of paying for all of them.
-- **Everyday details**: split shared family plans, track billing methods and notes, spot overlapping
-  services, or use Pausely locally without an account.
+- **Everyday details**: track billing methods and notes, spot overlapping services, or use Pausely
+  locally without an account.
 - Totals in your own currency, widgets, and six languages (English, Arabic, German, Spanish, French,
   Japanese).
 
 Free: up to five subscriptions (you choose which five), with reminders, verdicts, cancel help,
 single-screenshot import and the Savings Receipt.
-Pausely Pro: unlimited subscriptions, Pause Plan, batch screenshot import, and cancellation & refund
-email drafts. The single list of what Pro unlocks is `Pausely/Services/ProFeature.swift`.
+Pausely Pro: unlimited subscriptions, Pause Plan, 12-month forecast & cut simulator, batch screenshot
+import, and cancellation & refund email drafts. The single list of what Pro unlocks is `Pausely/Services/ProFeature.swift`.
 
 Pausely has no ads, does not sell data and does not connect to bank accounts.
 

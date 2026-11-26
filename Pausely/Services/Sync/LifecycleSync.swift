@@ -21,13 +21,14 @@ struct LifecycleEventRecord: Codable, Equatable {
         self.id = event.id
         self.user_id = userId
         self.subscription_id = event.subscriptionId
-        self.subscription_name = event.subscriptionName
+        let trimmed = event.subscriptionName.trimmingCharacters(in: .whitespacesAndNewlines)
+        self.subscription_name = String((trimmed.isEmpty ? "Subscription" : trimmed).prefix(200))
         self.kind = event.kind.rawValue
         self.occurred_at = event.date.iso8601String
-        self.amount = event.amount
-        self.currency = event.currency
+        self.amount = max(0, event.amount)
+        self.currency = String(event.currency.prefix(10))
         self.frequency = event.frequency.rawValue
-        self.previous_amount = event.previousAmount
+        self.previous_amount = event.previousAmount.map { max(0, $0) }
         self.renewal_date = event.renewalDate.map { BillingDay.stored($0).iso8601String }
         self.anchor_date = event.anchorDate.map { BillingDay.stored($0).iso8601String }
     }
@@ -86,13 +87,16 @@ final class LifecycleSync {
     func sync() async {
         guard SubscriptionStore.cloudSyncEnabled, !AuthManager.shared.isGuest else { return }
         let client = SupabaseManager.shared.client
-        guard let userId = client.auth.currentSession?.user.id,
-              LocalUserData.belongs(to: userId.uuidString) else { return }
+        guard client.auth.currentSession != nil else { return }
 
         LifecycleEventLog.shared.loadIfNeeded()
         guard LifecycleEventLog.shared.historyIsLoaded else { return }
 
         do {
+            let session = try await client.auth.session
+            guard !session.isExpired else { return }
+            let userId = session.user.id
+            guard LocalUserData.belongs(to: userId.uuidString) else { return }
             let remoteRows: [LifecycleEventRecord] = try await client
                 .from("lifecycle_events")
                 .select()
@@ -107,6 +111,7 @@ final class LifecycleSync {
 
             if result.merged != LifecycleEventLog.shared.events {
                 LifecycleEventLog.shared.restore(result.merged)
+                WidgetDataStore.shared.publish(subscriptions: SubscriptionStore.shared.subscriptions)
             }
             if !result.toUpload.isEmpty {
                 let records = result.toUpload.map { LifecycleEventRecord(from: $0, userId: userId) }
@@ -124,9 +129,12 @@ final class LifecycleSync {
     func upload(_ event: LifecycleEvent) async {
         guard SubscriptionStore.cloudSyncEnabled, !AuthManager.shared.isGuest else { return }
         let client = SupabaseManager.shared.client
-        guard let userId = client.auth.currentSession?.user.id,
-              LocalUserData.belongs(to: userId.uuidString) else { return }
+        guard client.auth.currentSession != nil else { return }
         do {
+            let session = try await client.auth.session
+            guard !session.isExpired else { return }
+            let userId = session.user.id
+            guard LocalUserData.belongs(to: userId.uuidString) else { return }
             let record = LifecycleEventRecord(from: event, userId: userId)
             _ = try await client
                 .from("lifecycle_events")

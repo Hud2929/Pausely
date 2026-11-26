@@ -15,6 +15,7 @@ enum AppConfig {
     
     
     // MARK: - Social & Web
+    static let websiteURL = "https://pausely.pro"
     static let supportURL = "https://pausely.pro/support.html"
     static let privacyPolicyURL = "https://pausely.pro/privacy.html"
     static let termsOfServiceURL = "https://pausely.pro/terms.html"

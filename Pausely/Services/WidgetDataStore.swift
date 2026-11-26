@@ -22,7 +22,8 @@ final class WidgetDataStore {
     }
 
     func publish(subscriptions: [Subscription], now: Date = Date()) {
-        Self.feed(for: subscriptions, now: now).write(to: defaults)
+        let includePrivate = !SubscriptionStore.shared.isHidden
+        Self.feed(for: subscriptions, now: now, includeAccountDetails: includePrivate).write(to: defaults)
         reloadWidgets()
     }
 
@@ -30,10 +31,13 @@ final class WidgetDataStore {
 
     /// The feed for a list: every charging subscription that has a date, with the days it charges on
     /// for about a year ahead, and the totals as text in the display currency.
+    /// When `includeAccountDetails` is false (signed out / hidden list), zero personal savings or
+    /// Pause Plan state is ever written to the shared widget container.
     static func feed(for subscriptions: [Subscription], now: Date, calendar: Calendar = .billing,
                      currency: String = CurrencyManager.shared.selectedCurrency,
                      rates: CurrencyRates = CurrencyManager.shared.rates,
-                     language: String? = L10n.chosenLanguage) -> WidgetFeed {
+                     language: String? = L10n.chosenLanguage,
+                     includeAccountDetails: Bool = true) -> WidgetFeed {
         let charging = subscriptions.charging
         let today = calendar.startOfDay(for: now)
 
@@ -64,6 +68,24 @@ final class WidgetDataStore {
             let converted = charging.isConverted(to: currency)
             feed.monthlyText = MoneyFormat.total(monthly, currency, converted: converted)
             feed.yearlyText = MoneyFormat.total(monthly * 12, currency, converted: converted, wholeUnits: true)
+        }
+        guard includeAccountDetails else { return feed }
+        let summary = SavingsSummary.current(now: now)
+        if !summary.isEmpty {
+            feed.savedSoFarText = summary.total(summary.savedSoFar)
+            feed.savedSoFarIsZero = summary.savedSoFar <= 0
+            feed.onTrackText = summary.total(summary.onTrack)
+            feed.cancelledCount = summary.lines.count
+        }
+        if PaymentManager.shared.isUnlocked(.pausePlan),
+           let plan = PausePlanStore.shared.activePlan {
+            let byId = Dictionary(subscriptions.map { ($0.id, $0) }, uniquingKeysWith: { a, _ in a })
+            if let current = PausePlanSchedule.currentTurn(plan, subscriptions: byId, now: now),
+               let sub = byId[current.subscriptionId] {
+                feed.pauseTurnName = sub.name
+                feed.pauseTurnEndText = DayText.date(current.end, locale: L10n.locale)
+                feed.pauseTurnEndStamp = calendar.dayStamp(current.end)
+            }
         }
         return feed
     }

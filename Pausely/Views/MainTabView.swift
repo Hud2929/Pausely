@@ -9,9 +9,13 @@ struct MainTabView: View {
         LaunchFlag.value(of: "--demo-tab").flatMap(Int.init) ?? 0
     }
     @State private var deepLinkedSubscription: Subscription?
+    @State private var showingFirstRunPaywall = false
+    @AppStorage("hasSeenFirstRunPaywall") private var hasSeenFirstRunPaywall = false
+    @AppStorage("pendingFirstRunPlan") private var pendingFirstRunPlan = false
     @ObservedObject private var authManager = AuthManager.shared
     @ObservedObject private var subscriptionStore = SubscriptionStore.shared
     @ObservedObject private var verdictCenter = VerdictCenter.shared
+    @ObservedObject private var paymentManager = PaymentManager.shared
 
     var body: some View {
         // The system tab bar: it translates, scales with text size, and is Liquid Glass on iOS 26.
@@ -79,14 +83,41 @@ struct MainTabView: View {
             await LifecycleSync.shared.sync()
             await PausePlanSync.shared.sync()
             // The slip made before the account existed joins the list once it has loaded.
+            let hadPendingTally = PendingTally.load() != nil
             await TallyImporter.importPending(into: subscriptionStore)
+            // If Pro was started during RevealStep while the store was hidden, add Pausely's own
+            // trial line now so its Day-5 reminder is scheduled immediately on Home.
+            await PaymentManager.shared.autoAddPauselyProIfNeeded()
+            // Present the quick 3-question curation + personalized Day 1–7 trial plan once right after
+            // onboarding finishes (including users who tapped "None of these", never during UI tests/screenshots).
+            let shouldPresentPlan = hadPendingTally || pendingFirstRunPlan
+            if shouldPresentPlan {
+                pendingFirstRunPlan = false
+            }
+            if shouldPresentPlan, !hasSeenFirstRunPaywall, !paymentManager.isPremium,
+               !LaunchFlag.uiTesting.isSet, !LaunchFlag.demoMode.isSet, !LaunchFlag.screenshots.isSet {
+                await StoreKitManager.shared.loadProducts()
+                try? await Task.sleep(for: .milliseconds(350))
+                if !Task.isCancelled, !paymentManager.isPremium {
+                    hasSeenFirstRunPaywall = true
+                    showingFirstRunPaywall = true
+                }
+            }
         }
         // A reminder tap (or "Review") opens the keep-or-cancel decision for that subscription.
-        .sheet(item: $verdictCenter.presented) { request in
+        .sheet(item: $verdictCenter.presented, onDismiss: {
+            ReviewPromptManager.shared.askAfterDecisionMade()
+        }) { request in
             RenewalVerdictView(subscriptionId: request.subscriptionId)
         }
         .sheet(isPresented: $verdictCenter.showingPausePlan) {
             PausePlanView()
+        }
+        .sheet(isPresented: $verdictCenter.showingSavingsReceipt) {
+            SavingsReceiptView()
+        }
+        .sheet(isPresented: $showingFirstRunPaywall) {
+            FirstRunPlanFlow()
         }
         .whatsNewSheet()
     }

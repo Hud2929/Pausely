@@ -7,9 +7,21 @@ struct SavingsReceiptView: View {
     @ObservedObject private var store = SubscriptionStore.shared
     @ObservedObject private var eventLog = LifecycleEventLog.shared
     @ObservedObject private var currencyManager = CurrencyManager.shared
-    /// The two pictures for sharing, drawn when the receipt opens and again when it changes. They
-    /// were drawn inside the screen's body: two full-size renders on every pass.
-    @State private var pictures: (whole: Image?, withoutAmounts: Image?) = (nil, nil)
+    @ObservedObject private var paymentManager = PaymentManager.shared
+    @ObservedObject private var storeManager = StoreKitManager.shared
+    /// The three pictures for sharing, drawn when the receipt opens and again when it changes. They
+    /// were drawn inside the screen's body: full-size renders on every pass.
+    @State private var pictures: (withoutNames: Image?, whole: Image?, withoutAmounts: Image?) = (nil, nil, nil)
+    @State private var showingPaywall = false
+
+    private func proProof(for summary: SavingsSummary) -> PaywallCase.SavingsProof? {
+        guard !paymentManager.isPremium, !summary.isEmpty,
+              let annual = storeManager.product(for: .proAnnual) else { return nil }
+        return PaywallCase.savingsProof(onTrack: summary.onTrack, summaryCurrency: summary.currency,
+                                        isConverted: summary.totalsAreConverted, proYearly: annual.price,
+                                        proCurrency: annual.priceFormatStyle.currencyCode,
+                                        rates: currencyManager.rates)
+    }
 
     var body: some View {
         let summary = SavingsSummary.current()
@@ -30,7 +42,30 @@ struct SavingsReceiptView: View {
                 if summary.isEmpty {
                     emptyState.padding(.top, 20)
                 } else {
-                    ReceiptRoll(summary: summary, hideAmounts: false).padding(.top, 20)
+                    ReceiptRoll(summary: summary, privacy: .full).padding(.top, 20)
+                    if let image = pictures.withoutNames {
+                        ShareLink(item: image,
+                                  message: Text(verbatim: ShareSlipFooter.shareMessage),
+                                  preview: SharePreview(L10n.string("Savings Receipt"), image: image)) {
+                            Label(L10n.string("Share receipt"), systemImage: "square.and.arrow.up")
+                        }
+                        .buttonStyle(.ink(.quiet))
+                        .padding(.top, 14)
+                        .accessibilityIdentifier("receiptShareBottomButton")
+                    }
+                    if let proof = proProof(for: summary) {
+                        let multiple = proof.multiple.formatted(.number.precision(.fractionLength(1)).locale(L10n.locale))
+                        VStack(alignment: .leading, spacing: 10) {
+                            Text("Your cancellations already cover Pausely Pro \(multiple)× over.")
+                                .font(.subheadline)
+                                .foregroundStyle(Color.inkTextMuted)
+                                .fixedSize(horizontal: false, vertical: true)
+                            Button { showingPaywall = true } label: { Text("See Pausely Pro") }
+                                .buttonStyle(.ink(.quiet))
+                                .accessibilityIdentifier("receiptSeeProButton")
+                        }
+                        .padding(.top, 20)
+                    }
                 }
 
                 howWeCount.padding(.top, 20)
@@ -42,10 +77,13 @@ struct SavingsReceiptView: View {
         .readableScroll()
         .inkScreen()
         .preferredColorScheme(.dark)
+        .sheet(isPresented: $showingPaywall) { StoreKitUpgradeView(context: PaywallContext(fromSavingsReceipt: true)) }
         .task(id: "\(eventLog.events.count)|\(currencyManager.selectedCurrency)") {
             let summary = SavingsSummary.current()
-            pictures = summary.isEmpty ? (nil, nil)
-                : (ReceiptRoll.image(summary: summary, hideAmounts: false), ReceiptRoll.image(summary: summary, hideAmounts: true))
+            pictures = summary.isEmpty ? (nil, nil, nil)
+                : (ReceiptRoll.image(summary: summary, privacy: .hideNames),
+                   ReceiptRoll.image(summary: summary, privacy: .full),
+                   ReceiptRoll.image(summary: summary, privacy: .hideAmounts))
         }
     }
 
@@ -53,13 +91,24 @@ struct SavingsReceiptView: View {
 
     private var shareMenu: some View {
         Menu {
+            if let image = pictures.withoutNames {
+                ShareLink(item: image,
+                          message: Text(verbatim: ShareSlipFooter.shareMessage),
+                          preview: SharePreview(L10n.string("Savings Receipt"), image: image)) {
+                    Label(L10n.string("Share without service names"), systemImage: "person.fill.questionmark")
+                }
+            }
             if let image = pictures.whole {
-                ShareLink(item: image, preview: SharePreview(L10n.string("Savings Receipt"), image: image)) {
+                ShareLink(item: image,
+                          message: Text(verbatim: ShareSlipFooter.shareMessage),
+                          preview: SharePreview(L10n.string("Savings Receipt"), image: image)) {
                     Label(L10n.string("Share"), systemImage: "square.and.arrow.up")
                 }
             }
             if let image = pictures.withoutAmounts {
-                ShareLink(item: image, preview: SharePreview(L10n.string("Savings Receipt"), image: image)) {
+                ShareLink(item: image,
+                          message: Text(verbatim: ShareSlipFooter.shareMessage),
+                          preview: SharePreview(L10n.string("Savings Receipt"), image: image)) {
                     Label(L10n.string("Share without amounts"), systemImage: "eye.slash")
                 }
             }
@@ -114,18 +163,30 @@ struct SavingsReceiptView: View {
 
 /// The printed roll. Also what is shared, so it draws nothing that needs the screen around it.
 struct ReceiptRoll: View {
+    enum PrivacyMode: Equatable {
+        case full
+        /// Keeps the real dollar savings and Pausely Promise, redacting merchant names for privacy-safe sharing.
+        case hideNames
+        /// Keeps names and dates, hiding every amount.
+        case hideAmounts
+    }
+
     let summary: SavingsSummary
-    /// For sharing: the names and dates stay, every amount becomes dots.
-    let hideAmounts: Bool
+    let privacy: PrivacyMode
+    var forSharing: Bool = false
+
+    private var hideAmounts: Bool { privacy == .hideAmounts }
+    private var hideNames: Bool { privacy == .hideNames }
 
     var body: some View {
+        let reversed = Array(summary.lines.reversed().enumerated())
         PaperSlip(tornTop: true, tornBottom: true) {
             VStack(alignment: .leading, spacing: 14) {
                 Wordmark()
 
-                ForEach(summary.lines.reversed()) { line in
+                ForEach(reversed, id: \.element.id) { index, line in
                     Perforation()
-                    lineRow(line)
+                    lineRow(line, index: index + 1)
                 }
 
                 Perforation()
@@ -138,15 +199,19 @@ struct ReceiptRoll: View {
                     Perforation()
                     PauselyPromiseCard()
                 }
+                if forSharing {
+                    ShareSlipFooter()
+                }
             }
         }
     }
 
     private func amount(_ text: String) -> String { hideAmounts ? "•••" : text }
 
-    private func lineRow(_ line: SavingsLedger.Line) -> some View {
+    private func lineRow(_ line: SavingsLedger.Line, index: Int) -> some View {
         VStack(alignment: .leading, spacing: 4) {
-            ProofLine(label: line.name, value: amount(summary.formatted(line.savedSoFar, from: line.currency)),
+            let label = hideNames ? L10n.string("Subscription \(L10n.number(index))") : line.name
+            ProofLine(label: label, value: amount(summary.formatted(line.savedSoFar, from: line.currency)),
                       emphasised: true)
             // Two lines of the roll, not one sentence: joined, the pair was too long for the roll
             // in every language and broke wherever the line ran out.
@@ -178,8 +243,8 @@ struct ReceiptRoll: View {
 
     /// The roll as a picture on ink, for sharing.
     @MainActor
-    static func image(summary: SavingsSummary, hideAmounts: Bool) -> Image? {
-        let card = ReceiptRoll(summary: summary, hideAmounts: hideAmounts)
+    static func image(summary: SavingsSummary, privacy: PrivacyMode) -> Image? {
+        let card = ReceiptRoll(summary: summary, privacy: privacy, forSharing: true)
             .frame(width: 360)
             .padding(24)
             .background(Color.ink)

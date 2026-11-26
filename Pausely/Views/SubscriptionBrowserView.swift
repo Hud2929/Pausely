@@ -20,6 +20,7 @@ struct SubscriptionBrowserView: View {
     @Environment(\.dynamicTypeSize) private var typeSize
     @State private var showingCustomAdd = false
     @State private var showingPaywall = false
+    @State private var pendingTierAfterUnlock = false
     @State private var showingInbox = false
     @State private var showingScreenshotImport = false
 
@@ -227,8 +228,18 @@ struct SubscriptionBrowserView: View {
         // landed on the catalog (the rating of 2026-11-23).
         .sheet(isPresented: $showingInbox) { InboxImportView(onFinished: { dismiss() }) }
         .sheet(isPresented: $showingScreenshotImport) { ScreenshotImportView(onFinished: { dismiss() }) }
-        .sheet(isPresented: $showingPaywall) {
-            StoreKitUpgradeView()
+        .sheet(isPresented: $showingPaywall, onDismiss: {
+            if pendingTierAfterUnlock {
+                pendingTierAfterUnlock = false
+                if selectedEntry != nil { showingTierSheet = true }
+            }
+        }) {
+            StoreKitUpgradeView(context: PaywallContext(
+                trigger: .unlimitedSubscriptions,
+                serviceName: selectedEntry?.name
+            )) {
+                pendingTierAfterUnlock = true
+            }
         }
     }
 
@@ -355,12 +366,12 @@ struct SubscriptionBrowserView: View {
         store.subscriptions.contains { $0.name.caseInsensitiveCompare(entry.name) == .orderedSame }
     }
 
-    /// On the free plan's limit, the upgrade screen says so before any plan is picked.
+    /// On the free plan's limit, remember the service tapped and open Pro; on unlock, open its plan sheet directly.
     private func open(_ entry: CatalogEntry) {
+        selectedEntry = entry
         if !PaymentManager.shared.hasRoom(in: store.subscriptions) {
             showingPaywall = true
         } else {
-            selectedEntry = entry
             showingTierSheet = true
         }
     }

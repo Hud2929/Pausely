@@ -41,6 +41,49 @@ struct WidgetFeed: Codable, Equatable {
     var language: String?
     /// False when the list is empty: the widget then says where to add something.
     var hasSubscriptions = false
+    /// Formatted Savings Receipt totals for the Savings Receipt widget (empty until first cancellation).
+    var savedSoFarText = ""
+    var savedSoFarIsZero = true
+    var onTrackText = ""
+    var cancelledCount = 0
+    /// Current active Pause Plan streaming turn, if a Pro plan is running, with its end day-stamp ("YYYY-MM-DD")
+    /// so widgets automatically stop showing an expired turn at midnight.
+    var pauseTurnName = ""
+    var pauseTurnEndText = ""
+    var pauseTurnEndStamp = ""
+
+    init() {}
+
+    enum CodingKeys: String, CodingKey {
+        case charges, monthlyText, yearlyText, language, hasSubscriptions
+        case savedSoFarText, savedSoFarIsZero, onTrackText, cancelledCount
+        case pauseTurnName, pauseTurnEndText, pauseTurnEndStamp
+    }
+
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        charges = try c.decodeIfPresent([Charge].self, forKey: .charges) ?? []
+        monthlyText = try c.decodeIfPresent(String.self, forKey: .monthlyText) ?? ""
+        yearlyText = try c.decodeIfPresent(String.self, forKey: .yearlyText) ?? ""
+        language = try c.decodeIfPresent(String.self, forKey: .language)
+        hasSubscriptions = try c.decodeIfPresent(Bool.self, forKey: .hasSubscriptions) ?? false
+        savedSoFarText = try c.decodeIfPresent(String.self, forKey: .savedSoFarText) ?? ""
+        savedSoFarIsZero = try c.decodeIfPresent(Bool.self, forKey: .savedSoFarIsZero) ?? true
+        onTrackText = try c.decodeIfPresent(String.self, forKey: .onTrackText) ?? ""
+        cancelledCount = try c.decodeIfPresent(Int.self, forKey: .cancelledCount) ?? 0
+        pauseTurnName = try c.decodeIfPresent(String.self, forKey: .pauseTurnName) ?? ""
+        pauseTurnEndText = try c.decodeIfPresent(String.self, forKey: .pauseTurnEndText) ?? ""
+        pauseTurnEndStamp = try c.decodeIfPresent(String.self, forKey: .pauseTurnEndStamp) ?? ""
+    }
+
+    /// Returns the active Pause Plan turn on `today`, or nil once its end day has passed at midnight.
+    func activePauseTurn(on today: Date, calendar: Calendar = .billing) -> (name: String, endText: String)? {
+        guard !pauseTurnName.isEmpty else { return nil }
+        if !pauseTurnEndStamp.isEmpty, calendar.dayStamp(today) > pauseTurnEndStamp {
+            return nil
+        }
+        return (pauseTurnName, pauseTurnEndText)
+    }
 
     // MARK: - What charges next
 

@@ -55,7 +55,7 @@ final class SubscriptionExporter {
         var lines = [headings.map(csvCell).joined(separator: ",")]
         for sub in subscriptions {
             // The next renewal, not the day that was typed in, which may be months ago.
-            let next = sub.renewsAutomatically ? sub.nextRenewal(onOrAfter: now, calendar: calendar) : nil
+            let next = sub.renewsAutomatically ? RenewalDecisions.upcomingCharge(for: sub, now: now, calendar: calendar)?.date : nil
             let cells = [sub.name,
                          SubscriptionCategory.localizedLabel(for: sub.category),
                          MoneyFormat.plainNumber(sub.amount, sub.currency),

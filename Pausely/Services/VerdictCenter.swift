@@ -16,6 +16,8 @@ final class VerdictCenter: ObservableObject {
     @Published var presented: Request?
     /// Set by a Pause Plan reminder tap.
     @Published var showingPausePlan = false
+    /// Set by a Savings Receipt widget or avoided-charge milestone tap.
+    @Published var showingSavingsReceipt = false
     /// The subscription the main screen should open: a tap on a widget, a Spotlight result, a link,
     /// or a reminder with nothing to decide. Held here until the main screen exists to show it, so a
     /// tap that starts the app is not lost.
@@ -32,6 +34,11 @@ final class VerdictCenter: ObservableObject {
         showingPausePlan = true
     }
 
+    func openSavingsReceipt() {
+        guard isSignedIn() else { return }
+        showingSavingsReceipt = true
+    }
+
     func open(subscriptionId: UUID) {
         guard isSignedIn() else { return }
         presented = Request(subscriptionId: subscriptionId)
@@ -41,6 +48,7 @@ final class VerdictCenter: ObservableObject {
     func forget() {
         presented = nil
         showingPausePlan = false
+        showingSavingsReceipt = false
         subscriptionToShow = nil
     }
 
@@ -59,6 +67,7 @@ final class VerdictCenter: ObservableObject {
     func keep(subscriptionId: UUID, renewalDay: String? = nil, now: Date = Date()) async {
         guard recordKeep(subscriptionId: subscriptionId, renewalDay: renewalDay, pressedAt: now) else { return }
         await ReminderScheduler.shared.reschedule(SubscriptionStore.shared.subscriptions, now: now)
+        ReviewPromptManager.shared.askAfterDecisionMade()
     }
 
     /// "Keep it" pressed before the phone's first unlock, when nothing could be read (`LockedKeeps`).

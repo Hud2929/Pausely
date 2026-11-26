@@ -25,7 +25,7 @@ struct WhatsNewSheet: View {
                     Hairline()
                     item("Try without an account", "Start locally on your device and sign in later if you want backup across devices.")
                     Hairline()
-                    item("Shared plans, billing notes, and overlaps", "Split shared subscriptions, note which card or store bills them, and spot overlapping services in Insights.")
+                    item("Billing notes, payment methods, and overlaps", "Note which card or store bills each subscription, keep reminders for yourself, and spot overlapping services in Insights.")
                     Hairline()
                     item("Cancel and refund email drafts", "Preview and send ready-to-go cancellation or refund emails, plus Savings Receipt and Pause Plan sync.")
                 }

@@ -100,12 +100,20 @@ class SubscriptionStore: ObservableObject {
         CurrencyManager.shared.$selectedCurrency
             .dropFirst()
             .receive(on: DispatchQueue.main)
-            .sink { [weak self] code in self?.calculateTotals(in: code) }
+            .sink { [weak self] code in
+                guard let self else { return }
+                self.calculateTotals(in: code)
+                if !self.isHidden { WidgetDataStore.shared.publish(subscriptions: self.subscriptions) }
+            }
             .store(in: &currencyCancellables)
         CurrencyManager.shared.$exchangeRates
             .dropFirst()
             .receive(on: DispatchQueue.main)
-            .sink { [weak self] _ in self?.calculateTotals() }
+            .sink { [weak self] _ in
+                guard let self else { return }
+                self.calculateTotals()
+                if !self.isHidden { WidgetDataStore.shared.publish(subscriptions: self.subscriptions) }
+            }
             .store(in: &currencyCancellables)
         NotificationCenter.default.publisher(for: .NSSystemTimeZoneDidChange)
             .receive(on: DispatchQueue.main)
@@ -178,7 +186,11 @@ class SubscriptionStore: ObservableObject {
         }
 
         do {
-            guard let session = client.auth.currentSession else { throw SyncFailure.signedOut }
+            // Require a valid, refreshed session so an expired token throws instead of querying PostgREST
+            // as `anon` (which returns `[]` under RLS and would wipe local subscriptions).
+            guard client.auth.currentSession != nil else { throw SyncFailure.signedOut }
+            let session = try await client.auth.session
+            guard !session.isExpired else { throw SyncFailure.signedOut }
             let userId = session.user.id
             // A list left here by a different account is removed by `LocalUserData.claim` before
             // anything is fetched into it or sent from it.
@@ -230,8 +242,11 @@ class SubscriptionStore: ObservableObject {
 
         let remote = try await fetchRemote()
 
-        let waiting = sync.changes(since: mark)
-            .merging(sync.pendingKinds) { _, queued in queued }
+        let waiting = sync.changes(since: mark).merging(sync.pendingKinds) { sinceMark, queued in
+            if sinceMark == .delete || queued == .delete { return .delete }
+            if sinceMark == .create || queued == .create { return .create }
+            return .update
+        }
         let merge = SubscriptionSyncMerge.merge(server: remote.subscriptions,
                                                 local: subscriptions,
                                                 pending: waiting,
@@ -382,18 +397,36 @@ class SubscriptionStore: ObservableObject {
         // The charge this cancellation avoids, worked out while it still renews.
         let avoided = RenewalDecisions.upcomingCharge(for: before, now: Date())?.date
         subscriptions[index].status = status
-        listChanged()
-        sync.noteChanged(id)
         if status == .cancelled, before.status != .cancelled {
             LifecycleEventLog.shared.record(.cancelled, for: before, renewalDate: avoided)
         } else if before.status == .cancelled, status == .active || status == .trial {
             LifecycleEventLog.shared.record(.reactivated, for: subscriptions[index])
         }
+        // Record the lifecycle event BEFORE `listChanged()` so widgets publish the fresh Savings Receipt.
+        listChanged()
+        sync.noteChanged(id)
         await ReminderScheduler.shared.reschedule(subscriptions)
         if status == .cancelled {
             ReviewPromptManager.shared.askAfterMoneyKept()
         }
         await send(id)
+    }
+
+    /// Batch-applies the user's chosen default reminder lead time to non-Pausely subscriptions that
+    /// still carry the previous default window, publishing widgets and rescheduling reminders once.
+    func applyDefaultReminderDays(_ days: Int, from previousDefault: Int = 3) async {
+        guard [1, 3, 7].contains(days), days != previousDefault else { return }
+        var updatedIDs: [UUID] = []
+        for idx in subscriptions.indices
+            where subscriptions[idx].notifyBeforeDays == previousDefault && !subscriptions[idx].isPausely {
+            subscriptions[idx].notifyBeforeDays = days
+            updatedIDs.append(subscriptions[idx].id)
+        }
+        guard !updatedIDs.isEmpty else { return }
+        listChanged()
+        for id in updatedIDs { sync.noteChanged(id) }
+        await ReminderScheduler.shared.reschedule(subscriptions)
+        for id in updatedIDs { await send(id) }
     }
 
     /// Removes every subscription from this device (account deletion, or a different person signing in).
@@ -423,9 +456,10 @@ class SubscriptionStore: ObservableObject {
         // (or none), instead of restarting today with a day it never had (the rating of 2026-11-23).
         if let cancel = LifecycleEventLog.shared.events.last(where: { $0.subscriptionId == id && $0.kind == .cancelled }),
            Self.isUndo(of: cancel, on: date, calendar: calendar) {
-            updated.nextBillingDate = cancel.anchorDate
+            let stillInTrial = updated.trialEndsAt.map { calendar.startOfDay(for: $0) >= calendar.startOfDay(for: date) } ?? false
+            updated.nextBillingDate = stillInTrial ? cancel.anchorDate : (cancel.anchorDate ?? cancel.renewalDate)
             await updateSubscription(updated)
-            await updateSubscriptionStatus(id: id, status: .active)
+            await updateSubscriptionStatus(id: id, status: stillInTrial ? .trial : .active)
             return true
         }
         let restart = PausePlanSchedule.restartAnchor(startedOn: date, frequency: updated.billingFrequency, calendar: calendar)

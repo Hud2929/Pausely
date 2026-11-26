@@ -119,11 +119,11 @@ final class StoreListingTests: XCTestCase {
 
     /// Pro is exactly what `ProFeature` unlocks, and the listing names nothing else as paid.
     func testProIsWhatTheAppUnlocks() throws {
-        XCTAssertEqual(ProFeature.allCases, [.unlimitedSubscriptions, .pausePlan, .batchScreenshotImport, .cancelConcierge])
-        XCTAssertTrue(try english().description.contains("Pausely Pro tracks all of them and adds Pause Plan, batch screenshot import (up to 10 at once), and cancellation and refund email drafts."))
+        XCTAssertEqual(ProFeature.allCases, [.unlimitedSubscriptions, .pausePlan, .spendForecast, .batchScreenshotImport, .cancelConcierge])
+        XCTAssertTrue(try english().description.contains("Pausely Pro tracks all of them and adds Pause Plan, 12-month forecast and cut simulator, batch screenshot import (up to 10 at once), and cancellation and refund email drafts."))
         // The repository's front page says the same. It used to add "the full savings analysis".
         let readme = try String(contentsOf: root.appendingPathComponent("README.md"), encoding: .utf8)
-        XCTAssertTrue(readme.contains("Pausely Pro: unlimited subscriptions, Pause Plan, batch screenshot import, and cancellation & refund\nemail drafts."))
+        XCTAssertTrue(readme.contains("Pausely Pro: unlimited subscriptions, Pause Plan, 12-month forecast & cut simulator, batch screenshot\nimport, and cancellation & refund email drafts."))
     }
 
     func testNothingTheAppCannotKeepIsOffered() throws {

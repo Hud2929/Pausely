@@ -121,7 +121,7 @@ struct TallyLine: Codable, Equatable, Identifiable {
     init(name: String, category: String, amount: Decimal, currency: String, isConfirmed: Bool = false,
          frequency: BillingFrequency? = nil, anchor: Date? = nil, trialEndsAt: Date? = nil,
          paymentMethod: String? = nil, existingId: UUID? = nil, notes: String? = nil,
-         notifyBeforeDays: Int = 3) {
+         notifyBeforeDays: Int = OnboardingProfile.load().validReminderDays) {
         self.name = name
         self.category = category
         self.amount = amount
@@ -158,8 +158,8 @@ struct TallyLine: Codable, Equatable, Identifiable {
     }
 
     /// The subscription this line becomes.
-    func subscription(now: Date = Date()) -> Subscription {
-        let inTrial = trialEndsAt.map { $0 > now } ?? false
+    func subscription(now: Date = Date(), calendar: Calendar = .billing) -> Subscription {
+        let inTrial = trialEndsAt.map { calendar.startOfDay(for: $0) >= calendar.startOfDay(for: now) } ?? false
         return Subscription(id: existingId ?? UUID(),
                             name: name, category: category, amount: amount, currency: currency,
                             billingFrequency: frequency ?? .monthly, nextBillingDate: anchor ?? (inTrial ? trialEndsAt : nil),
@@ -337,6 +337,8 @@ enum TallyImporter {
         var alreadyListed: [String] = []
         /// Already on the list without a renewal date, which the receipts supplied.
         var datesFilled: [String] = []
+        /// Already on the list with a new price confirmed during screenshot re-scan.
+        var pricesUpdated: [String] = []
     }
 
     /// Lines that didn't fit under the free limit. Stored under iOS hardware data protection on device
@@ -359,6 +361,22 @@ enum TallyImporter {
             defaults.removeObject(forKey: waitingKey)
         }
         bumpWaitingVersion(defaults: defaults)
+    }
+
+    /// Updates waiting lines that still carry the previous default reminder window so importing them
+    /// later preserves the user's chosen reminder lead time.
+    static func applyReminderDaysToWaiting(_ days: Int, from previousDefault: Int = 3,
+                                           defaults: UserDefaults = .standard) {
+        guard [1, 3, 7].contains(days), days != previousDefault else { return }
+        var lines = waitingLines(defaults: defaults)
+        var changed = false
+        for idx in lines.indices where lines[idx].notifyBeforeDays == previousDefault {
+            lines[idx].notifyBeforeDays = days
+            changed = true
+        }
+        if changed {
+            saveWaiting(lines, defaults: defaults)
+        }
     }
 
     #if DEBUG
@@ -398,32 +416,48 @@ enum TallyImporter {
         await add(tally.lines, into: store, payments: payments, preferredNames: tally.preferredNames, defaults: defaults)
     }
 
-    /// Adds what fits, keeps the rest waiting, and fills in a missing renewal date on a subscription that
-    /// is already listed when the line has one from a receipt. Nothing is dropped without being reported.
+    /// Adds what fits, keeps the rest waiting, fills in missing renewal dates from receipts, and
+    /// optionally applies confirmed price changes (e.g. from a screenshot re-scan).
     @discardableResult
     static func add(_ lines: [TallyLine], into store: SubscriptionStore, payments: PaymentManager = .shared,
                     rates: CurrencyRates = CurrencyManager.shared.rates,
                     preferredNames: Set<String> = [],
+                    updatePriceChanges: Bool = false,
                     defaults: UserDefaults = .standard) async -> Outcome {
         var outcome = Outcome()
 
-        // Already listed: never added twice. A date read from receipts fills an empty one, when the
-        // billing period agrees; an amount or a date the person entered is never changed.
+        // Already listed (charging): never added twice. Cancelled entries do not block re-subscribing.
+        // A date read from receipts fills an empty one, when the billing period agrees; an amount is
+        // updated only when explicitly confirmed via `updatePriceChanges` (which logs `.priceChanged`).
+        let charging = store.subscriptions.charging
         for line in lines {
-            guard let existing = store.subscriptions.first(where: { ServiceName.same($0.name, line.name) }) else { continue }
+            guard let existing = charging.first(where: { ServiceName.same($0.name, line.name) }) else { continue }
             outcome.alreadyListed.append(existing.name)
-            if existing.nextBillingDate == nil, let anchor = line.anchor, existing.billingFrequency == (line.frequency ?? .monthly) {
-                var updated = existing
+            var updated = existing
+            var filledDate = false
+            var changedPrice = false
+            let samePeriod = existing.billingFrequency == (line.frequency ?? .monthly)
+            if existing.nextBillingDate == nil, let anchor = line.anchor, samePeriod {
                 updated.nextBillingDate = anchor
+                filledDate = true
+            }
+            if updatePriceChanges, samePeriod,
+               MoneyFormat.normalizedCode(existing.currency) == MoneyFormat.normalizedCode(line.currency),
+               line.amount > 0, abs(existing.amount - line.amount) >= Decimal(string: "0.01")! {
+                updated.amount = line.amount
+                changedPrice = true
+            }
+            if filledDate || changedPrice {
                 await store.updateSubscription(updated)
-                outcome.datesFilled.append(existing.name)
+                if filledDate { outcome.datesFilled.append(existing.name) }
+                if changedPrice { outcome.pricesUpdated.append(existing.name) }
             }
         }
 
         let unlimited = payments.isUnlocked(.unlimitedSubscriptions)
         let slots = unlimited ? nil : FreeTier.room(in: store.subscriptions)
         let display = CurrencyManager.shared.selectedCurrency
-        let plan = PendingTally.plan(lines: lines, existingNames: store.subscriptions.map(\.name),
+        let plan = PendingTally.plan(lines: lines, existingNames: store.subscriptions.charging.map(\.name),
                                      freeSlots: slots, preferredNames: preferredNames) { line in
             // Ranked in one currency; a currency with no rate ranks last instead of by its raw number.
             rates.convert(line.yearlyCost, from: line.currency, to: display) ?? 0
@@ -443,7 +477,7 @@ enum TallyImporter {
 
         // What was already waiting stays; a line found again replaces its older copy.
         let names = Set(waiting.map { $0.name.lowercased() })
-        let listed = Set(store.subscriptions.map { $0.name.lowercased() })
+        let listed = Set(store.subscriptions.charging.map { $0.name.lowercased() })
         let earlier = waitingLines(defaults: defaults).filter { !names.contains($0.name.lowercased()) && !listed.contains($0.name.lowercased()) }
         saveWaiting(earlier + waiting, defaults: defaults)
         return outcome

@@ -13,15 +13,18 @@ struct AddSubscriptionView: View {
     @State private var nextPayment: Date?
     @State private var hasFreeTrial = false
     @State private var trialEndsAt: Date?
-    @State private var reminderDays: Int = 3
+    @State private var reminderDays: Int = OnboardingProfile.load().validReminderDays
     @State private var paymentMethod = ""
     @State private var notes = ""
     @ObservedObject private var store = SubscriptionStore.shared
     @ObservedObject private var currencyManager = CurrencyManager.shared
+    @ObservedObject private var paymentManager = PaymentManager.shared
     @FocusState private var focusedField: Field?
     /// What is missing, said under the amount when "Add" is pressed without it.
     @State private var problem: String?
     @State private var showingPaywall = false
+    @State private var pendingSaveAfterUnlock = false
+    @State private var isSaving = false
 
     enum Field {
         case name, amount
@@ -46,6 +49,12 @@ struct AddSubscriptionView: View {
                 VStack(alignment: .leading, spacing: 12) {
                     LeaveButton("Cancel") { dismiss() }
                         .accessibilityIdentifier("cancelButton")
+                    if !paymentManager.hasRoom(in: store.subscriptions) {
+                        Text("All \(FreeTier.subscriptionLimit) free places are in use. Saving will offer Pausely Pro to track unlimited subscriptions.")
+                            .font(.footnote)
+                            .foregroundStyle(Color.inkTextMuted)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
                     TextField(text: $name, prompt: Hint.text(Self.nameHint(largeText: typeSize.isAccessibilitySize)), axis: .vertical) { EmptyView() }
                         .lineLimit(1...3)
                         .font(.question(.title))
@@ -188,26 +197,52 @@ struct AddSubscriptionView: View {
             .padding(.top, 8)
             .padding(.bottom, 24)
         } actions: {
-            Button(action: saveSubscription) { Text("Add subscription") }
-                .buttonStyle(.ink)
-                .disabled(name.isEmpty || amount.isEmpty || (hasFreeTrial && trialEndsAt == nil))
-                .accessibilityIdentifier("addSubscriptionButton")
-                .accessibilityHint(
-                    name.isEmpty || amount.isEmpty
-                        ? L10n.string("Enter a name and an amount.")
-                        : (hasFreeTrial && trialEndsAt == nil
-                            ? L10n.string("Add the day the trial ends, so Pausely can ask you before it charges.")
-                            : "")
-                )
-                .padding(.horizontal, Layout.margin)
-                .padding(.top, 12)
-                .padding(.bottom, 8)
+            VStack(spacing: 10) {
+                Button(action: saveSubscription) {
+                    Text(isSaving ? L10n.string("Adding…") : L10n.string("Add subscription"))
+                }
+                    .buttonStyle(.ink)
+                    .disabled(isSaving || name.isEmpty || amount.isEmpty || (hasFreeTrial && trialEndsAt == nil))
+                    .accessibilityIdentifier("addSubscriptionButton")
+                    .accessibilityHint(
+                        name.isEmpty || amount.isEmpty
+                            ? L10n.string("Enter a name and an amount.")
+                            : (hasFreeTrial && trialEndsAt == nil
+                                ? L10n.string("Add the day the trial ends, so Pausely can ask you before it charges.")
+                                : "")
+                    )
+                if !paymentManager.hasRoom(in: store.subscriptions) {
+                    Button(action: saveForLater) {
+                        Text("Save for later")
+                    }
+                    .buttonStyle(.ink(.quiet))
+                    .disabled(isSaving || name.isEmpty || amount.isEmpty || (hasFreeTrial && trialEndsAt == nil))
+                    .accessibilityIdentifier("saveForLaterButton")
+                }
+            }
+            .padding(.horizontal, Layout.margin)
+            .padding(.top, 12)
+            .padding(.bottom, 8)
         }
         .inkScreen()
         .preferredColorScheme(.dark)
         .onAppear { focusedField = name.isEmpty ? .name : .amount }
-        .sheet(isPresented: $showingPaywall) {
-            StoreKitUpgradeView()
+        .sheet(isPresented: $showingPaywall, onDismiss: {
+            if pendingSaveAfterUnlock {
+                pendingSaveAfterUnlock = false
+                saveSubscription()
+            }
+        }) {
+            let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
+            let parsed = AmountText.parse(amount, currency: currencyManager.selectedCurrency)
+            StoreKitUpgradeView(context: PaywallContext(
+                trigger: .unlimitedSubscriptions,
+                serviceName: trimmed.isEmpty ? nil : trimmed,
+                serviceChargeAmount: parsed,
+                serviceChargeCurrency: parsed == nil ? nil : currencyManager.selectedCurrency
+            )) {
+                pendingSaveAfterUnlock = true
+            }
         }
         .onChange(of: name) { _, _ in problem = nil }
         .onChange(of: amount) { _, _ in problem = nil }
@@ -244,6 +279,7 @@ struct AddSubscriptionView: View {
     }
 
     func saveSubscription() {
+        guard !isSaving else { return }
         let trimmedName = name.trimmingCharacters(in: .whitespacesAndNewlines)
         // "9,99" and "9.99" both work, and the amount stays an exact decimal.
         guard !trimmedName.isEmpty, let price = AmountText.parse(amount, currency: currencyManager.selectedCurrency) else {
@@ -266,7 +302,9 @@ struct AddSubscriptionView: View {
             notes: trimmedNotes.isEmpty ? nil : trimmedNotes,
             paymentMethod: trimmedPayment.isEmpty ? nil : trimmedPayment
         )
+        isSaving = true
         Task {
+            defer { isSaving = false }
             do {
                 _ = try await store.addSubscription(newSub)
                 Feel.landed()
@@ -277,6 +315,31 @@ struct AddSubscriptionView: View {
             } catch {
                 problem = error.localizedDescription
             }
+        }
+    }
+
+    private func saveForLater() {
+        guard !isSaving else { return }
+        let trimmedName = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmedName.isEmpty, let price = AmountText.parse(amount, currency: currencyManager.selectedCurrency) else {
+            problem = L10n.string("Enter a name and an amount.")
+            return
+        }
+        let trimmedPayment = paymentMethod.trimmingCharacters(in: .whitespacesAndNewlines)
+        let trimmedNotes = notes.trimmingCharacters(in: .whitespacesAndNewlines)
+        let line = TallyLine(name: trimmedName, category: category.rawValue, amount: price,
+                             currency: currencyManager.selectedCurrency, isConfirmed: true, frequency: frequency,
+                             anchor: hasFreeTrial ? nil : nextPayment,
+                             trialEndsAt: hasFreeTrial ? trialEndsAt : nil,
+                             paymentMethod: trimmedPayment.isEmpty ? nil : trimmedPayment,
+                             notes: trimmedNotes.isEmpty ? nil : trimmedNotes,
+                             notifyBeforeDays: reminderDays)
+        isSaving = true
+        Task {
+            defer { isSaving = false }
+            _ = await TallyImporter.add([line], into: store)
+            Feel.landed()
+            dismiss()
         }
     }
 }

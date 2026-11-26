@@ -58,7 +58,7 @@ struct ServiceLogoView: View {
         .overlay(shape.stroke(Color.line, lineWidth: 1))
         .accessibilityHidden(true)
         .task(id: domain) {
-            guard let domain else { image = nil; return }
+            guard let domain else { image = nil; onWhite = false; return }
             if let cached = LogoStore.shared.cachedImage(for: domain) {
                 onWhite = Self.isDarkGlyphOnClear(cached)
                 image = cached
@@ -218,7 +218,7 @@ final class LogoStore {
         defer { session.finishTasksAndInvalidate() }
 
         func icon(at url: URL) async -> UIImage? {
-            guard let (data, response) = try? await session.data(from: url),
+            guard let (data, response) = try? await session.safeData(for: URLRequest(url: url)),
                   let http = response as? HTTPURLResponse,
                   http.statusCode == 200,
                   let finalURL = http.url,

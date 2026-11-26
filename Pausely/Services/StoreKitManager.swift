@@ -128,9 +128,99 @@ final class StoreKitManager: ObservableObject {
         return products.first { $0.id == id.rawValue }
     }
 
+    /// An eligible Apple StoreKit 2 Win-Back free-trial offer for returning customers (requires zero
+    /// server signing on iOS 18+; populated automatically once configured in App Store Connect).
+    struct FreeExtensionOffer: Equatable {
+        let id: String
+        let days: Int
+        let offer: Product.SubscriptionOffer
+    }
+
+    /// Minimal status snapshot used by pure unit-tested Win-Back eligibility filtering.
+    struct StatusSnapshot: Equatable {
+        let state: Product.SubscriptionInfo.RenewalState
+        let transactionProductID: String?
+        let renewalProductID: String?
+        let eligibleOfferIDs: [String]
+    }
+
+    /// Pure eligibility filter: Win-Back offers apply ONLY when the subscription group has no active,
+    /// grace, or billing-retry status AND an `.expired` status matching `productID` lists the offer ID.
+    /// Prevents cross-product offer ID collisions across Monthly and Annual in the same group.
+    nonisolated static func eligibleWinBackIDs(forProductID productID: String,
+                                               statuses: [StatusSnapshot]) -> Set<String> {
+        let hasActiveStatus = statuses.contains {
+            $0.state == .subscribed || $0.state == .inGracePeriod || $0.state == .inBillingRetryPeriod
+        }
+        guard !hasActiveStatus else { return [] }
+
+        var eligibleIDs: Set<String> = []
+        for status in statuses where status.state == .expired {
+            let statusProductID = status.transactionProductID ?? status.renewalProductID
+            guard statusProductID == productID else { continue }
+            eligibleIDs.formUnion(status.eligibleOfferIDs)
+        }
+        return eligibleIDs
+    }
+
+    /// Returns the best eligible free Win-Back offer (e.g., 7 more days free) on `product`, ONLY when
+    /// Apple reports an expired subscription for THIS exact `product.id` and lists that offer ID in
+    /// `renewalInfo.eligibleWinBackOfferIDs`. Never returned for active subscribers or active trials.
+    func freeWinBackOffer(for product: Product) async -> FreeExtensionOffer? {
+        guard let subscription = product.subscription,
+              let statuses = try? await subscription.status else { return nil }
+
+        let snapshots: [StatusSnapshot] = statuses.map { status in
+            let txProductID: String? = {
+                if case .verified(let tx) = status.transaction { return tx.productID }
+                return nil
+            }()
+            let renewalProductID: String?
+            let eligibleOfferIDs: [String]
+            if case .verified(let renewal) = status.renewalInfo {
+                renewalProductID = renewal.currentProductID
+                eligibleOfferIDs = renewal.eligibleWinBackOfferIDs
+            } else {
+                renewalProductID = nil
+                eligibleOfferIDs = []
+            }
+            return StatusSnapshot(state: status.state,
+                                  transactionProductID: txProductID,
+                                  renewalProductID: renewalProductID,
+                                  eligibleOfferIDs: eligibleOfferIDs)
+        }
+
+        let eligibleIDs = Self.eligibleWinBackIDs(forProductID: product.id, statuses: snapshots)
+        guard !eligibleIDs.isEmpty else { return nil }
+
+        return subscription.winBackOffers
+            .filter { offer in
+                guard offer.paymentMode == .freeTrial, let id = offer.id else { return false }
+                return eligibleIDs.contains(id)
+            }
+            .compactMap { offer -> FreeExtensionOffer? in
+                guard let id = offer.id,
+                      let days = PaywallCase.trialDays(value: offer.period.value, unit: offer.period.unit) else {
+                    return nil
+                }
+                return FreeExtensionOffer(id: id, days: days, offer: offer)
+            }
+            .max { $0.days < $1.days }
+    }
+
+    /// Best eligible free Win-Back offer across Annual and Monthly products for a lapsed customer.
+    func bestEligibleWinBackOffer() async -> (product: Product, offer: FreeExtensionOffer)? {
+        for tier in [SubscriptionTier.proAnnual, .pro] {
+            if let product = product(for: tier), let offer = await freeWinBackOffer(for: product) {
+                return (product, offer)
+            }
+        }
+        return nil
+    }
+
     // MARK: - Buying and restoring
 
-    func purchase(_ product: Product) async -> PurchaseOutcome {
+    func purchase(_ product: Product, winBackOffer: Product.SubscriptionOffer? = nil) async -> PurchaseOutcome {
         isLoading = true
         defer { isLoading = false }
         do {
@@ -138,6 +228,9 @@ final class StoreKitManager: ObservableObject {
             if let uidString = AuthManager.shared.currentUser?.id,
                let accountToken = UUID(uuidString: uidString) {
                 options.insert(.appAccountToken(accountToken))
+            }
+            if let winBackOffer {
+                options.insert(.winBackOffer(winBackOffer))
             }
             switch try await product.purchase(options: options) {
             case .success(let verification):
@@ -185,12 +278,23 @@ final class StoreKitManager: ObservableObject {
     }
 
     /// Pausely's own subscription for this plan, or nil until both the App Store's price and a
-    /// verified purchase are known. Nothing here is ever estimated.
+    /// currently active, verified entitlement are known. Nothing here is ever estimated.
     func ownSubscription(for tier: SubscriptionTier) async -> OwnSubscription? {
-        guard let product = product(for: tier), let latest = await Transaction.latest(for: product.id),
-              case .verified(let transaction) = latest, transaction.revocationDate == nil else { return nil }
+        guard let product = product(for: tier) else { return nil }
+        var activeTransaction: StoreKit.Transaction?
+        for await result in StoreKit.Transaction.currentEntitlements {
+            if case .verified(let transaction) = result,
+               transaction.productID == product.id,
+               transaction.revocationDate == nil {
+                activeTransaction = transaction
+                break
+            }
+        }
+        guard let transaction = activeTransaction else { return nil }
+        let isFreeOffer = transaction.offer?.type == .introductory
+            || (transaction.offer?.type == .winBack && transaction.offer?.paymentMode == .freeTrial)
         var own = OwnSubscription(tier: tier, price: product.price, currency: product.priceFormatStyle.currencyCode,
-                                  renews: transaction.expirationDate, isTrial: transaction.offer?.type == .introductory)
+                                  renews: transaction.expirationDate, isTrial: isFreeOffer)
         own.transactionId = transaction.id
         // Whether it will renew, and whether Apple is having trouble charging for it.
         if let statuses = try? await product.subscription?.status {

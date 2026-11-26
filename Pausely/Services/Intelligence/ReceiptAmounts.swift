@@ -10,6 +10,7 @@ extension ReceiptTextAnalyzer {
     static let currencySymbols: [(token: String, code: String?)] = [
         ("CA$", "CAD"), ("C$", "CAD"), ("US$", "USD"), ("AU$", "AUD"), ("A$", "AUD"), ("NZ$", "NZD"), ("HK$", "HKD"),
         ("NT$", "TWD"), ("S$", "SGD"), ("R$", "BRL"), ("MX$", "MXN"),
+        ("Fr.", "CHF"), ("Rp", "IDR"), ("RM", "MYR"),
         ("£", "GBP"), ("€", "EUR"), ("¥", "JPY"), ("￥", "JPY"), ("₹", "INR"), ("₩", "KRW"), ("₪", "ILS"), ("₺", "TRY"),
         ("₽", "RUB"), ("₴", "UAH"), ("฿", "THB"), ("₱", "PHP"), ("₫", "VND"), ("₦", "NGN"), ("zł", "PLN"), ("Kč", "CZK"),
         ("円", "JPY"), ("원", "KRW"),
@@ -31,19 +32,27 @@ extension ReceiptTextAnalyzer {
     /// Currencies written with three decimals ("1.250 KWD").
     static let threeDecimalCurrencies: Set<String> = ["KWD", "BHD", "OMR"]
 
-    private static let numberPattern = "\\d{1,3}(?:[.,]\\d{3})+(?:[.,]\\d{1,3})?|\\d+(?:[.,]\\d{1,3})?"
+    private static let numberPattern = "\\d{1,3}(?:[.,\u{202F}]\\d{3})+(?:[.,]\\d{1,3})?|\\d+(?:[.,]\\d{1,3})?"
 
     private static let symbolAlternation: String = currencySymbols
-        .map { NSRegularExpression.escapedPattern(for: $0.token) }
+        .map { entry in
+            let escaped = NSRegularExpression.escapedPattern(for: entry.token)
+            let startsWithAsciiLetter = entry.token.first.map { $0.isASCII && $0.isLetter } ?? false
+            return startsWithAsciiLetter ? "\\b\(escaped)" : escaped
+        }
         .joined(separator: "|")
 
     /// "$15.49", "C$ 16.49", "USD 20", "SAR 29.99".
     private static let prefixRegex: NSRegularExpression? = try? NSRegularExpression(
-        pattern: "(\(symbolAlternation)|\\b(?:\(currencyCodes.joined(separator: "|")))\\b)\\s?(\(numberPattern))")
+        pattern: "(\(symbolAlternation)|\\b(?:\(currencyCodes.joined(separator: "|")))\\b)[ \u{00A0}\u{202F}]{0,2}(\(numberPattern))")
 
-    /// "10,99 €", "49.00 USD", "990円", "29.99 ر.س".
+    /// "10,99 €", "49.00 USD", "990円", "29.99 ر.س", "129 kr".
     private static let suffixRegex: NSRegularExpression? = try? NSRegularExpression(
-        pattern: "(\(numberPattern))\\s?(\(symbolAlternation)|(?:\(currencyCodes.joined(separator: "|")))\\b)")
+        pattern: "(\(numberPattern))[ \u{00A0}\u{202F}]{0,2}(\(symbolAlternation)|(?:\(currencyCodes.joined(separator: "|")))\\b|kr\\b)")
+
+    /// Trailing ISO code immediately after a bare symbol figure ("$15.49 CAD", "$19.99 USD").
+    private static let trailingDollarCodeRegex: NSRegularExpression? = try? NSRegularExpression(
+        pattern: "^[ \u{00A0}\u{202F}]{1,2}(USD|CAD|AUD|NZD|HKD|SGD|MXN|TWD|BRL|GBP|EUR|CHF)\\b")
 
     private static let positiveContext: [(String, Int)] = [
         ("amount charged", 4), ("amount paid", 4), ("amount due", 3), ("you paid", 4), ("you were charged", 4),
@@ -136,10 +145,23 @@ extension ReceiptTextAnalyzer {
         let full = NSRange(location: 0, length: ns.length)
         var found: [(money: Money, range: NSRange)] = []
         func add(_ amount: String, _ token: String, _ range: NSRange) {
-            let currency = currencyCode(forToken: token)
+            var currency = currencyCode(forToken: token)
+            var finalRange = range
+            // "$15.49 CAD" or "$19.99 USD": resolve the trailing code onto the bare "$" figure.
+            if currency == nil, token == "$" {
+                let end = range.location + range.length
+                let tailLen = min(6, ns.length - end)
+                if tailLen >= 4 {
+                    let tail = ns.substring(with: NSRange(location: end, length: tailLen))
+                    if let m = trailingDollarCodeRegex?.firstMatch(in: tail, range: NSRange(location: 0, length: (tail as NSString).length)) {
+                        currency = (tail as NSString).substring(with: m.range(at: 1))
+                        finalRange = NSRange(location: range.location, length: range.length + m.range.length)
+                    }
+                }
+            }
             // Zero figures are kept ("Tax $0.00"): they still separate one label from the next.
             guard let parsed = parseAmount(amount, currency: currency) else { return }
-            found.append((Money(amount: parsed.value, currency: currency), range))
+            found.append((Money(amount: parsed.value, currency: currency), finalRange))
         }
         prefixRegex?.enumerateMatches(in: text, range: full) { match, _, _ in
             guard let match else { return }

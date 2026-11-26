@@ -138,6 +138,10 @@ class AuthManager: ObservableObject {
             let is_pro: Bool?
         }
         do {
+            // Require a valid, refreshed session so an expired token never queries `profiles` as `anon`
+            // and revokes an admin-granted Pro entitlement.
+            let session = try await SupabaseManager.shared.client.auth.session
+            guard !session.isExpired else { return }
             let rows: [ProfileRow] = try await SupabaseManager.shared.client
                 .from("profiles")
                 .select("is_pro")
@@ -160,14 +164,31 @@ class AuthManager: ObservableObject {
     // MARK: - Session Verification
 
     /// Verifies the Supabase session asynchronously after a cached restore.
-    /// Signs out silently if the token has expired and cannot be refreshed.
+    /// Signs out if the refresh token is revoked/expired, while preserving cached offline access on network errors.
     private func verifySession() async {
-        if let session = client.auth.currentSession {
+        if let cached = client.auth.currentSession {
+            let activeSession: Session
+            do {
+                activeSession = try await client.auth.session
+            } catch {
+                if SyncQueue.isUnreachable(error) {
+                    activeSession = cached
+                } else {
+                    PauselyLogger.info("Stored session could not be refreshed — signing out", category: "auth")
+                    try? await client.auth.signOut(scope: .local)
+                    AccountMemory.forgetSession()
+                    currentUser = nil
+                    isAuthenticated = false
+                    state = .unauthenticated
+                    LocalUserData.hideWhileSignedOut()
+                    return
+                }
+            }
             UserDefaults.standard.removeObject(forKey: Self.guestModeKey)
-            let user = makeUser(from: session.user)
-            AccountMemory.rememberSession(userId: session.user.id.uuidString,
-                         email: session.user.email,
-                         createdAt: session.user.createdAt)
+            let user = makeUser(from: activeSession.user)
+            AccountMemory.rememberSession(userId: activeSession.user.id.uuidString,
+                         email: activeSession.user.email,
+                         createdAt: activeSession.user.createdAt)
             currentUser = user
             isAuthenticated = true
             state = .authenticated(user)

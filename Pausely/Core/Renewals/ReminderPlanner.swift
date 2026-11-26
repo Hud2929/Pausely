@@ -11,9 +11,11 @@ enum ReminderPlanner {
         case renewalHeadsUp     // N days before (the subscription's "Remind me" setting)
         case renewalTomorrow    // the day before
         case renewalToday       // the morning of the renewal
+        case trialHeadsUp       // two days before a free trial ends (safely ahead of Apple's 24-hour cutoff)
         case trialEnding        // the day before a free trial ends
         case planCancel         // Pause Plan: cancel this one before it renews
         case planStart          // Pause Plan: this one's month starts today
+        case savingsAvoided     // Cancelled subscription charge day passed: celebrates money kept
     }
 
     struct Reminder: Equatable {
@@ -25,6 +27,8 @@ enum ReminderPlanner {
         /// The renewal or trial end it is about.
         let eventDate: Date
         let daysBefore: Int
+        /// Formatted avoided-charge amount for `.savingsAvoided` milestones (from `SavingsLedger`).
+        var amountText: String? = nil
     }
 
     nonisolated static let identifierPrefix = "pausely.reminder."
@@ -37,6 +41,16 @@ enum ReminderPlanner {
     struct Preferences: Equatable {
         var renewals = true
         var trials = true
+        /// Avoided-charge milestones (rank 3, never displaces renewals). Pure planner defaults to
+        /// `false`; `ReminderScheduler.preferences` reads the live user switch (which defaults to `true`).
+        var savingsMilestones = false
+    }
+
+    /// One future charge day that a cancelled subscription will no longer bill.
+    struct AvoidedCharge: Equatable {
+        let subscriptionId: UUID
+        let date: Date
+        var amountText: String? = nil
     }
 
     /// - Parameters:
@@ -49,9 +63,11 @@ enum ReminderPlanner {
     static func plan(for subscriptions: [Subscription], now: Date, calendar: Calendar = .billing,
                      cyclesAhead: Int = 2, budget: Int = defaultBudget,
                      preferences: Preferences = Preferences(), kept: Set<String> = [],
-                     pausePlan: PausePlan? = nil) -> [Reminder] {
+                     pausePlan: PausePlan? = nil,
+                     avoidedCharges: [AvoidedCharge] = []) -> [Reminder] {
         chosen(from: ranked(for: subscriptions, now: now, calendar: calendar, cyclesAhead: cyclesAhead,
-                            preferences: preferences, kept: kept, pausePlan: pausePlan), budget: budget)
+                            preferences: preferences, kept: kept, pausePlan: pausePlan,
+                            avoidedCharges: avoidedCharges), budget: budget)
     }
 
     /// When to ask the person to open Pausely, so that reminders don't quietly stop. Reminders are
@@ -62,13 +78,18 @@ enum ReminderPlanner {
     static func refillDate(for subscriptions: [Subscription], now: Date, calendar: Calendar = .billing,
                            cyclesAhead: Int = 2, budget: Int = defaultBudget,
                            preferences: Preferences = Preferences(), kept: Set<String> = [],
-                           pausePlan: PausePlan? = nil) -> Date? {
-        let all = ranked(for: subscriptions, now: now, calendar: calendar, cyclesAhead: cyclesAhead,
-                         preferences: preferences, kept: kept, pausePlan: pausePlan)
-        let planned = chosen(from: all, budget: budget)
+                           pausePlan: PausePlan? = nil,
+                           avoidedCharges: [AvoidedCharge] = []) -> Date? {
+        // Rank-3 savings milestones must never distort `refillDate` (neither starving active renewal
+        // refreshes nor triggering false refill warnings when a milestone is dropped).
+        let activeAll = ranked(for: subscriptions, now: now, calendar: calendar, cyclesAhead: cyclesAhead,
+                               preferences: preferences, kept: kept, pausePlan: pausePlan,
+                               avoidedCharges: avoidedCharges)
+            .filter { $0.reminder.kind != .savingsAvoided }
+        let planned = chosen(from: activeAll, budget: budget)
         guard let last = planned.last else { return nil }
         let plannedIds = Set(planned.map(\.identifier))
-        let firstLeftOut = all.map(\.reminder).filter { !plannedIds.contains($0.identifier) }.map(\.fireDate).min()
+        let firstLeftOut = activeAll.map(\.reminder).filter { !plannedIds.contains($0.identifier) }.map(\.fireDate).min()
 
         func nine(onTheDayOf date: Date, plus days: Int) -> Date? {
             calendar.date(byAdding: .day, value: days, to: calendar.startOfDay(for: date))
@@ -83,7 +104,8 @@ enum ReminderPlanner {
     /// reminders about that next charge; 2 for the charges after it.
     private static func ranked(for subscriptions: [Subscription], now: Date, calendar: Calendar, cyclesAhead: Int,
                                preferences: Preferences, kept: Set<String>,
-                               pausePlan: PausePlan?) -> [(reminder: Reminder, rank: Int)] {
+                               pausePlan: PausePlan?,
+                               avoidedCharges: [AvoidedCharge]) -> [(reminder: Reminder, rank: Int)] {
         var all: [(reminder: Reminder, rank: Int)] = []
         // Subscriptions in a Pause Plan get the plan's reminders instead of the usual renewal ones.
         let rotating = pausePlan.map { Set($0.subscriptionIds) } ?? []
@@ -116,9 +138,26 @@ enum ReminderPlanner {
                 }
             }
 
-            if preferences.trials, let trialEnd, !kept.contains(RenewalDecisions.key(sub.id, trialEnd, calendar)),
-               let r = make(.trialEnding, sub, calendar.noon(of: trialEnd), daysBefore: 1, hour: 10, now, calendar) {
-                all.append((r, 0))
+            if preferences.trials, let trialEnd, !kept.contains(RenewalDecisions.key(sub.id, trialEnd, calendar)) {
+                // Two days before gives advance notice safely ahead of Apple's 24-hour cancellation deadline.
+                if let headsUp = make(.trialHeadsUp, sub, calendar.noon(of: trialEnd), daysBefore: 2, hour: 10, now, calendar) {
+                    all.append((headsUp, 0))
+                }
+                if let ending = make(.trialEnding, sub, calendar.noon(of: trialEnd), daysBefore: 1, hour: 10, now, calendar) {
+                    all.append((ending, 0))
+                }
+            }
+        }
+        if preferences.savingsMilestones {
+            let subsById = Dictionary(subscriptions.map { ($0.id, $0) }, uniquingKeysWith: { a, _ in a })
+            for charge in avoidedCharges {
+                guard let sub = subsById[charge.subscriptionId], !sub.isPausely,
+                      var r = make(.savingsAvoided, sub, calendar.noon(of: charge.date), daysBefore: 0, hour: 10, now, calendar) else {
+                    continue
+                }
+                r.amountText = charge.amountText
+                // Rank 3: strictly below all active renewal/trial/Pause Plan alerts so milestones never crowd them out.
+                all.append((r, 3))
             }
         }
         return all

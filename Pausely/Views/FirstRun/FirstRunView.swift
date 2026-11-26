@@ -33,7 +33,10 @@ struct FirstRunView: View {
                 GuessStep(guess: $guess, currency: tally.currency, onNext: {
                     tally.guess = Decimal(Int(guess))
                     go(.tally)
-                }, onSignIn: onSignIn)
+                }, onSignIn: {
+                    UserDefaults.standard.removeObject(forKey: "pendingFirstRunPlan")
+                    onSignIn()
+                })
                 .transition(stepTransition)
             case .tally:
                 TallyStep(tally: $tally, onBack: { go(.guess) }, onReveal: { go(.reveal) },
@@ -49,6 +52,10 @@ struct FirstRunView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .inkScreen()
         .readableWidth()
+        .task {
+            // Pre-warm StoreKit prices on Screen 1 so the post-onboarding plan renders at 0ms.
+            await StoreKitManager.shared.loadProducts()
+        }
     }
 
     private var continueAction: (() -> Void)? {
@@ -66,11 +73,13 @@ struct FirstRunView: View {
     }
 
     private func keep() {
+        UserDefaults.standard.set(true, forKey: "pendingFirstRunPlan")
         if tally.lines.isEmpty { PendingTally.clear() } else { PendingTally.save(tally) }
         onKeepList()
     }
 
     private func continueLocally() {
+        UserDefaults.standard.set(true, forKey: "pendingFirstRunPlan")
         if tally.lines.isEmpty { PendingTally.clear() } else { PendingTally.save(tally) }
         onContinueWithoutAccount?()
     }

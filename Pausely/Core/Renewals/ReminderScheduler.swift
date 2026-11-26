@@ -52,9 +52,10 @@ final class ReminderScheduler {
 
         let byId = Dictionary(subscriptions.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
         let kept = RenewalDecisions.keptKeys(in: LifecycleEventLog.shared.events)
-        let pausePlan = PausePlanStore.shared.activePlan
+        let pausePlan = PaymentManager.shared.isUnlocked(.pausePlan) ? PausePlanStore.shared.activePlan : nil
+        let avoided = Self.upcomingAvoidedCharges(subscriptions: subscriptions, now: now)
         for reminder in ReminderPlanner.plan(for: subscriptions, now: now, preferences: Self.preferences, kept: kept,
-                                             pausePlan: pausePlan) {
+                                             pausePlan: pausePlan, avoidedCharges: avoided) {
             guard let sub = byId[reminder.subscriptionId] else { continue }
             await add(UNNotificationRequest(
                 identifier: reminder.identifier,
@@ -65,7 +66,7 @@ final class ReminderScheduler {
         // Reminders are planned a couple of renewals ahead. If the app isn't opened in all that time,
         // the last thing it sends says so, instead of going quiet.
         if let refill = ReminderPlanner.refillDate(for: subscriptions, now: now, preferences: Self.preferences, kept: kept,
-                                                   pausePlan: pausePlan) {
+                                                   pausePlan: pausePlan, avoidedCharges: avoided) {
             await add(UNNotificationRequest(
                 identifier: ReminderPlanner.refillIdentifier,
                 content: Self.refillContent(),
@@ -101,16 +102,38 @@ final class ReminderScheduler {
         return components
     }
 
-    /// The two switches in Settings → Notifications. Both default to on.
+    /// The switches in Settings → Notifications. All default to on once notifications are allowed.
     static let renewalRemindersKey = "renewalAlerts"
     static let trialRemindersKey = "trialEndingAlerts"
+    static let savingsMilestonesKey = "savingsMilestoneAlerts"
 
     static var preferences: ReminderPlanner.Preferences {
         let defaults = UserDefaults.standard
         return ReminderPlanner.Preferences(
             renewals: defaults.object(forKey: renewalRemindersKey) as? Bool ?? true,
-            trials: defaults.object(forKey: trialRemindersKey) as? Bool ?? true
+            trials: defaults.object(forKey: trialRemindersKey) as? Bool ?? true,
+            savingsMilestones: defaults.object(forKey: savingsMilestonesKey) as? Bool ?? true
         )
+    }
+
+    /// Next upcoming avoided charge per cancelled subscription from `SavingsLedger` (up to 1 per line).
+    /// Compares against the 10am local fire moment so opening the app before 10am on an avoided charge day
+    /// does not prematurely drop today's milestone.
+    private static func upcomingAvoidedCharges(subscriptions: [Subscription], now: Date, calendar: Calendar = .billing) -> [ReminderPlanner.AvoidedCharge] {
+        let excluded = Set(subscriptions.filter(\.isPausely).map(\.id))
+        let lines = SavingsLedger.lines(from: LifecycleEventLog.shared.events, now: now, calendar: calendar, excluding: excluded)
+        return lines.compactMap { line in
+            guard line.endedOn == nil else { return nil }
+            let next = line.avoidedCharges.first { chargeDay in
+                guard let fire = calendar.date(bySettingHour: 10, minute: 0, second: 0, of: calendar.startOfDay(for: chargeDay)) else {
+                    return false
+                }
+                return fire > now
+            }
+            guard let next else { return nil }
+            let formatted = MoneyFormat.string(line.amountPerCharge, line.currency, locale: L10n.locale)
+            return ReminderPlanner.AvoidedCharge(subscriptionId: line.subscriptionId, date: next, amountText: formatted)
+        }
     }
 
     nonisolated static func isPauselyReminder(_ identifier: String) -> Bool {
@@ -131,6 +154,9 @@ final class ReminderScheduler {
         case .renewalToday:
             content.title = L10n.string("\(sub.name) renews today")
             content.body = L10n.string("\(amount) is due today.")
+        case .trialHeadsUp:
+            content.title = L10n.string("\(sub.name) trial ends in 2 days")
+            content.body = L10n.string("Cancel by tomorrow so you aren't charged \(amount). Keep it or cancel it?")
         case .trialEnding:
             content.title = L10n.string("\(sub.name) trial ends tomorrow")
             content.body = L10n.string("After that it costs \(amount) \(sub.billingFrequency.billingPeriodLabel). Keep it or cancel it?")
@@ -140,9 +166,14 @@ final class ReminderScheduler {
         case .planStart:
             content.title = L10n.string("Pause Plan: \(sub.name) is on")
             content.body = L10n.string("Its month starts today. Start it again whenever you're ready to watch.")
+        case .savingsAvoided:
+            let keptAmount = reminder.amountText ?? amount
+            content.title = L10n.string("You just kept \(keptAmount)")
+            content.body = L10n.string("\(sub.name) didn't charge you today. Open your Savings Receipt to see what you've kept.")
         }
         switch reminder.kind {
         case .planCancel, .planStart: content.categoryIdentifier = ReminderActions.pausePlanCategory
+        case .savingsAvoided: break
         default: content.categoryIdentifier = ReminderActions.decisionCategory
         }
         content.sound = .default
@@ -162,9 +193,11 @@ extension ReminderPlanner.Kind {
         case .renewalHeadsUp: return "renewal"
         case .renewalTomorrow: return "renewal_urgent"
         case .renewalToday: return "renewal_day_of"
+        case .trialHeadsUp: return "trial_heads_up"
         case .trialEnding: return "trial_ending"
         case .planCancel: return "pause_plan_cancel"
         case .planStart: return "pause_plan_start"
+        case .savingsAvoided: return "savings_avoided"
         }
     }
 }

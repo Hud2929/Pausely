@@ -12,6 +12,8 @@ enum DeepLinkRoute {
     case authConfirm
     case authResetPassword
     case subscriptionManage(id: UUID)
+    case subscriptionVerdict(id: UUID)
+    case savingsReceipt
     case unknown
 }
 
@@ -42,6 +44,14 @@ final class DeepLinkManager {
                 return .subscriptionManage(id: id)
             }
             return .unknown
+        case "verdict":
+            // pausely://verdict?id=UUID — opens Keep/Cancel decision directly from imminent widget charges.
+            if let idString = url.queryParameters?["id"], let id = UUID(uuidString: idString) {
+                return .subscriptionVerdict(id: id)
+            }
+            return .unknown
+        case "receipt":
+            return .savingsReceipt
         default:
             return .unknown
         }
@@ -65,6 +75,12 @@ final class DeepLinkManager {
 
         case .subscriptionManage(let id):
             VerdictCenter.shared.showSubscription(id)
+
+        case .subscriptionVerdict(let id):
+            VerdictCenter.shared.open(subscriptionId: id)
+
+        case .savingsReceipt:
+            VerdictCenter.shared.openSavingsReceipt()
 
         case .unknown:
             os_log("A link the app has no screen for was opened (scheme %{public}@)", log: .default, type: .info, url.scheme ?? "none")

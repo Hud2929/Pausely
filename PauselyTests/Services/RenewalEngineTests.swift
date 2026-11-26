@@ -147,11 +147,13 @@ final class RenewalEngineTests: XCTestCase {
         XCTAssertTrue(ReminderPlanner.plan(for: [sub(day(2026, 10, 30), status: .cancelled)], now: day(2026, 10, 22, hour: 8), calendar: cal).isEmpty)
     }
 
-    func testTrialGetsOneTrialReminderInsteadOfDuplicates() {
+    func testTrialGetsHeadsUpAndEndingTrialRemindersWithoutRenewalDuplicates() {
         let plan = ReminderPlanner.plan(for: [sub(day(2026, 10, 25), status: .trial, trialEnds: day(2026, 10, 25))],
                                         now: day(2026, 10, 22, hour: 8), calendar: cal)
+        XCTAssertEqual(plan.filter { $0.kind == .trialHeadsUp }.map { ymd($0.fireDate) }, ["2026-10-23"],
+                       "two-day heads-up arrives safely ahead of Apple's 24-hour cancellation deadline")
         XCTAssertEqual(plan.filter { $0.kind == .trialEnding }.map { ymd($0.fireDate) }, ["2026-10-24"])
-        XCTAssertFalse(plan.contains { $0.kind != .trialEnding && ymd($0.eventDate) == "2026-10-25" })
+        XCTAssertFalse(plan.contains { $0.kind != .trialHeadsUp && $0.kind != .trialEnding && ymd($0.eventDate) == "2026-10-25" })
         XCTAssertTrue(plan.contains { $0.kind == .renewalToday && ymd($0.eventDate) == "2026-11-25" })
     }
 

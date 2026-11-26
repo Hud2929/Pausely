@@ -22,20 +22,7 @@ struct TallyStep: View {
         VStack(spacing: 0) {
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
-                    LineOrStack(spacing: 12, lineSpacing: 4, spread: true, alignment: .center) {
-                        FirstRunBackButton(action: onBack)
-                        Button {
-                            Feel.selection()
-                            showingScreenshotImport = true
-                        } label: {
-                            Label("Import screenshots", systemImage: "photo.on.rectangle.angled")
-                                .font(.subheadline.weight(.medium))
-                                .foregroundStyle(Color.inkTextMuted)
-                                .tapArea(.trailing)
-                        }
-                        .buttonStyle(.plain)
-                        .accessibilityIdentifier("firstRunScreenshotImportButton")
-                    }
+                    FirstRunBackButton(action: onBack)
 
                     Text("Now tap everything you pay for.")
                         .font(.question(.title2))
@@ -47,6 +34,8 @@ struct TallyStep: View {
                     if !Self.listComesStraightAfterTheHeading(largeText: typeSize.isAccessibilitySize) {
                         addedAfterwards
                             .padding(.top, 8)
+                        screenshotImportRow
+                            .padding(.top, 14)
                     }
 
                     LazyVGrid(columns: columns, spacing: 10) {
@@ -72,6 +61,8 @@ struct TallyStep: View {
                     // not find theirs.
                     if Self.listComesStraightAfterTheHeading(largeText: typeSize.isAccessibilitySize) {
                         addedAfterwards
+                            .padding(.bottom, 12)
+                        screenshotImportRow
                             .padding(.bottom, 24)
                     }
                 }
@@ -95,6 +86,42 @@ struct TallyStep: View {
                 tally.mergeDetected(lines)
                 if !tally.lines.isEmpty { onReveal() }
             })
+        }
+    }
+
+    private var screenshotImportRow: some View {
+        VStack(spacing: 0) {
+            Hairline()
+            Button {
+                Feel.selection()
+                showingScreenshotImport = true
+            } label: {
+                HStack(spacing: 12) {
+                    Image(systemName: "photo.on.rectangle.angled")
+                        .font(.body.weight(.semibold))
+                        .foregroundStyle(Color.inkText)
+                        .accessibilityHidden(true)
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Scan a screenshot")
+                            .font(.subheadline.weight(.semibold))
+                            .foregroundStyle(Color.inkText)
+                            .multilineTextAlignment(.leading)
+                        Text("Fills prices and renewal dates on this iPhone")
+                            .font(.footnote)
+                            .foregroundStyle(Color.inkTextMuted)
+                            .multilineTextAlignment(.leading)
+                    }
+                    .fixedSize(horizontal: false, vertical: true)
+                    Spacer(minLength: 8)
+                    RowChevron()
+                }
+                .padding(.vertical, 12)
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .accessibilityElement(children: .combine)
+            .accessibilityIdentifier("firstRunScreenshotImportButton")
+            Hairline()
         }
     }
 

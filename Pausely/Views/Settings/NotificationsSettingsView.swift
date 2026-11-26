@@ -1,14 +1,17 @@
 import SwiftUI
 import UserNotifications
 
-/// Which reminders Pausely sends. The switches only matter once iOS allows notifications, so the page
-/// says first whether it does, and offers the one step that turns them on.
+/// Which reminders Pausely sends, plus editable default reminder timing and Home/Insights focus.
+/// The notification switches only matter once iOS allows notifications, so the page says first
+/// whether it does, and offers the one step that turns them on.
 struct NotificationsSettingsView: View {
     @AppStorage(ReminderScheduler.renewalRemindersKey) private var renewalAlerts = true
     @AppStorage(ReminderScheduler.trialRemindersKey) private var trialEndingAlerts = true
+    @AppStorage(ReminderScheduler.savingsMilestonesKey) private var savingsMilestoneAlerts = true
 
     private var notifications = NotificationManager.shared
     @State private var isAsking = false
+    @State private var profile = OnboardingProfile.load()
 
     var body: some View {
         SettingsPage(title: "Notifications") {
@@ -22,20 +25,56 @@ struct NotificationsSettingsView: View {
                         .accessibilityIdentifier("renewalRemindersToggle")
                 }
                 SettingsRow(title: L10n.string("Free trial reminders"),
-                            detail: L10n.string("The day before a free trial starts charging")) {
+                            detail: L10n.string("2 days before and the day before a free trial starts charging")) {
                     Toggle("", isOn: $trialEndingAlerts).labelsHidden().tint(Color.inkTextMuted)
                         .accessibilityLabel(Text("Free trial reminders"))
                         .accessibilityIdentifier("trialRemindersToggle")
                 }
+                SettingsRow(title: L10n.string("Savings milestones"),
+                            detail: L10n.string("When a cancelled subscription's charge day passes without billing you")) {
+                    Toggle("", isOn: $savingsMilestoneAlerts).labelsHidden().tint(Color.inkTextMuted)
+                        .accessibilityLabel(Text("Savings milestones"))
+                        .accessibilityIdentifier("savingsMilestonesToggle")
+                }
             }
-            // Until iOS allows notifications the switches can't be used, and iOS greys them itself.
-            // The words stay at full strength: they say what turning reminders on would bring, and
-            // at half strength the footnote could not be read (the system's audit failed it).
             .disabled(!notifications.isAuthorized)
+
+            SettingsSection(title: "Default reminder",
+                            footer: "Used for new subscriptions and updates existing ones still on your previous default.") {
+                ForEach([7, 3, 1], id: \.self) { days in
+                    ChoiceRow(title: SubscriptionEditDraft.reminderLabel(days),
+                              isChosen: profile.validReminderDays == days) {
+                        let previous = profile.validReminderDays
+                        guard previous != days else { return }
+                        profile.reminderDays = days
+                        profile.save()
+                        let updated = profile
+                        Task { await updated.applyReminderDays(to: SubscriptionStore.shared, from: previous) }
+                    }
+                    .accessibilityIdentifier("defaultReminder_\(days)")
+                }
+            }
+
+            SettingsSection(title: "Your focus",
+                            footer: "Orders Home and Insights around what you want Pausely to catch first.") {
+                ForEach(OnboardingProfile.Goal.allCases) { option in
+                    ChoiceRow(title: option.shortLabel,
+                              detail: option.detail,
+                              isChosen: profile.goal == option) {
+                        profile.goal = option
+                        profile.save()
+                    }
+                    .accessibilityIdentifier("focusGoal_\(option.rawValue)")
+                }
+            }
         }
-        .task { await notifications.refreshStatus() }
+        .task {
+            profile = OnboardingProfile.load()
+            await notifications.refreshStatus()
+        }
         .onChange(of: renewalAlerts) { _, _ in reschedule() }
         .onChange(of: trialEndingAlerts) { _, _ in reschedule() }
+        .onChange(of: savingsMilestoneAlerts) { _, _ in reschedule() }
     }
 
     private func reschedule() {

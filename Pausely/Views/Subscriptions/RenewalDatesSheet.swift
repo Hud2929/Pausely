@@ -8,6 +8,7 @@ struct RenewalDatesSheet: View {
     @Environment(\.dismiss) private var dismiss
     @State private var dates: [UUID: Date] = [:]
     @State private var isSaving = false
+    @State private var showingScreenshotImport = false
 
     var body: some View {
         ActionScreen {
@@ -32,7 +33,42 @@ struct RenewalDatesSheet: View {
                     .foregroundStyle(Color.inkTextMuted)
                     .fixedSize(horizontal: false, vertical: true)
                     .padding(.top, 10)
-                    .padding(.bottom, 12)
+                    .padding(.bottom, 14)
+
+                VStack(spacing: 0) {
+                    Hairline()
+                    Button {
+                        Feel.selection()
+                        showingScreenshotImport = true
+                    } label: {
+                        HStack(spacing: 12) {
+                            Image(systemName: "photo.on.rectangle.angled")
+                                .font(.body.weight(.semibold))
+                                .foregroundStyle(Color.inkText)
+                                .accessibilityHidden(true)
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("Fill dates from a screenshot")
+                                    .font(.subheadline.weight(.semibold))
+                                    .foregroundStyle(Color.inkText)
+                                    .multilineTextAlignment(.leading)
+                                Text("Reads Apple Subscriptions or a bank screen on this iPhone")
+                                    .font(.footnote)
+                                    .foregroundStyle(Color.inkTextMuted)
+                                    .multilineTextAlignment(.leading)
+                            }
+                            .fixedSize(horizontal: false, vertical: true)
+                            Spacer(minLength: 8)
+                            RowChevron()
+                        }
+                        .padding(.vertical, 12)
+                        .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityElement(children: .combine)
+                    .accessibilityIdentifier("datesFromScreenshotButton")
+                    Hairline()
+                }
+                .padding(.bottom, 12)
 
                 ForEach(Array(subscriptions.enumerated()), id: \.element.id) { index, subscription in
                     if index > 0 { Hairline() }
@@ -56,6 +92,9 @@ struct RenewalDatesSheet: View {
         }
         .inkScreen()
         .preferredColorScheme(.dark)
+        .sheet(isPresented: $showingScreenshotImport) {
+            ScreenshotImportView(onFinished: { dismiss() })
+        }
     }
 
     private func row(_ subscription: Subscription) -> some View {

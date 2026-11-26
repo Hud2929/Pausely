@@ -9,6 +9,7 @@ struct SubscriptionsView: View {
     @State private var searchText = ""
     @State private var activeSheet: ActiveSheet?
     @State private var pendingRemoval: UUID?
+    @State private var pendingPaywallFromPicker = false
     @ObservedObject private var payments = PaymentManager.shared
     /// Read so the list is drawn again when what waits for room changes.
     @AppStorage(TallyImporter.waitingVersionKey) private var waitingVersion = 0
@@ -76,7 +77,10 @@ struct SubscriptionsView: View {
                         default: empty
                         }
                         if !waiting.isEmpty, !payments.isUnlocked(.unlimitedSubscriptions) {
-                            WaitingSection(lines: waiting) { activeSheet = .choose }
+                            WaitingSection(lines: waiting, totalCount: store.activeSubscriptions.count + waiting.count,
+                                           currencyManager: currencyManager,
+                                           onChoose: { activeSheet = .choose },
+                                           onSeePro: { activeSheet = .paywall })
                         }
                     }
                     .padding(.horizontal, Layout.margin)
@@ -89,7 +93,12 @@ struct SubscriptionsView: View {
             }
         }
         .inkScreen()
-        .sheet(item: $activeSheet) { sheet in
+        .sheet(item: $activeSheet, onDismiss: {
+            if pendingPaywallFromPicker {
+                pendingPaywallFromPicker = false
+                activeSheet = .paywall
+            }
+        }) { sheet in
             switch sheet {
             case .browser:
                 SubscriptionBrowserView()
@@ -99,10 +108,10 @@ struct SubscriptionsView: View {
                     .presentationSizing(.page)
             case .choose:
                 FreeLimitPickerSheet(store: store, currencyManager: currencyManager,
-                                     onSeePro: { Task { try? await Task.sleep(for: .milliseconds(450)); activeSheet = .paywall } })
+                                     onSeePro: { pendingPaywallFromPicker = true })
                     .presentationSizing(.page)
             case .paywall:
-                StoreKitUpgradeView()
+                StoreKitUpgradeView(trigger: .unlimitedSubscriptions)
             }
         }
         // A widget, a search result or a link asked for one subscription. The request can be set before
@@ -228,7 +237,10 @@ struct SubscriptionsView: View {
             let waiting = waitingVersion >= 0 ? TallyImporter.waitingLines() : []
             if !waiting.isEmpty, !payments.isUnlocked(.unlimitedSubscriptions), searchText.isEmpty {
                 Section {
-                    WaitingSection(lines: waiting) { activeSheet = .choose }
+                    WaitingSection(lines: waiting, totalCount: store.activeSubscriptions.count + waiting.count,
+                                   currencyManager: currencyManager,
+                                   onChoose: { activeSheet = .choose },
+                                   onSeePro: { activeSheet = .paywall })
                         .listRowInsets(EdgeInsets(top: 20, leading: Layout.margin, bottom: 8, trailing: Layout.margin))
                         .listRowBackground(Color.clear)
                         .listRowSeparator(.hidden)
@@ -406,10 +418,23 @@ private struct SubscriptionRow: View {
     SubscriptionsView()
 }
 
-/// Subscriptions kept for when there's room on the free plan, with the way to choose which are tracked.
+/// Subscriptions kept for when there's room on the free plan, with ways to swap or unlock all with Pro.
 private struct WaitingSection: View {
     let lines: [TallyLine]
+    let totalCount: Int
+    let currencyManager: CurrencyManager
     let onChoose: () -> Void
+    let onSeePro: () -> Void
+
+    private var subtitle: String {
+        if let risk = PaywallCase.waitingRisk(lines: lines, displayCurrency: currencyManager.selectedCurrency,
+                                              proYearly: nil, proCurrency: nil, rates: currencyManager.rates) {
+            let yearly = MoneyFormat.total(risk.yearlyAmount, risk.currency, converted: risk.isConverted,
+                                           locale: L10n.locale, wholeUnits: true)
+            return L10n.string("About \(yearly) a year without reminders. The free plan tracks \(FreeTier.subscriptionLimit).")
+        }
+        return L10n.string("Kept for later: the free plan tracks \(FreeTier.subscriptionLimit). These aren't in your totals or reminders.")
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
@@ -420,7 +445,7 @@ private struct WaitingSection: View {
                     // Wraps, never cut: "Waiting for ro…" at the largest text (2026-11-23).
                     .fixedSize(horizontal: false, vertical: true)
                     .accessibilityAddTraits(.isHeader)
-                Text("Kept for later: the free plan tracks \(FreeTier.subscriptionLimit). These aren't in your totals or reminders.")
+                Text(verbatim: subtitle)
                     .font(.subheadline)
                     .foregroundStyle(Color.inkTextMuted)
                     .fixedSize(horizontal: false, vertical: true)
@@ -440,14 +465,26 @@ private struct WaitingSection: View {
                     Hairline()
                 }
             }
-            Button(action: onChoose) {
-                Text("Choose which to track")
-                    .font(.subheadline.weight(.semibold))
-                    .foregroundStyle(Color.inkText)
-                    .tapArea(.leading)
+            LineOrStack(spacing: 16, lineSpacing: 4) {
+                Button(action: onChoose) {
+                    Text("Choose which to track")
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(Color.inkText)
+                        .tapArea(.leading)
+                }
+                .buttonStyle(.plain)
+                .accessibilityIdentifier("chooseWaitingButton")
+
+                Button(action: onSeePro) {
+                    Text("Track all \(totalCount) with Pro")
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(Color.inkTextMuted)
+                        .underline()
+                        .tapArea(.leading)
+                }
+                .buttonStyle(.plain)
+                .accessibilityIdentifier("waitingSeeProButton")
             }
-            .buttonStyle(.plain)
-            .accessibilityIdentifier("chooseWaitingButton")
         }
     }
 }

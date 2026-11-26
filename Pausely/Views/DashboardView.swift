@@ -2,7 +2,8 @@ import SwiftUI
 import UserNotifications
 
 /// Home. Four things, in the order someone needs them: what it all costs, what needs a decision,
-/// what leaves in the next 30 days, and what Pausely has kept.
+/// what leaves in the next 30 days (with Pause Plan elevated when rotating streaming is the goal),
+/// and what Pausely has kept.
 @MainActor
 struct DashboardView: View {
     @ObservedObject private var store = SubscriptionStore.shared
@@ -13,12 +14,15 @@ struct DashboardView: View {
 
     @State private var showingAdd = false
     @State private var showingPaywall = false
+    @State private var paywallTrigger: ProFeature? = .unlimitedSubscriptions
     @State private var showingReceipt = false
     @State private var showingDates = false
     @State private var showingInbox = false
     @State private var showingScreenshotImport = false
     @State private var showingFreePicker = false
     @State private var pendingPaywallFromPicker = false
+    @State private var profile = OnboardingProfile.load()
+    @State private var eligibleWinBack: StoreKitManager.FreeExtensionOffer?
     @AppStorage(TallyImporter.waitingVersionKey) private var waitingVersion = 0
     @State private var showsYear = false
     @ScaledMetric(relativeTo: .largeTitle) private var numberSize: CGFloat = 52
@@ -26,12 +30,17 @@ struct DashboardView: View {
     @Environment(\.dynamicTypeSize) private var typeSize
 
     /// How many lines the total may take. One; two at the accessibility text sizes, where a total
-    /// in the millions, already at half its size, was cut off on one line ("IDR 9,573,4…"). On
-    /// two, the currency sits above the figure and all of it shows.
+    /// in the millions, already at half its size, was cut off on one line ("IDR 9,573,4…").
     nonisolated static func totalLines(largeText: Bool) -> Int { largeText ? 2 : 1 }
 
     private var hasKept: Bool { !SavingsSummary.current().isEmpty }
     private var charges: [Horizon.Charge] { Horizon.charges(for: store.subscriptions, now: Date()) }
+    private var showPausePlan: Bool {
+        PausePlanCard.isRelevant(plan: pausePlanStore.activePlan, subscriptions: store.subscriptions)
+    }
+    private var elevatePausePlan: Bool {
+        showPausePlan && profile.goal == .rotateStreaming
+    }
 
     var body: some View {
         ScrollView {
@@ -51,6 +60,10 @@ struct DashboardView: View {
                     attention.padding(.top, 28)
                     // Proof of money kept comes before the list of what is about to leave.
                     if hasKept { keptSection.padding(.top, 24) }
+                    if elevatePausePlan {
+                        VStack(spacing: 0) { Hairline(); PausePlanCard() }
+                            .padding(.top, 24)
+                    }
                     if Self.showsComingUp(hasCharges: !charges.isEmpty,
                                           hasUndated: !Horizon.undated(store.subscriptions).isEmpty) {
                         HorizonSection(charges: charges, notInTotal: Self.notInTotal(Horizon.undated(store.subscriptions)),
@@ -59,7 +72,10 @@ struct DashboardView: View {
                             .padding(.top, 32)
                     }
                     if !hasKept { keptSection.padding(.top, 28) }
-                    quietRows.padding(.top, 20)
+                    if showPausePlan && !elevatePausePlan {
+                        VStack(spacing: 0) { Hairline(); PausePlanCard() }
+                            .padding(.top, 20)
+                    }
                 }
             }
             .padding(.horizontal, Layout.margin)
@@ -70,7 +86,7 @@ struct DashboardView: View {
         .inkScreen()
         .refreshable { await store.fetchSubscriptions(force: true) }
         .sheet(isPresented: $showingAdd) { SubscriptionBrowserView() }
-        .sheet(isPresented: $showingPaywall) { StoreKitUpgradeView() }
+        .sheet(isPresented: $showingPaywall) { StoreKitUpgradeView(trigger: paywallTrigger) }
         .sheet(isPresented: $showingReceipt) { SavingsReceiptView() }
         .sheet(isPresented: $showingDates) { RenewalDatesSheet(subscriptions: Horizon.undated(store.subscriptions)) }
         .sheet(isPresented: $showingInbox) { InboxImportView() }
@@ -78,10 +94,24 @@ struct DashboardView: View {
         .sheet(isPresented: $showingFreePicker, onDismiss: {
             guard pendingPaywallFromPicker else { return }
             pendingPaywallFromPicker = false
+            paywallTrigger = .unlimitedSubscriptions
             showingPaywall = true
         }) { FreeLimitPickerSheet(store: store, currencyManager: currencyManager, onSeePro: { pendingPaywallFromPicker = true }).presentationSizing(.page) }
         .onAppear {
+            profile = OnboardingProfile.load()
             ReviewPromptManager.shared.askAfterMoneyKept()
+            ReviewPromptManager.shared.askAfterDecisionMade()
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .onboardingProfileDidChange)) { _ in
+            profile = OnboardingProfile.load()
+        }
+        .task(id: paymentManager.currentTier) {
+            guard !paymentManager.isPremium, !DemoSavings.isScreenshotRun, !LaunchFlag.demoMode.isSet else {
+                eligibleWinBack = nil
+                return
+            }
+            await StoreKitManager.shared.loadProducts()
+            eligibleWinBack = await StoreKitManager.shared.bestEligibleWinBackOffer()?.offer
         }
     }
 
@@ -91,7 +121,6 @@ struct DashboardView: View {
     private var spokenTotal: String {
         let currency = currencyManager.selectedCurrency
         if showsYear {
-            // "about" says it once: "about ≈$1,019.75" said it twice (2026-11-23).
             return L10n.string("Your subscriptions cost about \(MoneyFormat.string(store.totalAnnualSpend, currency)) a year.")
         }
         return L10n.string("Your subscriptions cost \(MoneyFormat.total(store.totalMonthlySpend, currency, converted: store.totalIsConverted)) a month.")
@@ -123,21 +152,12 @@ struct DashboardView: View {
         }
     }
 
-    /// Whether the total sits under the row that holds "+", with the whole width to itself. At
-    /// the accessibility text sizes, yes: beside "+" a total in the millions had four fifths of
-    /// the width and was cut off ("IDR 9,573,4…").
     nonisolated static func totalHasTheWholeWidth(largeText: Bool) -> Bool { largeText }
 
-    /// Whether Home shows the coming month. Not when no charge is known and a subscription has no
-    /// renewal date: "£0.00, nothing is due in the next month" was said of a monthly Netflix with no
-    /// date, which charges within the month. The row asking for the date says what to do instead.
     nonisolated static func showsComingUp(hasCharges: Bool, hasUndated: Bool) -> Bool {
         hasCharges || !hasUndated
     }
 
-    /// What the coming month's total leaves out, said under it: a subscription with no renewal date
-    /// has no charge on the line, and the total read as if it were all of the month. Nil when every
-    /// active subscription has a date.
     nonisolated static func notInTotal(_ undated: [Subscription]) -> String? {
         switch undated.count {
         case 0: return nil
@@ -153,8 +173,6 @@ struct DashboardView: View {
         } label: {
             HStack(spacing: 6) {
                 Text(showsYear ? L10n.string("Each year") : L10n.string("Each month"))
-                    // Two words that belong together: at the largest sizes they shrink a
-                    // little before they part.
                     .lineLimit(1)
                     .minimumScaleFactor(0.7)
                 Image(systemName: "arrow.up.arrow.down").font(.caption2.weight(.semibold))
@@ -170,7 +188,6 @@ struct DashboardView: View {
     }
 
     @ViewBuilder private var totalFigure: some View {
-        // No figure before the list has arrived: "$0.00" was on screen until it did.
         if !store.listState.totalIsKnown {
             RoundedRectangle(cornerRadius: Layout.markRadius, style: .continuous)
                 .fill(Color.inkRaised)
@@ -195,7 +212,6 @@ struct DashboardView: View {
             Text(L10n.string("\(store.activeSubscriptions.count) subscriptions"))
                 .font(.subheadline)
                 .foregroundStyle(Color.inkTextMuted)
-                // A number stays with its noun.
                 .lineLimit(1)
                 .minimumScaleFactor(0.75)
         }
@@ -218,11 +234,18 @@ struct DashboardView: View {
     // MARK: - What needs attention
 
     @ViewBuilder private var attention: some View {
-        let pending = VerdictCenter.shared.pendingDecisions(rotating: pausePlanStore.activePlan)
-        // Read here so Home is drawn again when what waits changes: declared and never read, it redrew
-        // nothing, and the "Choose" row appeared only after a relaunch (the ratings of 2026-11-23).
+        let rawPending = VerdictCenter.shared.pendingDecisions(rotating: pausePlanStore.activePlan)
+        let pending = profile.goal == .catchTrials
+            ? rawPending.sorted { lhs, rhs in
+                if lhs.isTrialEnd != rhs.isTrialEnd { return lhs.isTrialEnd }
+                return lhs.date < rhs.date
+            }
+            : rawPending
         let waiting = waitingVersion >= 0 ? TallyImporter.waitingLines() : []
-        let undated = Horizon.undated(store.subscriptions)
+        let rawUndated = Horizon.undated(store.subscriptions)
+        let undated = profile.goal == .catchTrials
+            ? rawUndated.sorted { ($0.status == .trial) && ($1.status != .trial) }
+            : rawUndated
         let showReminderAsk = !NotificationManager.shared.isAuthorized && !DemoSavings.isScreenshotRun
 
         VStack(spacing: 0) {
@@ -257,28 +280,40 @@ struct DashboardView: View {
                 Hairline()
             }
 
+            if let winBack = eligibleWinBack, !paymentManager.isPremium {
+                AttentionRow(state: .kept, symbol: "sparkles",
+                             title: L10n.string("Welcome back to Pausely Pro"),
+                             detail: L10n.string("Try Pausely Pro again with \(winBack.days) days free — cancel anytime."),
+                             action: L10n.string("Claim free")) {
+                    paywallTrigger = nil
+                    showingPaywall = true
+                }
+                .accessibilityIdentifier("homeWinBackRow")
+                Hairline()
+            }
+
             if !waiting.isEmpty, !paymentManager.isUnlocked(.unlimitedSubscriptions) {
-                // Free users can always choose WHICH 5 subscriptions occupy their free slots, or go Pro to track all.
                 let room = FreeTier.room(in: store.subscriptions)
                 let one = waiting.count == 1 ? waiting[0].name : nil
+                let risk = PaywallCase.waitingRisk(lines: waiting, displayCurrency: currencyManager.selectedCurrency,
+                                                   proYearly: nil, proCurrency: nil, rates: currencyManager.rates)
+                let noRoom = risk.map {
+                    let y = MoneyFormat.total($0.yearlyAmount, $0.currency, converted: $0.isConverted, locale: L10n.locale, wholeUnits: true)
+                    return L10n.string("About \(y) a year without reminders. Choose which \(FreeTier.subscriptionLimit) to watch, or go Pro for all.")
+                } ?? L10n.string("The free plan tracks \(FreeTier.subscriptionLimit). Choose which ones to watch, or go Pro for all.")
                 AttentionRow(state: nil, symbol: room > 0 ? "plus.circle" : "checklist",
                              title: room > 0 ? one.map { L10n.string("There's room for \($0)") }
                                                 ?? L10n.string("There's room for \(min(room, waiting.count)) of the \(waiting.count) you kept for later")
                                              : one.map { L10n.string("\($0) isn't tracked") }
                                                 ?? L10n.string("\(waiting.count) of your subscriptions aren't tracked"),
-                             detail: room > 0 ? L10n.string("The free plan tracks \(FreeTier.subscriptionLimit). Choose which ones to track.")
-                                              : L10n.string("The free plan tracks \(FreeTier.subscriptionLimit). Choose which ones to watch, or go Pro for all."),
+                             detail: room > 0 ? L10n.string("The free plan tracks \(FreeTier.subscriptionLimit). Choose which ones to track.") : noRoom,
                              action: room > 0 && waiting.count <= room ? L10n.string("Add") : L10n.string("Choose")) {
-                    if room > 0 && waiting.count <= room {
-                        Task { await TallyImporter.importWaiting(into: store) }
-                    } else {
-                        showingFreePicker = true
-                    }
+                    if room > 0 && waiting.count <= room { Task { await TallyImporter.importWaiting(into: store) } }
+                    else { showingFreePicker = true }
                 }
                 .accessibilityIdentifier("waitingRow")
                 Hairline()
             }
-
         }
     }
 
@@ -334,366 +369,4 @@ struct DashboardView: View {
         .accessibilityHint(Text("Opens your Savings Receipt"))
         .accessibilityIdentifier("savingsReceiptCard")
     }
-
-    // MARK: - Pause Plan
-
-    /// The running plan, said as on Insights: which service is on and until when. It used to be the
-    /// two words "Pause Plan" and nothing else.
-    @ViewBuilder private var quietRows: some View {
-        if pausePlanStore.activePlan != nil {
-            VStack(spacing: 0) {
-                Hairline()
-                PausePlanCard()
-            }
-        }
-    }
 }
-
-// MARK: - Parts
-
-/// One thing that wants a decision or an answer: a mark, a sentence, and the action.
-private struct AttentionRow: View {
-    var state: MoneyState?
-    var symbol: String?
-    let title: String
-    let detail: String
-    let action: String
-    let perform: () -> Void
-    @Environment(\.dynamicTypeSize) private var typeSize
-    /// The room a symbol is given grows with it.
-    @ScaledMetric(relativeTo: .footnote) private var symbolSide: CGFloat = 18
-
-    var body: some View {
-        Button {
-            Feel.selection()
-            perform()
-        } label: {
-            Group {
-                if typeSize.isAccessibilitySize {
-                    VStack(alignment: .leading, spacing: 8) { mark; text; actionLabel }
-                } else {
-                    HStack(alignment: .center, spacing: 12) { mark; text; Spacer(minLength: 8); actionLabel }
-                }
-            }
-            .padding(.vertical, 14)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .contentShape(Rectangle())
-        }
-        .buttonStyle(.plain)
-        .accessibilityElement(children: .combine)
-    }
-
-    @ViewBuilder private var mark: some View {
-        if let state, symbol == nil {
-            StateMark(state: state)
-        } else {
-            Image(systemName: symbol ?? "circle")
-                .font(.footnote.weight(.semibold))
-                .foregroundStyle(state?.color ?? Color.inkTextMuted)
-                .frame(width: symbolSide, height: symbolSide)
-                .accessibilityHidden(true)
-        }
-    }
-
-    private var text: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Text(verbatim: title)
-                .font(.body.weight(.semibold))
-                .foregroundStyle(Color.inkText)
-                .multilineTextAlignment(.leading)
-            Facts(detail)
-                .font(.subheadline)
-                .foregroundStyle(Color.inkTextMuted)
-                .multilineTextAlignment(.leading)
-        }
-        .fixedSize(horizontal: false, vertical: true)
-    }
-
-    private var actionLabel: some View {
-        Text(verbatim: action)
-            .font(.subheadline.weight(.semibold))
-            .foregroundStyle(Color.inkText)
-            .padding(.horizontal, 14)
-            .frame(minHeight: 34)
-            .overlay(Capsule().stroke(Color.outline, lineWidth: 1))
-    }
-}
-
-/// Asks for notifications in context, naming the charge the first reminder would be about.
-private struct ReminderAskRow: View {
-    let nextCharge: Horizon.Charge?
-    private var notifications = NotificationManager.shared
-    @State private var isAsking = false
-
-    init(nextCharge: Horizon.Charge?) { self.nextCharge = nextCharge }
-
-    var body: some View {
-        let denied = notifications.status == .denied
-        AttentionRow(state: nil, symbol: denied ? "bell.slash" : "bell",
-                     title: denied ? L10n.string("Reminders are off") : L10n.string("Get a heads-up before you're charged"),
-                     detail: denied
-                        ? L10n.string("Turn on notifications for Pausely in Settings so renewals don't surprise you.")
-                        : detail,
-                     action: denied ? L10n.string("Open Settings") : L10n.string("Turn on")) {
-            if denied {
-                notifications.openSystemSettings()
-            } else if !isAsking {
-                isAsking = true
-                Task {
-                    await notifications.requestPermission()
-                    isAsking = false
-                }
-            }
-        }
-        .accessibilityIdentifier("turnOnRemindersButton")
-    }
-
-    /// Names the charge the first reminder would be about, so the request is concrete.
-    private var detail: String {
-        guard let charge = nextCharge else {
-            return L10n.string("Pausely reminds you before each renewal so you can keep it or cancel it.")
-        }
-        let price = MoneyFormat.string(charge.amount, charge.currency, locale: L10n.locale)
-        let day = DayText.date(charge.date, locale: L10n.locale)
-        return L10n.string("First up: \(charge.name), \(price) on \(day).")
-    }
-}
-
-// MARK: - The 30-day horizon
-
-/// The coming month as one line: a dot per charge, placed by day and sized by amount. Dragging along
-/// it shows what leaves by that day. The rows below say the same thing in words.
-private struct HorizonSection: View {
-    let charges: [Horizon.Charge]
-    /// What the total leaves out (subscriptions with no renewal date), or nil.
-    let notInTotal: String?
-    let currency: String
-    let rates: CurrencyRates
-    let pendingKeys: Set<String>
-
-    @GestureState private var selectedDay: Int?
-    @State private var spokenDay: Int?
-
-    private var pickedDay: Int? { selectedDay ?? spokenDay }
-    private var throughDay: Int { pickedDay ?? Horizon.days - 1 }
-    private var total: Decimal { Horizon.total(of: charges, through: throughDay, in: currency, rates: rates) }
-    /// Exact charges awaiting a decision above aren't repeated row-for-row below the timeline.
-    private var listedCharges: [Horizon.Charge] {
-        charges.filter { !pendingKeys.contains(RenewalDecisions.key($0.subscriptionId, $0.date)) }
-    }
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            SideBySide {
-                Text(pickedDay == nil ? L10n.string("Coming up") : L10n.string("By \(dayText(throughDay))"))
-                    .font(.headline)
-                    .foregroundStyle(Color.inkText)
-            } trailing: {
-                Text(verbatim: MoneyFormat.total(total, currency, converted: Horizon.isConverted(charges, through: throughDay, to: currency),
-                                                 locale: L10n.locale))
-                    .font(.headline.monospacedDigit())
-                    .foregroundStyle(Color.inkText)
-                    .contentTransition(.numericText())
-                    // An amount is one thing: it shrinks before it breaks across lines.
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.5)
-            }
-            .accessibilityElement(children: .combine)
-            .accessibilityAddTraits(.isHeader)
-
-            if let notInTotal {
-                Text(verbatim: notInTotal)
-                    .font(.footnote)
-                    .foregroundStyle(Color.inkTextMuted)
-                    .fixedSize(horizontal: false, vertical: true)
-                    .padding(.top, 4)
-                    .accessibilityIdentifier("notInTotal")
-            }
-
-            if charges.isEmpty {
-                Text("Nothing is due in the next month.")
-                    .font(.subheadline)
-                    .foregroundStyle(Color.inkTextMuted)
-                    .padding(.top, 10)
-            } else {
-                line.padding(.top, 10)
-                HStack {
-                    Text("Today")
-                    Spacer()
-                    Text(verbatim: dayText(Horizon.days - 1))
-                }
-                .font(.caption)
-                .foregroundStyle(Color.inkTextFaint)
-                .padding(.bottom, 10)
-                .accessibilityHidden(true)
-
-                let awaiting = charges.count - listedCharges.count
-                if awaiting > 0 && !listedCharges.isEmpty {
-                    Text(awaiting == 1
-                         ? L10n.string("Includes 1 awaiting a decision above.")
-                         : L10n.string("Includes \(awaiting) awaiting a decision above."))
-                        .font(.footnote)
-                        .foregroundStyle(Color.inkTextMuted)
-                        .fixedSize(horizontal: false, vertical: true)
-                        .padding(.bottom, 6)
-                }
-
-                ForEach(Array(listedCharges.prefix(6).enumerated()), id: \.element.id) { index, charge in
-                    if index > 0 { Hairline() }
-                    ChargeRow(charge: charge, state: state(for: charge),
-                              dimmed: charge.dayOffset > throughDay)
-                }
-                if listedCharges.count > 6 {
-                    Hairline()
-                    Text(L10n.string("And \(listedCharges.count - 6) more in Subscriptions."))
-                        .font(.subheadline)
-                        .foregroundStyle(Color.inkTextMuted)
-                        .padding(.vertical, 12)
-                } else if listedCharges.isEmpty {
-                    Text("Everything due in the next month is waiting for a decision above.")
-                        .font(.subheadline)
-                        .foregroundStyle(Color.inkTextMuted)
-                        .fixedSize(horizontal: false, vertical: true)
-                        .padding(.vertical, 8)
-                }
-            }
-        }
-        .animation(Motion.unlessReduced(Motion.touch), value: pickedDay)
-    }
-
-    private func state(for charge: Horizon.Charge) -> MoneyState? {
-        if pendingKeys.contains(RenewalDecisions.key(charge.subscriptionId, charge.date)) { return .decide }
-        return charge.dayOffset <= 1 ? .due : nil
-    }
-
-    private func dayText(_ offset: Int) -> String {
-        let date = Calendar.billing.date(byAdding: .day, value: offset, to: Date()) ?? Date()
-        return DayText.date(date, locale: L10n.locale)
-    }
-
-    private var line: some View {
-        GeometryReader { geo in
-            let width = geo.size.width
-            let largest = charges.compactMap { rates.convert($0.amount, from: $0.currency, to: currency) }.max() ?? 1
-            ZStack(alignment: .leading) {
-                Rectangle().fill(Color.track).frame(height: 1)
-                if let selectedDay {
-                    Rectangle().fill(Color.inkText).frame(width: x(selectedDay, width), height: 1)
-                }
-                ForEach(charges) { charge in
-                    let amount = rates.convert(charge.amount, from: charge.currency, to: currency) ?? 0
-                    let share = largest > 0 ? NSDecimalNumber(decimal: amount / largest).doubleValue : 0
-                    let size = 7 + 15 * share.squareRoot()
-                    Circle()
-                        .fill(state(for: charge)?.color ?? Color.inkText)
-                        .opacity(charge.dayOffset > throughDay ? 0.3 : 1)
-                        .frame(width: size, height: size)
-                        .overlay(Circle().stroke(Color.ink, lineWidth: 1.5))
-                        .position(x: x(charge.dayOffset, width), y: geo.size.height / 2)
-                }
-            }
-            .frame(height: geo.size.height)
-            .contentShape(Rectangle())
-            .gesture(
-                DragGesture(minimumDistance: 0)
-                    .updating($selectedDay) { value, day, _ in
-                        let fraction = min(max(value.location.x / max(width, 1), 0), 1)
-                        day = Int((fraction * Double(Horizon.days - 1)).rounded())
-                    }
-            )
-            .onChange(of: selectedDay) { _, day in
-                if day != nil { Feel.selection() }
-            }
-        }
-        // A fingertip tall, so the line can be found and held (it was 28 points).
-        .frame(height: Layout.tapTarget)
-        // What a drag does, VoiceOver does by swiping up and down: one charge day at a time.
-        .accessibilityElement()
-        .accessibilityLabel(Text("Total by day"))
-        .accessibilityValue(Text(verbatim: L10n.string("By \(dayText(throughDay))") + ", "
-                                 + MoneyFormat.total(total, currency, converted: Horizon.isConverted(charges, through: throughDay, to: currency),
-                                                     locale: L10n.locale)))
-        .accessibilityAdjustableAction { direction in
-            let day = Horizon.stepDay(from: throughDay, forward: direction == .increment, charges: charges)
-            spokenDay = day == Horizon.days - 1 ? nil : day
-        }
-    }
-
-    /// Where a day sits, from the leading edge. SwiftUI mirrors positions, leading-aligned widths and
-    /// gesture locations in a right-to-left layout itself; flipped here as well, Arabic drew the dots
-    /// and the filled part from the wrong end (found 2026-11-18).
-    nonisolated static func x(_ day: Int, _ width: CGFloat) -> CGFloat {
-        let inset: CGFloat = 11
-        let fraction = CGFloat(day) / CGFloat(Horizon.days - 1)
-        return inset + fraction * (width - inset * 2)
-    }
-
-    private func x(_ day: Int, _ width: CGFloat) -> CGFloat { Self.x(day, width) }
-}
-
-private struct ChargeRow: View {
-    let charge: Horizon.Charge
-    let state: MoneyState?
-    let dimmed: Bool
-    @Environment(\.dynamicTypeSize) private var typeSize
-
-    var body: some View {
-        Button {
-            Feel.selection()
-            VerdictCenter.shared.showSubscription(charge.subscriptionId)
-        } label: {
-            HStack(spacing: 12) {
-                if typeSize.isAccessibilitySize {
-                    words
-                    Spacer(minLength: 8)
-                } else {
-                    ServiceLogoView(name: charge.name, category: charge.category, size: 36)
-                    // As on the Subscriptions list: the price beside the name while it takes no
-                    // more than half the row, under it when it is wider, and never broken.
-                    LineOrStack(spacing: 8, lineSpacing: 2, spread: true, besideShare: 0.5) {
-                        words
-                        price
-                    }
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                }
-            }
-            .padding(.vertical, 12)
-            // Past the picked day a row steps back, and can still be read: at this strength its
-            // name stays above 4.5 to 1 on ink (at 0.35 it was under 3).
-            .opacity(dimmed ? 0.5 : 1)
-            .contentShape(Rectangle())
-        }
-        .buttonStyle(.plain)
-        .accessibilityElement(children: .combine)
-    }
-
-    private var words: some View {
-        VStack(alignment: .leading, spacing: 2) {
-            Text(verbatim: charge.name)
-                .font(.body)
-                .foregroundStyle(Color.inkText)
-                .fixedSize(horizontal: false, vertical: true)
-            HStack(spacing: 6) {
-                if let state { StateMark(state: state) }
-                Facts(when)
-                    .font(.subheadline)
-                    .foregroundStyle(state?.color ?? Color.inkTextMuted)
-                    .fixedSize(horizontal: false, vertical: true)
-            }
-            if typeSize.isAccessibilitySize { price }
-        }
-    }
-
-    private var price: some View {
-        Text(verbatim: MoneyFormat.string(charge.amount, charge.currency, locale: L10n.locale))
-            .font(.body.monospacedDigit())
-            .foregroundStyle(Color.inkText)
-    }
-
-    private var when: String {
-        let day = L10n.day(charge.date)
-        let relative = L10n.whole(L10n.relativeDay(charge.dayOffset, capitalized: true))
-        return L10n.breakingAfterDots(charge.isTrialEnd ? L10n.string("Trial ends \(day) · \(relative)") : "\(day) · \(relative)")
-    }
-}
-

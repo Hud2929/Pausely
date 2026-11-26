@@ -261,7 +261,7 @@ final class GmailMailboxProvider: MailboxProvider {
         request.httpMethod = "POST"
         request.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
         request.httpBody = Data(OAuthSession.formEncode(["token": tokens.refreshToken ?? tokens.accessToken]).utf8)
-        _ = try? await URLSession.shared.data(for: request)
+        _ = try? await URLSession.shared.safeData(for: request)
     }
 
     // MARK: - History (only new mail)

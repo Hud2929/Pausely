@@ -7,7 +7,7 @@ struct CancelTimingCard: View {
     let subscription: Subscription
 
     var body: some View {
-        if let next = subscription.calculatedNextBillingDate {
+        if let next = RenewalDecisions.upcomingCharge(for: subscription, now: Date())?.date {
             VStack(alignment: .leading, spacing: 6) {
                 Text("When to cancel")
                     .font(.headline)

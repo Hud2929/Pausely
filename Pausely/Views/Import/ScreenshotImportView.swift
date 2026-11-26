@@ -25,11 +25,12 @@ struct ScreenshotImportView: View {
     @State private var editingPrice: ScreenshotParser.DetectedItem?
     @State private var outcome: TallyImporter.Outcome?
     @State private var scanNote: String?
-    @State private var showingPaywall = false
+    @State private var paywallTrigger: ProFeature?
     @State private var showingManualAdd = false
     @State private var showingFreePicker = false
     @State private var pendingPaywallFromPicker = false
     @State private var isAdding = false
+    @State private var scanTask: Task<Void, Never>?
 
     private enum Phase {
         case ready
@@ -50,7 +51,24 @@ struct ScreenshotImportView: View {
     }
 
     private var chosenItems: [ScreenshotParser.DetectedItem] {
-        activeDetected.filter { selectedIDs.contains($0.id) && $0.amount != nil }
+        activeDetected.filter { item in
+            guard selectedIDs.contains(item.id), let amount = item.amount, amount > 0 else { return false }
+            if onPickForTally == nil, let existing = existingSubscription(for: item) {
+                return canFillDate(existing: existing, item: item) || canUpdatePrice(existing: existing, item: item)
+            }
+            return true
+        }
+    }
+
+    private func canFillDate(existing: Subscription, item: ScreenshotParser.DetectedItem) -> Bool {
+        existing.nextBillingDate == nil && item.renewalDate != nil && existing.billingFrequency == item.frequency
+    }
+
+    private func canUpdatePrice(existing: Subscription, item: ScreenshotParser.DetectedItem) -> Bool {
+        guard let amount = item.amount, amount > 0,
+              existing.billingFrequency == item.frequency,
+              MoneyFormat.normalizedCode(existing.currency) == MoneyFormat.normalizedCode(item.currency) else { return false }
+        return abs(existing.amount - amount) >= Decimal(string: "0.01")!
     }
 
     var body: some View {
@@ -67,13 +85,15 @@ struct ScreenshotImportView: View {
                 } else {
                     switch phase {
                     case .ready:
-                        ScreenshotImportReadyView(canBatchImport: canBatchImport)
+                        ScreenshotImportReadyView(canBatchImport: canBatchImport, onSeeBatchPro: {
+                            paywallTrigger = .batchScreenshotImport
+                        })
                     case .reading(let count):
-                        readingContent(count: count)
+                        ScreenshotReadingView(count: count)
                     case .review:
                         reviewContent
                     case .nothingFound:
-                        nothingFoundContent
+                        ScreenshotNothingFoundView()
                     }
                 }
             }
@@ -94,7 +114,12 @@ struct ScreenshotImportView: View {
         .preferredColorScheme(.dark)
         .onChange(of: pickerItems) { _, items in
             guard !items.isEmpty else { return }
-            Task { await process(items) }
+            scanTask?.cancel()
+            scanTask = Task { await process(items) }
+        }
+        .onDisappear {
+            scanTask?.cancel()
+            scanTask = nil
         }
         .onAppear {
             #if DEBUG
@@ -104,50 +129,42 @@ struct ScreenshotImportView: View {
             #endif
         }
         .sheet(item: $editingPrice) { item in
-            PriceSheet(name: item.name, placeholder: item.amount, currency: item.currency, frequency: item.frequency) { amount in
+            PriceSheet(name: item.name, placeholder: item.amount, currency: item.currency, frequency: item.frequency,
+                       onSaveFrequency: { freq in updateFrequency(freq, for: item.id) }) { amount in
                 updateAmount(amount, for: item.id)
             }
         }
-        .sheet(isPresented: $showingPaywall) {
-            StoreKitUpgradeView(trigger: outcome?.waiting.isEmpty == false ? .unlimitedSubscriptions : .batchScreenshotImport)
+        .sheet(item: $paywallTrigger) { trigger in
+            StoreKitUpgradeView(context: ScreenshotImportSupport.paywallContext(
+                trigger: trigger, chosenItems: chosenItems, existingCharging: store.subscriptions.charging,
+                outcome: outcome, displayCurrency: currencyManager.selectedCurrency, rates: currencyManager.rates
+            )) {
+                if trigger == .unlimitedSubscriptions {
+                    if let current = outcome {
+                        outcome = ScreenshotImportSupport.promotedOutcome(current)
+                    } else if !chosenItems.isEmpty {
+                        let lines = chosenItems.compactMap { $0.tallyLine() }
+                        Task { await commitImport(lines: lines, preferredNames: []) }
+                    }
+                }
+            }
         }
         .sheet(isPresented: $showingManualAdd) { AddSubscriptionView() }
         .sheet(isPresented: $showingFreePicker, onDismiss: {
             if pendingPaywallFromPicker {
                 pendingPaywallFromPicker = false
-                showingPaywall = true
+                paywallTrigger = .unlimitedSubscriptions
             }
         }) { freePickerSheet }
-    }
-
-    // MARK: - Reading
-
-    private func readingContent(count: Int) -> some View {
-        VStack(alignment: .leading, spacing: 14) {
-            Text(count == 1 ? L10n.string("Reading your screenshot…")
-                            : L10n.string("Reading \(count) screenshots…"))
-                .font(.question(.title))
-                .foregroundStyle(Color.inkText)
-                .fixedSize(horizontal: false, vertical: true)
-                .padding(.top, 8)
-                .accessibilityAddTraits(.isHeader)
-
-            HStack(spacing: 12) {
-                ProgressView().tint(Color.inkTextMuted)
-                Text("Recognizing services, prices, and renewal dates on this iPhone.")
-                    .font(.body)
-                    .foregroundStyle(Color.inkTextMuted)
-                    .fixedSize(horizontal: false, vertical: true)
-            }
-            .padding(.top, 8)
-        }
     }
 
     // MARK: - Review
 
     private var reviewContent: some View {
         VStack(alignment: .leading, spacing: 0) {
-            Text(activeDetected.count == 1
+            Text(activeDetected.isEmpty
+                 ? L10n.string("No active subscriptions found")
+                 : activeDetected.count == 1
                  ? L10n.string("Found 1 subscription")
                  : L10n.string("Found \(activeDetected.count) subscriptions"))
                 .font(.question(.title))
@@ -156,11 +173,13 @@ struct ScreenshotImportView: View {
                 .padding(.top, 8)
                 .accessibilityAddTraits(.isHeader)
 
-            Text("Tap a row to select or unselect. Tap any price to edit it.")
-                .font(.subheadline)
-                .foregroundStyle(Color.inkTextMuted)
-                .fixedSize(horizontal: false, vertical: true)
-                .padding(.top, 6)
+            if !activeDetected.isEmpty {
+                Text("Tap a row to select or unselect. Tap any price to edit it.")
+                    .font(.subheadline)
+                    .foregroundStyle(Color.inkTextMuted)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .padding(.top, 6)
+            }
 
             if let scanNote {
                 Text(verbatim: scanNote)
@@ -195,9 +214,34 @@ struct ScreenshotImportView: View {
                         .fixedSize(horizontal: false, vertical: true)
                     ForEach(Array(inactiveDetected.enumerated()), id: \.element.id) { index, item in
                         if index > 0 { Hairline() }
-                        inactiveRow(item)
+                        ScreenshotInactiveRow(item: item)
                     }
                 }
+            }
+
+            if !canBatchImport {
+                Button {
+                    Feel.selection()
+                    paywallTrigger = .batchScreenshotImport
+                } label: {
+                    HStack(spacing: 10) {
+                        LineOrStack(spacing: 8, lineSpacing: 4) {
+                            Text("Import up to \(ScreenshotImportReadyView.proBatch) screenshots at once")
+                                .font(.subheadline.weight(.medium))
+                                .foregroundStyle(Color.inkText)
+                                .multilineTextAlignment(.leading)
+                            ProPill()
+                        }
+                        Spacer(minLength: 8)
+                        RowChevron()
+                    }
+                    .padding(.vertical, 14)
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .accessibilityElement(children: .combine)
+                .accessibilityIdentifier("reviewBatchProButton")
+                .padding(.top, 16)
             }
         }
     }
@@ -205,43 +249,25 @@ struct ScreenshotImportView: View {
     private func detectedRow(_ item: ScreenshotParser.DetectedItem) -> some View {
         let existing = onPickForTally == nil ? existingSubscription(for: item) : nil
         let onList = existing != nil
-        let fillsDate = existing != nil && existing?.nextBillingDate == nil && item.renewalDate != nil
-        let isOn = selectedIDs.contains(item.id)
+        let fillsDate = existing.map { canFillDate(existing: $0, item: item) } ?? false
+        let updatesPrice = existing.map { canUpdatePrice(existing: $0, item: item) } ?? false
+        let selectable = !onList || fillsDate || updatesPrice
+        let isOn = selectable && selectedIDs.contains(item.id)
 
         return MarkedWords(alignment: .top, spacing: 12) {
-            Button {
-                if item.amount == nil {
-                    editingPrice = item
-                } else {
-                    toggle(item.id)
-                }
-            } label: {
-                Image(systemName: isOn ? "checkmark.circle.fill" : "circle")
-                    .font(.title3)
-                    .foregroundStyle(isOn ? Color.paperInk : Color.paperMuted)
-                    .tapArea(.topLeading)
-            }
-            .buttonStyle(.plain)
-            .accessibilityLabel(Text(verbatim: item.name))
-            .accessibilityAddTraits(isOn ? [.isSelected] : [])
+            Image(systemName: selectable ? (isOn ? "checkmark.circle.fill" : "circle") : "checkmark.circle")
+                .font(.title3)
+                .foregroundStyle(isOn ? Color.paperInk : Color.paperMuted)
+                .tapArea(.topLeading)
+                .accessibilityHidden(true)
         } words: {
             VStack(alignment: .leading, spacing: 4) {
                 LineOrStack(spacing: 8, lineSpacing: 4, spread: true, besideShare: 0.45) {
-                    Button {
-                        if item.amount == nil {
-                            editingPrice = item
-                        } else {
-                            toggle(item.id)
-                        }
-                    } label: {
-                        Text(verbatim: item.name)
-                            .font(.body.weight(.semibold))
-                            .foregroundStyle(Color.paperInk)
-                            .multilineTextAlignment(.leading)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .contentShape(Rectangle())
-                    }
-                    .buttonStyle(.plain)
+                    Text(verbatim: item.name)
+                        .font(.body.weight(.semibold))
+                        .foregroundStyle(selectable ? Color.paperInk : Color.paperMuted)
+                        .multilineTextAlignment(.leading)
+                        .frame(maxWidth: .infinity, alignment: .leading)
 
                     Button {
                         Feel.selection()
@@ -272,22 +298,28 @@ struct ScreenshotImportView: View {
                                         : L10n.string("Add price for \(item.name)"))
                 }
 
-                if let detail = detailLine(for: item, onList: onList, fillsDate: fillsDate) {
+                if let detail = detailLine(for: item, existing: existing, fillsDate: fillsDate, updatesPrice: updatesPrice) {
                     Facts(detail)
                         .font(.footnote)
-                        .foregroundStyle(Color.paperMuted)
+                        .foregroundStyle(updatesPrice && (item.amount ?? 0) > (existing?.amount ?? 0) ? Color.paperDue : Color.paperMuted)
                         .fixedSize(horizontal: false, vertical: true)
                 }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
         }
         .padding(.vertical, 6)
+        .contentShape(Rectangle())
+        .onTapGesture {
+            guard selectable else { return }
+            if item.amount == nil { editingPrice = item } else { toggle(item.id) }
+        }
         // One sentence for VoiceOver, chosen or not as its trait, with the price as an action: the row was four
         // stops (the box, the name, "Edit price for…", the date), as the rating of 2026-11-23 found.
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel(Text(verbatim: rowSummary(item, onList: onList, fillsDate: fillsDate)))
-        .accessibilityAddTraits(isOn ? [.isButton, .isSelected] : .isButton)
+        .accessibilityLabel(Text(verbatim: rowSummary(item, existing: existing, fillsDate: fillsDate, updatesPrice: updatesPrice)))
+        .accessibilityAddTraits(selectable ? (isOn ? [.isButton, .isSelected] : .isButton) : [])
         .accessibilityAction {
+            guard selectable else { return }
             if item.amount == nil { editingPrice = item } else { toggle(item.id) }
         }
         .accessibilityAction(named: item.amount != nil ? Text("Edit price") : Text("Add price")) { editingPrice = item }
@@ -295,51 +327,15 @@ struct ScreenshotImportView: View {
     }
 
     /// What VoiceOver reads for a row: its name, price and what the screenshot said about it.
-    private func rowSummary(_ item: ScreenshotParser.DetectedItem, onList: Bool, fillsDate: Bool) -> String {
+    private func rowSummary(_ item: ScreenshotParser.DetectedItem, existing: Subscription?, fillsDate: Bool, updatesPrice: Bool) -> String {
         var parts = [item.name]
         if let amount = item.amount {
             parts.append(item.frequency.priced(MoneyFormat.string(amount, item.currency, locale: L10n.locale)))
         } else {
             parts.append(L10n.string("No price found"))
         }
-        if let detail = detailLine(for: item, onList: onList, fillsDate: fillsDate) { parts.append(detail) }
+        if let detail = detailLine(for: item, existing: existing, fillsDate: fillsDate, updatesPrice: updatesPrice) { parts.append(detail) }
         return parts.joined(separator: ", ")
-    }
-
-    private func inactiveRow(_ item: ScreenshotParser.DetectedItem) -> some View {
-        VStack(alignment: .leading, spacing: 2) {
-            Text(verbatim: item.name)
-                .font(.body)
-                .foregroundStyle(Color.inkTextMuted)
-                .strikethrough(true, color: Color.inkTextFaint)
-            if let amount = item.amount {
-                Text(verbatim: item.frequency.pricedShort(MoneyFormat.string(amount, item.currency, locale: L10n.locale)))
-                    .font(.footnote)
-                    .foregroundStyle(Color.inkTextFaint)
-                    .accessibilityLabel(Text(verbatim: item.frequency.priced(MoneyFormat.string(amount, item.currency, locale: L10n.locale))))
-            }
-        }
-        .padding(.vertical, 10)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .accessibilityElement(children: .combine)
-    }
-
-    // MARK: - Nothing Found
-
-    private var nothingFoundContent: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text("No subscriptions found in that image.")
-                .font(.question(.title))
-                .foregroundStyle(Color.inkText)
-                .fixedSize(horizontal: false, vertical: true)
-                .padding(.top, 8)
-                .accessibilityAddTraits(.isHeader)
-
-            Text("Try a screenshot of Apple Settings › Subscriptions or a bank screen showing service names and prices.")
-                .font(.body)
-                .foregroundStyle(Color.inkTextMuted)
-                .fixedSize(horizontal: false, vertical: true)
-        }
     }
 
     // MARK: - Actions
@@ -358,7 +354,7 @@ struct ScreenshotImportView: View {
                 .buttonStyle(.ink)
                 .accessibilityIdentifier("screenshotDoneButton")
                 if !outcome.waiting.isEmpty, !payments.isUnlocked(.unlimitedSubscriptions) {
-                    Button { showingPaywall = true } label: { Text("Track all with Pro") }
+                    Button { paywallTrigger = .unlimitedSubscriptions } label: { Text("Track all with Pro") }
                         .buttonStyle(.ink(.quiet))
                 }
             }
@@ -384,20 +380,28 @@ struct ScreenshotImportView: View {
             case .reading:
                 EmptyView()
             case .review:
+                let scanTitle = canBatchImport ? L10n.string("Scan more screenshots") : L10n.string("Scan another screenshot")
                 VStack(spacing: 10) {
-                    Button {
-                        handleAddTapped()
-                    } label: {
-                        Text(verbatim: reviewPrimaryTitle)
-                    }
-                    .buttonStyle(.ink)
-                    .disabled(chosenItems.isEmpty || isAdding)
-                    .accessibilityIdentifier("confirmScreenshotImportButton")
+                    if !activeDetected.isEmpty {
+                        Button {
+                            handleAddTapped()
+                        } label: {
+                            Text(verbatim: reviewPrimaryTitle)
+                        }
+                        .buttonStyle(.ink)
+                        .disabled(chosenItems.isEmpty || isAdding)
+                        .accessibilityIdentifier("confirmScreenshotImportButton")
 
-                    PhotosPicker(selection: $pickerItems, maxSelectionCount: maxPhotos, matching: .images) {
-                        Text(canBatchImport ? L10n.string("Scan more screenshots") : L10n.string("Scan another screenshot"))
+                        PhotosPicker(selection: $pickerItems, maxSelectionCount: maxPhotos, matching: .images) {
+                            Text(verbatim: scanTitle)
+                        }
+                        .buttonStyle(.ink(.quiet))
+                    } else {
+                        PhotosPicker(selection: $pickerItems, maxSelectionCount: maxPhotos, matching: .images) {
+                            Text(verbatim: scanTitle)
+                        }
+                        .buttonStyle(.ink)
                     }
-                    .buttonStyle(.ink(.quiet))
                 }
             case .nothingFound:
                 VStack(spacing: 10) {
@@ -421,7 +425,7 @@ struct ScreenshotImportView: View {
     // MARK: - Helpers
 
     private func existingSubscription(for item: ScreenshotParser.DetectedItem) -> Subscription? {
-        store.subscriptions.first { ServiceName.same($0.name, item.name) }
+        store.subscriptions.charging.first { ServiceName.same($0.name, item.name) }
     }
 
     /// Kept for later from an earlier add: known already, so not chosen again (its price was overwritten by each
@@ -430,7 +434,7 @@ struct ScreenshotImportView: View {
         TallyImporter.waitingLines().contains { ServiceName.same($0.name, item.name) }
     }
 
-    private func detailLine(for item: ScreenshotParser.DetectedItem, onList: Bool, fillsDate: Bool) -> String? {
+    private func detailLine(for item: ScreenshotParser.DetectedItem, existing: Subscription?, fillsDate: Bool, updatesPrice: Bool) -> String? {
         var parts: [String] = []
         if item.isTrial, let trial = item.trialEndsAt {
             parts.append(L10n.string("Trial ends \(L10n.day(trial))"))
@@ -439,9 +443,14 @@ struct ScreenshotImportView: View {
             parts.append(renewal < Calendar.billing.startOfDay(for: Date())
                          ? L10n.string("Last charged \(L10n.day(renewal))") : L10n.string("Renews \(L10n.day(renewal))"))
         }
+        if updatesPrice, let old = existing, let newAmount = item.amount {
+            let from = MoneyFormat.string(old.amount, old.currency, locale: L10n.locale)
+            let to = MoneyFormat.string(newAmount, item.currency, locale: L10n.locale)
+            parts.append(L10n.string("Price changed: \(from) → \(to)"))
+        }
         if fillsDate {
             parts.append(L10n.string("Adds renewal date"))
-        } else if onList {
+        } else if existing != nil && !updatesPrice {
             parts.append(L10n.string("Already on your list"))
         } else if isKeptForLater(item) {
             parts.append(L10n.string("Kept for later"))
@@ -467,9 +476,14 @@ struct ScreenshotImportView: View {
     }
 
     private func updateAmount(_ amount: Decimal, for id: String) {
-        guard let idx = detected.firstIndex(where: { $0.id == id }) else { return }
+        guard amount > 0, let idx = detected.firstIndex(where: { $0.id == id }) else { return }
         detected[idx].amount = amount
         selectedIDs.insert(id)
+    }
+
+    private func updateFrequency(_ frequency: BillingFrequency, for id: String) {
+        guard let idx = detected.firstIndex(where: { $0.id == id }) else { return }
+        detected[idx].frequency = frequency
     }
 
     private var reviewPrimaryTitle: String {
@@ -482,12 +496,28 @@ struct ScreenshotImportView: View {
         let newCount = chosenItems.filter { existingSubscription(for: $0) == nil }.count
         let dateFills = chosenItems.filter { item in
             guard let existing = existingSubscription(for: item) else { return false }
-            return existing.nextBillingDate == nil && item.renewalDate != nil
+            return canFillDate(existing: existing, item: item)
         }.count
-        if newCount == 0 && dateFills > 0 {
-            return dateFills == 1
-                ? L10n.string("Update 1 renewal date")
-                : L10n.string("Update \(dateFills) renewal dates")
+        let priceUpdates = chosenItems.filter { item in
+            guard let existing = existingSubscription(for: item) else { return false }
+            return canUpdatePrice(existing: existing, item: item)
+        }.count
+        if newCount == 0 {
+            if priceUpdates > 0 && dateFills == 0 {
+                return priceUpdates == 1
+                    ? L10n.string("Update 1 price")
+                    : L10n.string("Update \(priceUpdates) prices")
+            }
+            if dateFills > 0 && priceUpdates == 0 {
+                return dateFills == 1
+                    ? L10n.string("Update 1 renewal date")
+                    : L10n.string("Update \(dateFills) renewal dates")
+            }
+            if dateFills > 0 || priceUpdates > 0 {
+                return chosenItems.count == 1
+                    ? L10n.string("Update 1 subscription")
+                    : L10n.string("Update \(chosenItems.count) subscriptions")
+            }
         }
         return L10n.string("Add \(chosenItems.count) to my list")
     }
@@ -499,12 +529,13 @@ struct ScreenshotImportView: View {
         var pages: [[ScreenshotParser.TextObservation]] = []
 
         for item in items {
+            if Task.isCancelled { return }
             if let data = try? await item.loadTransferable(type: Data.self),
-               let image = UIImage(data: data),
-               let observations = try? await ScreenshotOCR.recognizeText(in: image) {
+               let observations = try? await ScreenshotOCR.recognizeText(in: data) {
                 pages.append(observations)
             }
         }
+        if Task.isCancelled { return }
 
         let parsed = ScreenshotParser.parse(pages: pages, defaultCurrency: currency, rates: currencyManager.rates)
         pickerItems = []
@@ -521,14 +552,14 @@ struct ScreenshotImportView: View {
 
         // Merge with any earlier batch scanned in this sheet session without losing user edits or ticks.
         var combined = detected
-        let addedIDs = ScreenshotParser.mergeBatch(parsed, into: &combined)
+        let addedIDs = ScreenshotParser.mergeBatch(parsed, into: &combined, defaultCurrency: currency, rates: currencyManager.rates)
         detected = combined
         for item in combined where addedIDs.contains(item.id) {
-            // A row that may not repeat is shown, not chosen for the person (the rating of 2026-11-23).
-            guard !item.isCancelled, item.amount != nil, item.doubt != .mayNotRepeat, item.doubt != .aBill,
+            guard !item.isCancelled, let amount = item.amount, amount > 0,
+                  item.doubt != .mayNotRepeat, item.doubt != .aBill,
                   !isKeptForLater(item) else { continue }
             if onPickForTally == nil, let existing = existingSubscription(for: item) {
-                if existing.nextBillingDate == nil && item.renewalDate != nil {
+                if canFillDate(existing: existing, item: item) || canUpdatePrice(existing: existing, item: item) {
                     selectedIDs.insert(item.id)
                 }
             } else {
@@ -550,7 +581,7 @@ struct ScreenshotImportView: View {
         }
         let room = FreeTier.room(in: store.subscriptions)
         let newCount = lines.filter { line in
-            !store.subscriptions.contains { ServiceName.same($0.name, line.name) }
+            !store.subscriptions.charging.contains { ServiceName.same($0.name, line.name) }
         }.count
         if !payments.isUnlocked(.unlimitedSubscriptions), newCount > room {
             showingFreePicker = true
@@ -564,33 +595,28 @@ struct ScreenshotImportView: View {
         let rates = currencyManager.rates
         let room = FreeTier.room(in: store.subscriptions)
         let newLines = chosenItems.compactMap { $0.tallyLine() }.filter { line in
-            !store.subscriptions.contains { ServiceName.same($0.name, line.name) }
+            !store.subscriptions.charging.contains { ServiceName.same($0.name, line.name) }
         }
         if room == 0 {
             let activeCandidates = store.subscriptions.charging.map { sub in
                 FreeLimitPickerSheet.Candidate(
-                    name: sub.name,
-                    category: sub.category ?? SubscriptionCategory.other.rawValue,
-                    amount: sub.amount,
-                    currency: sub.currency,
-                    frequency: sub.billingFrequency,
-                    yearlyInDisplay: rates.convert(sub.annualCost, from: sub.currency, to: display) ?? 0
+                    name: sub.name, category: sub.category ?? SubscriptionCategory.other.rawValue,
+                    amount: sub.amount, currency: sub.currency, frequency: sub.billingFrequency,
+                    yearlyInDisplay: rates.convert(sub.annualCost, from: sub.currency, to: display)
                 )
             }
             let newCandidates = newLines.map { line in
                 FreeLimitPickerSheet.Candidate(
-                    name: line.name,
-                    category: line.category,
-                    amount: line.amount,
-                    currency: line.currency,
+                    name: line.name, category: line.category, amount: line.amount, currency: line.currency,
                     frequency: line.frequency ?? .monthly,
-                    yearlyInDisplay: rates.convert(line.yearlyCost, from: line.currency, to: display) ?? 0
+                    yearlyInDisplay: rates.convert(line.yearlyCost, from: line.currency, to: display)
                 )
             }
             return FreeLimitPickerSheet(
                 candidates: activeCandidates + newCandidates,
                 initialSelection: Set(store.subscriptions.charging.map(\.name)),
                 maxSelection: FreeTier.room(in: []),
+                displayCurrency: display,
                 onSave: { chosen in
                     Task { await commitSwapImport(lines: chosenItems.compactMap { $0.tallyLine() }, chosenActiveNames: chosen) }
                 },
@@ -600,16 +626,14 @@ struct ScreenshotImportView: View {
         return FreeLimitPickerSheet(
             candidates: newLines.map { line in
                 FreeLimitPickerSheet.Candidate(
-                    name: line.name,
-                    category: line.category,
-                    amount: line.amount,
-                    currency: line.currency,
+                    name: line.name, category: line.category, amount: line.amount, currency: line.currency,
                     frequency: line.frequency ?? .monthly,
-                    yearlyInDisplay: rates.convert(line.yearlyCost, from: line.currency, to: display) ?? 0
+                    yearlyInDisplay: rates.convert(line.yearlyCost, from: line.currency, to: display)
                 )
             },
             initialSelection: [],
             maxSelection: max(1, room),
+            displayCurrency: display,
             onSave: { chosen in
                 Task { await commitImport(lines: chosenItems.compactMap { $0.tallyLine() }, preferredNames: chosen) }
             },
@@ -621,7 +645,7 @@ struct ScreenshotImportView: View {
         isAdding = true
         defer { isAdding = false }
         let beforeNames = Set(store.subscriptions.charging.map { $0.name.lowercased() })
-        let initial = await TallyImporter.add(lines, into: store, payments: payments)
+        let initial = await TallyImporter.add(lines, into: store, payments: payments, updatePriceChanges: true)
         await TallyImporter.applyChoice(selectedNames: chosenActiveNames, into: store, payments: payments)
         let afterActive = store.subscriptions.charging
         let added = afterActive.filter { !beforeNames.contains($0.name.lowercased()) }.map(\.name)
@@ -630,14 +654,16 @@ struct ScreenshotImportView: View {
         withAnimation(Motion.unlessReduced(Motion.arrive)) {
             outcome = TallyImporter.Outcome(added: added, waiting: waiting,
                                             alreadyListed: initial.alreadyListed,
-                                            datesFilled: initial.datesFilled)
+                                            datesFilled: initial.datesFilled,
+                                            pricesUpdated: initial.pricesUpdated)
         }
     }
 
     private func commitImport(lines: [TallyLine], preferredNames: Set<String>) async {
         isAdding = true
         defer { isAdding = false }
-        let result = await TallyImporter.add(lines, into: store, payments: payments, preferredNames: preferredNames)
+        let result = await TallyImporter.add(lines, into: store, payments: payments,
+                                             preferredNames: preferredNames, updatePriceChanges: true)
         Feel.landed()
         withAnimation(Motion.unlessReduced(Motion.arrive)) {
             outcome = result

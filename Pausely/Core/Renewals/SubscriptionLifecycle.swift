@@ -24,8 +24,24 @@ final class SubscriptionLifecycle {
         var changes = Changes()
         let today = calendar.startOfDay(for: now)
         for sub in subscriptions {
-            if sub.status == .trial, let end = sub.trialEndsAt, calendar.startOfDay(for: end) < today {
-                changes.endedTrials[sub.id] = end
+            if sub.status == .trial {
+                guard let end = sub.trialEndsAt else { continue }
+                let endDay = calendar.startOfDay(for: end)
+                if endDay < today {
+                    changes.endedTrials[sub.id] = end
+                    // The day the trial ended is already recorded as `.trialEnded`; only count
+                    // subsequent renewal cycles strictly after `end` so the first charge is never doubled.
+                    if let lastRun {
+                        let anchor = sub.nextBillingDate ?? end
+                        let afterDate = max(lastRun, calendar.noon(of: end))
+                        for date in RenewalSchedule.renewals(anchor: anchor, frequency: sub.billingFrequency,
+                                                             after: afterDate, through: now, calendar: calendar)
+                            where calendar.startOfDay(for: date) > endDay {
+                            changes.renewals.append(.init(subscriptionId: sub.id, date: date))
+                        }
+                    }
+                }
+                continue
             }
             guard let lastRun, sub.renewsAutomatically, let anchor = sub.nextBillingDate else { continue }
             for date in RenewalSchedule.renewals(anchor: anchor, frequency: sub.billingFrequency,
@@ -66,6 +82,9 @@ final class SubscriptionLifecycle {
         }
 
         UserDefaults.standard.set(now, forKey: lastRunKey)
+        if !store.isHidden {
+            WidgetDataStore.shared.publish(subscriptions: store.subscriptions, now: now)
+        }
         await ReminderScheduler.shared.reschedule(store.subscriptions, now: now)
     }
 }

@@ -9,13 +9,15 @@ struct FreeLimitPickerSheet: View {
         let amount: Decimal
         let currency: String
         let frequency: BillingFrequency
-        let yearlyInDisplay: Decimal
+        /// Yearly cost converted into `displayCurrency`, or nil if that currency has no exchange rate.
+        let yearlyInDisplay: Decimal?
 
         var id: String { name.lowercased() }
     }
 
     let candidates: [Candidate]
     let maxSelection: Int
+    let displayCurrency: String
     let onSave: (Set<String>) -> Void
     var onSeePro: (() -> Void)?
 
@@ -25,14 +27,17 @@ struct FreeLimitPickerSheet: View {
     @State private var refusedNote = false
     @Environment(\.dynamicTypeSize) private var typeSize
 
+    @MainActor
     init(candidates: [Candidate], initialSelection: Set<String>, maxSelection: Int,
+         displayCurrency: String? = nil,
          onSave: @escaping (Set<String>) -> Void, onSeePro: (() -> Void)? = nil) {
         self.candidates = candidates
         let limit = max(1, maxSelection)
         self.maxSelection = limit
+        self.displayCurrency = displayCurrency ?? CurrencyManager.shared.selectedCurrency
         self.onSave = onSave
         self.onSeePro = onSeePro
-        let ranked = candidates.sorted { $0.yearlyInDisplay > $1.yearlyInDisplay }
+        let ranked = candidates.sorted { ($0.yearlyInDisplay ?? -1) > ($1.yearlyInDisplay ?? -1) }
         if initialSelection.isEmpty {
             _selected = State(initialValue: Set(ranked.prefix(limit).map(\.name)))
         } else {
@@ -54,7 +59,7 @@ struct FreeLimitPickerSheet: View {
                 amount: sub.amount,
                 currency: sub.currency,
                 frequency: sub.billingFrequency,
-                yearlyInDisplay: rates.convert(sub.annualCost, from: sub.currency, to: display) ?? 0
+                yearlyInDisplay: rates.convert(sub.annualCost, from: sub.currency, to: display)
             )
         }
         let activeNames = Set(activeCandidates.map { $0.name.lowercased() })
@@ -65,13 +70,14 @@ struct FreeLimitPickerSheet: View {
                 amount: line.amount,
                 currency: line.currency,
                 frequency: line.frequency ?? .monthly,
-                yearlyInDisplay: rates.convert(line.yearlyCost, from: line.currency, to: display) ?? 0
+                yearlyInDisplay: rates.convert(line.yearlyCost, from: line.currency, to: display)
             )
         }
         self.init(
             candidates: activeCandidates + waitingCandidates,
             initialSelection: Set(store.subscriptions.charging.map(\.name)),
             maxSelection: FreeTier.room(in: []),
+            displayCurrency: display,
             onSave: { chosen in
                 Task { await TallyImporter.applyChoice(selectedNames: chosen, into: store) }
             },
@@ -80,7 +86,26 @@ struct FreeLimitPickerSheet: View {
     }
 
     private var sortedCandidates: [Candidate] {
-        candidates.sorted { $0.yearlyInDisplay > $1.yearlyInDisplay }
+        candidates.sorted { ($0.yearlyInDisplay ?? -1) > ($1.yearlyInDisplay ?? -1) }
+    }
+
+    /// Sum of unselected yearly amounts only when EVERY unselected item converted cleanly (never silently $0).
+    private var unselectedYearlyTotal: (amount: Decimal, isConverted: Bool)? {
+        let unselected = sortedCandidates.filter { !selected.contains($0.name) }
+        guard !unselected.isEmpty else { return nil }
+        let normalized = MoneyFormat.normalizedCode(displayCurrency)
+        var sum: Decimal = 0
+        var convertedAny = false
+        for item in unselected {
+            guard let yearly = item.yearlyInDisplay else { return nil }
+            sum += yearly
+            if MoneyFormat.normalizedCode(item.currency) != normalized { convertedAny = true }
+        }
+        return sum > 0 ? (sum, convertedAny) : nil
+    }
+
+    private var unselectedCount: Int {
+        max(0, candidates.count - selected.count)
     }
 
     var body: some View {
@@ -100,7 +125,15 @@ struct FreeLimitPickerSheet: View {
                     .padding(.top, 8)
                     .accessibilityAddTraits(.isHeader)
 
-                Text(L10n.string("\(selected.count) of \(maxSelection) selected. The rest wait safely until you swap or go Pro."))
+                let riskText: String = {
+                    if unselectedCount > 0, let total = unselectedYearlyTotal {
+                        let yearly = MoneyFormat.total(total.amount, displayCurrency, converted: total.isConverted,
+                                                       locale: L10n.locale, wholeUnits: true)
+                        return L10n.string("\(selected.count) of \(maxSelection) selected. \(unselectedCount) left unwatched (about \(yearly) a year, no reminders).")
+                    }
+                    return L10n.string("\(selected.count) of \(maxSelection) selected. The rest wait safely until you swap or go Pro.")
+                }()
+                Text(verbatim: riskText)
                     .font(.subheadline)
                     .foregroundStyle(refusedNote && selected.count >= maxSelection ? Color.decide : Color.inkTextMuted)
                     .fixedSize(horizontal: false, vertical: true)
@@ -144,7 +177,7 @@ struct FreeLimitPickerSheet: View {
                         dismiss()
                         onSeePro()
                     } label: {
-                        Text("Track all with Pro")
+                        Text("Track all \(candidates.count) with Pro")
                     }
                     .buttonStyle(.ink(.quiet))
                     .accessibilityIdentifier("freePickerSeeProButton")

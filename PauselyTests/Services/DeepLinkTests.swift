@@ -59,6 +59,19 @@ final class DeepLinkTests: XCTestCase {
         }
     }
 
+    func testVerdictLink() {
+        let id = UUID()
+        guard case .subscriptionVerdict(let routed) = route("pausely://verdict?id=\(id.uuidString)"), routed == id else {
+            return XCTFail("verdict")
+        }
+    }
+
+    func testReceiptLink() {
+        guard case .savingsReceipt = route("pausely://receipt") else {
+            return XCTFail("receipt")
+        }
+    }
+
     func testUnknownLinks() {
         guard case .unknown = route("pausely://somewhere/else") else { return XCTFail("unknown path") }
         guard case .unknown = route("https://example.com/r/ABCD1234") else { return XCTFail("other domain") }

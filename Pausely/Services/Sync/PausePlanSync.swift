@@ -102,12 +102,15 @@ final class PausePlanSync {
     func sync() async {
         guard SubscriptionStore.cloudSyncEnabled, !AuthManager.shared.isGuest else { return }
         let client = SupabaseManager.shared.client
-        guard let userId = client.auth.currentSession?.user.id,
-              LocalUserData.belongs(to: userId.uuidString) else { return }
+        guard client.auth.currentSession != nil else { return }
 
         PausePlanStore.shared.loadIfNeeded()
         guard PausePlanStore.shared.planIsLoaded else { return }
         do {
+            let session = try await client.auth.session
+            guard !session.isExpired else { return }
+            let userId = session.user.id
+            guard LocalUserData.belongs(to: userId.uuidString) else { return }
             let rows: [PausePlanRecord] = try await client
                 .from("pause_plans")
                 .select()
@@ -133,9 +136,12 @@ final class PausePlanSync {
     func push(_ state: PausePlanStore.SyncState) async {
         guard SubscriptionStore.cloudSyncEnabled, !AuthManager.shared.isGuest else { return }
         let client = SupabaseManager.shared.client
-        guard let userId = client.auth.currentSession?.user.id,
-              LocalUserData.belongs(to: userId.uuidString) else { return }
+        guard client.auth.currentSession != nil else { return }
         do {
+            let session = try await client.auth.session
+            guard !session.isExpired else { return }
+            let userId = session.user.id
+            guard LocalUserData.belongs(to: userId.uuidString) else { return }
             let record = PausePlanRecord(from: state, userId: userId)
             _ = try await client
                 .from("pause_plans")

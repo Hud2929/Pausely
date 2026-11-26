@@ -6,7 +6,6 @@ struct RenewalVerdictView: View {
     let subscriptionId: UUID
 
     @Environment(\.dismiss) private var dismiss
-    @Environment(\.openURL) private var openURL
     @Environment(\.dynamicTypeSize) private var typeSize
     @ObservedObject private var store = SubscriptionStore.shared
     @ObservedObject private var eventLog = LifecycleEventLog.shared
@@ -16,6 +15,7 @@ struct RenewalVerdictView: View {
     @ObservedObject private var authManager = AuthManager.shared
 
     @State private var showCancelFlow = false
+    @State private var showRetention = false
     @State private var showReceipt = false
     @State private var isKeeping = false
     @State private var enteringUsage = false
@@ -57,6 +57,9 @@ struct RenewalVerdictView: View {
         .preferredColorScheme(.dark)
         .sheet(isPresented: $showCancelFlow) {
             if let sub = subscription { CancelSubscriptionFlow(subscription: sub, showsOutcome: false) }
+        }
+        .sheet(isPresented: $showRetention) {
+            if let sub = subscription { PauselyRetentionSheet(isTrial: sub.status == .trial) }
         }
         .sheet(isPresented: $showReceipt) {
             SavingsReceiptView()
@@ -226,7 +229,7 @@ struct RenewalVerdictView: View {
 
             if sub.isPausely {
                 Perforation().padding(.vertical, 2)
-                PauselyPromiseCard()
+                PauselyPromiseCard(isTrial: sub.status == .trial)
             }
         }
     }
@@ -292,8 +295,8 @@ struct RenewalVerdictView: View {
             }
 
             Button {
-                if sub.isPausely, let url = CancelHelp.applesSubscriptions {
-                    openURL(url)
+                if sub.isPausely {
+                    showRetention = true
                 } else {
                     showCancelFlow = true
                 }
@@ -352,6 +355,7 @@ struct RenewalVerdictView: View {
                 if outcome == .cancelled {
                     Button { showReceipt = true } label: { Text("See your Savings Receipt") }
                         .buttonStyle(.ink)
+                    ShareCancelledButton(subscriptionId: sub.id, identifier: "verdictShareCancelledButton")
                     Button { dismiss() } label: { Text("Done") }
                         .buttonStyle(.ink(.quiet))
                 } else {
@@ -494,21 +498,65 @@ struct CancelledSlip: View {
 
 
 struct PauselyPromiseCard: View {
+    var isTrial: Bool = false
     @ObservedObject private var store = SubscriptionStore.shared
     @ObservedObject private var eventLog = LifecycleEventLog.shared
+    @ObservedObject private var currencyManager = CurrencyManager.shared
 
-    /// Printed on Pausely's own slip: what it has kept against what it costs.
+    /// Printed on Pausely's own slip: what it has kept (and during a free trial, what it is actively
+    /// watching before renewals arrive) against what it costs.
     var body: some View {
         let summary = SavingsSummary.current()
+        let protection = isTrial && summary.isEmpty
+            ? ProtectionSummary.current(subscriptions: store.subscriptions,
+                                        displayCurrency: currencyManager.selectedCurrency,
+                                        rates: currencyManager.rates)
+            : nil
         VStack(alignment: .leading, spacing: 6) {
             Text("The Pausely Promise")
                 .font(.footnote.weight(.semibold))
-            Text(message(summary))
+            if let protection, let guardLine = activeGuardLine(protection) {
+                Text(verbatim: guardLine)
+                    .font(.footnote)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            Text(verbatim: message(summary))
                 .font(.footnote)
+                .foregroundStyle(isTrial && summary.isEmpty ? Color.paperMuted : Color.paperInk)
                 .fixedSize(horizontal: false, vertical: true)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .accessibilityElement(children: .combine)
+    }
+
+    private func activeGuardLine(_ protection: ProtectionSummary) -> String? {
+        guard protection.watchedCount > 0 else { return nil }
+        var sentences: [String] = []
+        if let yearly = protection.yearlySpend, yearly > 0 {
+            let formatted = MoneyFormat.total(yearly, protection.displayCurrency,
+                                              converted: protection.isConverted, locale: L10n.locale, wholeUnits: true)
+            sentences.append(protection.watchedCount == 1
+                             ? L10n.string("Watching 1 subscription (about \(formatted) a year).")
+                             : L10n.string("Watching \(protection.watchedCount) subscriptions (about \(formatted) a year)."))
+        } else {
+            sentences.append(protection.watchedCount == 1
+                             ? L10n.string("Watching 1 subscription.")
+                             : L10n.string("Watching \(protection.watchedCount) subscriptions."))
+        }
+        if protection.overFreeLimitCount > 0 {
+            sentences.append(protection.overFreeLimitCount == 1
+                             ? L10n.string("1 of them wouldn't fit on the free plan.")
+                             : L10n.string("\(protection.overFreeLimitCount) of them wouldn't fit on the free plan."))
+        }
+        if let next = protection.nextCharge {
+            sentences.append(L10n.string("Next reminder: \(next.name) on \(DayText.date(next.date, locale: L10n.locale))."))
+        }
+        if let pause = PausePlanCard.yearlySavingsInfo(in: store.subscriptions, currency: currencyManager) {
+            let formatted = MoneyFormat.total(pause.amount, pause.currency,
+                                              converted: pause.isConverted, locale: L10n.locale, wholeUnits: true)
+            sentences.append(L10n.string("Pause Plan can save about \(formatted) a year."))
+        }
+        return L10n.sentences(sentences)
     }
 
     private func message(_ summary: SavingsSummary) -> String {
@@ -519,7 +567,9 @@ struct PauselyPromiseCard: View {
                 : L10n.string("Pausely is free for you, and your cancellations are on track to keep you \(summary.total(summary.onTrack)) over 12 months. If you ever pay for it, it has to save you more than it costs.")
         }
         if summary.isEmpty {
-            return L10n.string("Nothing is on your Savings Receipt yet. If Pausely doesn't save you more than its \(cost), we'd rather you cancel it.")
+            return isTrial
+                ? L10n.string("No renewals have come due yet. Over the year, if Pausely doesn't save you more than its \(cost), it will tell you to cancel it.")
+                : L10n.string("Nothing is on your Savings Receipt yet. If Pausely doesn't save you more than its \(cost), we'd rather you cancel it.")
         }
         if summary.paysForItself, let multiple = summary.returnMultiple {
             let times = multiple.formatted(.number.precision(.fractionLength(1)).locale(L10n.locale))

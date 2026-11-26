@@ -241,6 +241,9 @@ struct SignUpView: View {
             .onChange(of: authManager.isSignedIntoCloud) { _, signedIn in
                 if signedIn { dismiss() }
             }
+            .onChange(of: authManager.needsNewPassword) { _, needed in
+                if needed { dismiss() }
+            }
         }
     }
 
@@ -374,6 +377,9 @@ struct SignInView: View {
             }
             .onChange(of: authManager.isSignedIntoCloud) { _, signedIn in
                 if signedIn { dismiss() }
+            }
+            .onChange(of: authManager.needsNewPassword) { _, needed in
+                if needed { dismiss() }
             }
         }
     }

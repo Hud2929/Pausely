@@ -18,6 +18,8 @@ extension Color {
     static let widgetDue = Color(palette: Palette.due)
     /// A few days away.
     static let widgetDecide = Color(palette: Palette.decide)
+    /// Money kept by cancelling.
+    static let widgetKept = Color(palette: Palette.kept)
 }
 
 /// How near a charge is, as the app shows it: due (today or tomorrow) and soon (within three days)
@@ -97,9 +99,13 @@ extension View {
 }
 
 extension WidgetFeed {
-    /// The locale a widget speaks: the language chosen in the app, or the iPhone's.
+    /// The locale a widget speaks: the language chosen in the app (keeping the device's region), or the iPhone's.
     var locale: Locale {
-        language.map { Locale(identifier: $0) } ?? .current
+        guard let language, !language.isEmpty else { return .current }
+        if let region = Locale.current.region?.identifier, !language.contains("_"), !language.contains("-") {
+            return Locale(identifier: "\(language)_\(region)")
+        }
+        return Locale(identifier: language)
     }
 
     /// What the widget gallery shows before the person has a list: three made-up lines, named for
@@ -118,13 +124,29 @@ extension WidgetFeed {
         ]
         feed.monthlyText = "$29.47"   // money-guard: sample
         feed.yearlyText = "$354"      // money-guard: sample
+        feed.savedSoFarText = "$92.94" // money-guard: sample
+        feed.savedSoFarIsZero = false
+        feed.onTrackText = "$239.88"  // money-guard: sample
+        feed.cancelledCount = 2
         return feed
     }
 }
 
-/// A link that opens one subscription in the app.
+/// A link that opens one subscription (or its Keep/Cancel verdict when imminent) in the app.
 enum WidgetLink {
     static func subscription(_ id: UUID) -> URL? {
         URL(string: "pausely://subscription/manage?id=\(id.uuidString)")
+    }
+
+    static func verdict(_ id: UUID) -> URL? {
+        URL(string: "pausely://verdict?id=\(id.uuidString)")
+    }
+
+    static func destination(for upcoming: WidgetFeed.Upcoming) -> URL? {
+        upcoming.daysAway <= 3 ? verdict(upcoming.charge.id) : subscription(upcoming.charge.id)
+    }
+
+    static var receipt: URL? {
+        URL(string: "pausely://receipt")
     }
 }

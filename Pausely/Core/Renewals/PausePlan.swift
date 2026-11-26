@@ -73,7 +73,7 @@ enum PausePlanSchedule {
     /// their paid time while it plays.
     static func suggestedOrder(_ subs: [Subscription], now: Date, calendar: Calendar = .billing) -> [UUID] {
         func next(_ s: Subscription) -> Date {
-            s.renewsAutomatically ? (s.nextRenewal(onOrAfter: now, calendar: calendar) ?? .distantPast) : .distantPast
+            s.renewsAutomatically ? (RenewalDecisions.upcomingCharge(for: s, now: now, calendar: calendar)?.date ?? .distantPast) : .distantPast
         }
         let sorted = subs.sorted { (next($0), $0.name) > (next($1), $1.name) }
         guard let first = sorted.first else { return [] }
@@ -103,10 +103,17 @@ enum PausePlanSchedule {
 
     // MARK: - Turns
 
-    /// When the first service hands over: its next renewal on or after the plan's start.
+    /// When the first service hands over: its next charge strictly after the plan's start day
+    /// (so starting a plan on the chosen first service's renewal day doesn't immediately skip Turn 0).
     static func firstHandoff(_ plan: PausePlan, subscriptions: [UUID: Subscription], calendar: Calendar = .billing) -> Date {
-        if let firstId = plan.subscriptionIds.first, let first = subscriptions[firstId], let anchor = first.nextBillingDate {
-            return RenewalSchedule.nextRenewal(anchor: anchor, frequency: .monthly, onOrAfter: plan.startedOn, calendar: calendar)
+        let dayAfterStart = calendar.date(byAdding: .day, value: 1, to: calendar.startOfDay(for: plan.startedOn)) ?? plan.startedOn
+        if let firstId = plan.subscriptionIds.first, let first = subscriptions[firstId] {
+            if let anchor = first.nextBillingDate {
+                return RenewalSchedule.nextRenewal(anchor: anchor, frequency: .monthly, onOrAfter: dayAfterStart, calendar: calendar)
+            }
+            if first.status == .trial, let trialEnd = first.trialEndsAt {
+                return RenewalSchedule.nextRenewal(anchor: trialEnd, frequency: .monthly, onOrAfter: dayAfterStart, calendar: calendar)
+            }
         }
         let fallback = calendar.date(byAdding: .month, value: 1, to: calendar.startOfDay(for: plan.startedOn)) ?? plan.startedOn
         return calendar.noon(of: fallback)
@@ -176,9 +183,10 @@ enum PausePlanSchedule {
                                 eventDate: calendar.noon(of: event), daysBefore: daysBefore))
         }
 
-        // Services that should be paused but still renew: cancel before the next charge.
+        // Services that should be paused but still renew (including free trials): cancel before the next charge.
         for id in plan.subscriptionIds where id != current.subscriptionId {
-            guard let sub = byId[id], sub.renewsAutomatically, let next = sub.nextRenewal(onOrAfter: now, calendar: calendar),
+            guard let sub = byId[id], sub.renewsAutomatically,
+                  let next = RenewalDecisions.upcomingCharge(for: sub, now: now, calendar: calendar)?.date,
                   shouldPause(id, renewingOn: next, plan: plan, current: current, calendar: calendar) else { continue }
             add(.planCancel, id, event: next, daysBefore: 1, hour: 10)
         }

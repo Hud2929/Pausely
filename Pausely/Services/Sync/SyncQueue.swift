@@ -226,6 +226,12 @@ final class SyncQueue: ObservableObject {
 
     private func fail(_ sent: SyncIntent, _ error: Error) {
         guard let index = pending.firstIndex(where: { $0.subscriptionId == sent.subscriptionId }) else { return }
+        if pending[index].revision != sent.revision {
+            // The user edited or deleted this subscription while the older request was in flight.
+            // Retry the newer revision immediately instead of stamping backoff/refused onto it.
+            drainAgain = true
+            return
+        }
         pending[index].attempts += 1
         pending[index].refused = !Self.isUnreachable(error)
         pending[index].notBefore = now().addingTimeInterval(Self.wait(afterAttempt: pending[index].attempts))
@@ -334,16 +340,24 @@ struct SupabaseSyncTransport: SyncTransport {
         return LocalUserData.belongs(to: user.uuidString) && !SubscriptionStore.isFirstSync(for: user.uuidString)
     }
 
+    private func validSession() async throws -> Session {
+        guard client.auth.currentSession != nil else { throw SyncFailure.signedOut }
+        let session = try await client.auth.session
+        guard !session.isExpired else { throw SyncFailure.signedOut }
+        return session
+    }
+
     func create(_ subscription: Subscription) async throws {
-        guard let user = client.auth.currentSession?.user.id else { throw SyncFailure.signedOut }
+        let session = try await validSession()
         var record = SubscriptionRecord(from: subscription)
-        record.user_id = user
+        record.user_id = session.user.id
         _ = try await client.from("subscriptions").upsert(record).execute()
     }
 
     /// The whole row, without its owner (an update never changes who it belongs to). Dates that were
     /// cleared go up as null, so a resume or a removed renewal date clears on the server too.
     func update(_ subscription: Subscription) async throws {
+        _ = try await validSession()
         _ = try await client.from("subscriptions")
             .update(SubscriptionRecord(from: subscription))
             .eq("id", value: subscription.id)
@@ -351,6 +365,7 @@ struct SupabaseSyncTransport: SyncTransport {
     }
 
     func delete(id: UUID) async throws {
+        _ = try await validSession()
         try await client.from("subscriptions").delete().eq("id", value: id).execute()
     }
 }

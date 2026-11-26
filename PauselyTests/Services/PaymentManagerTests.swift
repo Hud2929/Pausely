@@ -25,10 +25,11 @@ final class PaymentManagerTests: XCTestCase {
     /// What Pro unlocks, and so what the paywall lists and the store page may promise: tracking more
     /// than the free plan does, and Pause Plan. A third thing listed here has to exist.
     func testProUnlocksExactlyWhatExists() {
-        XCTAssertEqual(ProFeature.allCases, [.unlimitedSubscriptions, .pausePlan, .batchScreenshotImport, .cancelConcierge])
+        XCTAssertEqual(ProFeature.allCases, [.unlimitedSubscriptions, .pausePlan, .spendForecast, .batchScreenshotImport, .cancelConcierge])
         XCTAssertEqual(ProFeature.allCases.map(\.title), [
             "Unlimited subscriptions",
             "Pause Plan: rotate your streaming",
+            "12-month forecast & cut simulator",
             "Batch screenshot import (up to 10 at once)",
             "Cancel & refund email drafts",
         ])

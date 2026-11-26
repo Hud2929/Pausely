@@ -9,6 +9,7 @@ struct ProfileView: View {
     @ObservedObject private var currencyManager = CurrencyManager.shared
     @Environment(\.openURL) private var openURL
     @AppStorage("app_language") private var appLanguage = "system"
+    @AppStorage(TallyImporter.waitingVersionKey) private var waitingVersion = 0
 
     @State private var sheet: Sheet?
     @State private var confirmSignOut = false
@@ -20,9 +21,10 @@ struct ProfileView: View {
     @Environment(\.dynamicTypeSize) private var typeSize
     @State private var managingPlan = false
     @State private var requestingRefund = false
+    @State private var eligibleWinBack: StoreKitManager.FreeExtensionOffer?
 
     private enum Sheet: String, Identifiable {
-        case paywall, notifications, receipt, currency, privacy, help, export, whatsNew, wrapped, inbox, screenshots, language
+        case paywall, retention, notifications, receipt, currency, privacy, help, export, whatsNew, wrapped, inbox, screenshots, language
         var id: String { rawValue }
     }
 
@@ -97,22 +99,28 @@ struct ProfileView: View {
         .readableScroll()
         .inkScreen()
         .task(id: paymentManager.currentTier) {
-            #if DEBUG
-            // `--demo-pro`, `=trial`, `=ending`, `=problem`: the plan group in each of its states,
-            // which otherwise needs a purchase through the App Store.
-            if let shown = LaunchFlag.value(of: "--demo-pro") {
-                plan = .demo(shown)
-                return
-            }
-            #endif
-            plan = paymentManager.isPremium ? await StoreKitManager.shared.ownSubscription(for: paymentManager.currentTier) : nil
+            await refreshPlanState()
         }
         // Apple's own sheets: changing or cancelling the plan, and asking for money back.
         .manageSubscriptionsSheet(isPresented: $managingPlan)
         .refundRequestSheet(for: plan?.transactionId ?? 0, isPresented: $requestingRefund)
+        .onChange(of: managingPlan) { _, presented in
+            if !presented {
+                Task {
+                    await PaymentManager.shared.updateCurrentEntitlements()
+                    await refreshPlanState()
+                }
+            }
+        }
+        .onChange(of: sheet) { previous, current in
+            if previous == .retention && current == nil {
+                Task { await refreshPlanState() }
+            }
+        }
         .sheet(item: $sheet) { sheet in
             switch sheet {
-            case .paywall: StoreKitUpgradeView()
+            case .paywall: StoreKitUpgradeView(trigger: profilePaywallTrigger)
+            case .retention: PauselyRetentionSheet(isTrial: plan?.isTrial ?? false, isManaging: true)
             case .notifications: NotificationsSettingsView()
             case .receipt: SavingsReceiptView()
             case .currency: CurrencySettingsView()
@@ -153,6 +161,29 @@ struct ProfileView: View {
                         : User(id: "demo", email: "jane.doe@longer-company-name.example.co.uk")
     }
     #endif
+
+    private var profilePaywallTrigger: ProFeature? {
+        let waiting = waitingVersion >= 0 ? TallyImporter.waitingLines().count : 0
+        if waiting > 0 || !paymentManager.hasRoom(in: store.subscriptions) { return .unlimitedSubscriptions }
+        if PausePlanCard.yearlySavingsInfo(in: store.subscriptions, currency: currencyManager) != nil { return .pausePlan }
+        return nil
+    }
+
+    private var freePlanStatusLine: String {
+        let waiting = waitingVersion >= 0 ? TallyImporter.waitingLines().count : 0
+        let used = FreeTier.used(by: store.subscriptions)
+        if waiting > 0 {
+            return L10n.string("Free plan: \(used) of \(used + waiting) subscriptions tracked (\(waiting) waiting).")
+        }
+        if let info = PausePlanCard.yearlySavingsInfo(in: store.subscriptions, currency: currencyManager) {
+            let formatted = MoneyFormat.total(info.amount, info.currency, converted: info.isConverted, locale: L10n.locale, wholeUnits: true)
+            return L10n.string("Free plan: rotate streaming in Pro to save about \(formatted) a year.")
+        }
+        if used > 0 {
+            return L10n.string("Free plan: \(used) of \(FreeTier.subscriptionLimit) places used.")
+        }
+        return L10n.string("Free plan: Pausely tracks up to \(FreeTier.subscriptionLimit) subscriptions.")
+    }
 
     private var header: some View {
         let user = shownUser
@@ -195,17 +226,25 @@ struct ProfileView: View {
                     .fixedSize(horizontal: false, vertical: true)
                     .accessibilityLabel(Text(verbatim: email))
             }
-            Text(isPro ? L10n.string("Pausely Pro")
-                       : L10n.string("Free plan: Pausely tracks up to \(FreeTier.subscriptionLimit) subscriptions."))
+            Text(isPro ? L10n.string("Pausely Pro") : freePlanStatusLine)
                 .font(.subheadline)
                 .foregroundStyle(Color.inkTextMuted)
                 .fixedSize(horizontal: false, vertical: true)
                 .padding(.top, 2)
             if !isPro {
-                Button { sheet = .paywall } label: { Text("See Pro") }
-                    .buttonStyle(.ink(.quiet))
+                if let winBack = eligibleWinBack {
+                    Button { sheet = .paywall } label: {
+                        Text("Welcome back — claim \(winBack.days) more days free")
+                    }
+                    .buttonStyle(.ink)
                     .padding(.top, 12)
-                    .accessibilityIdentifier("upgradePromptCard")
+                    .accessibilityIdentifier("profileWinBackButton")
+                } else {
+                    Button { sheet = .paywall } label: { Text("See Pausely Pro") }
+                        .buttonStyle(.ink(.quiet))
+                        .padding(.top, 12)
+                        .accessibilityIdentifier("upgradePromptCard")
+                }
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -232,8 +271,16 @@ struct ProfileView: View {
                 Hairline()
             }
             // A free trial has been charged nothing, so there is nothing to refund: Manage ends it.
+            // While renewal is active, open the honest protection summary first (with 1-tap Apple Manage);
+            // once already set to end, go straight to Apple's sheet.
             row("creditcard", L10n.string("Manage subscription"), value: plan.statusLine(), id: "managePlanButton",
-                last: plan.transactionId == nil || plan.isTrial) { managingPlan = true }
+                last: plan.transactionId == nil || plan.isTrial) {
+                if plan.willRenew == false {
+                    managingPlan = true
+                } else {
+                    sheet = .retention
+                }
+            }
             if plan.transactionId != nil, !plan.isTrial {
                 row("arrow.uturn.backward", L10n.string("Request a refund"), id: "refundPlanButton", last: true) { requestingRefund = true }
             }
@@ -308,6 +355,24 @@ struct ProfileView: View {
         }
     }
 
+    private func refreshPlanState() async {
+        #if DEBUG
+        if let shown = LaunchFlag.value(of: "--demo-pro") {
+            plan = .demo(shown)
+            eligibleWinBack = nil
+            return
+        }
+        #endif
+        if paymentManager.isPremium {
+            plan = await StoreKitManager.shared.ownSubscription(for: paymentManager.currentTier)
+            eligibleWinBack = nil
+        } else {
+            plan = nil
+            await StoreKitManager.shared.loadProducts()
+            eligibleWinBack = await StoreKitManager.shared.bestEligibleWinBackOffer()?.offer
+        }
+    }
+
     private func open(_ address: String) {
         if let url = URL(string: address) { openURL(url) }
     }
@@ -325,9 +390,8 @@ struct SubscriptionWrappedView: View {
 
     private var stats: WrappedStats { WrappedStats(subscriptions: subscriptions, events: LifecycleEventLog.shared.events) }
     private var isEmpty: Bool { stats.hasNothingToShow }
-    /// The slip as a picture for sharing, drawn once when the screen opens (it was drawn on every
-    /// pass of the screen's body).
-    @State private var picture: Image?
+    /// The slip pictures for sharing, drawn once when the screen opens (full and privacy-safe without names).
+    @State private var pictures: (withoutNames: Image?, whole: Image?) = (nil, nil)
 
     var body: some View {
         ScrollView {
@@ -335,12 +399,28 @@ struct SubscriptionWrappedView: View {
                 HStack {
                     LeaveButton("Done") { dismiss() }
                     Spacer()
-                    if !isEmpty, let image = picture {
-                        ShareLink(item: image, preview: SharePreview(L10n.string("Your year in subscriptions"), image: image)) {
+                    if !isEmpty, (pictures.withoutNames != nil || pictures.whole != nil) {
+                        Menu {
+                            if let image = pictures.withoutNames {
+                                ShareLink(item: image,
+                                          message: Text(verbatim: ShareSlipFooter.shareMessage),
+                                          preview: SharePreview(L10n.string("Your year in subscriptions"), image: image)) {
+                                    Label(L10n.string("Share without service names"), systemImage: "person.fill.questionmark")
+                                }
+                            }
+                            if let image = pictures.whole {
+                                ShareLink(item: image,
+                                          message: Text(verbatim: ShareSlipFooter.shareMessage),
+                                          preview: SharePreview(L10n.string("Your year in subscriptions"), image: image)) {
+                                    Label(L10n.string("Share"), systemImage: "square.and.arrow.up")
+                                }
+                            }
+                        } label: {
                             Image(systemName: "square.and.arrow.up")
                                 .font(.body.weight(.semibold))
                                 .foregroundStyle(Color.inkText)
                                 .frame(width: Layout.tapTarget, height: Layout.tapTarget, alignment: .trailing)
+                                .contentShape(Rectangle())
                         }
                         .accessibilityLabel(Text("Share"))
                     }
@@ -370,6 +450,17 @@ struct SubscriptionWrappedView: View {
 
                     YearSlip(stats: stats, currency: currencyManager.selectedCurrency)
                         .padding(.top, 24)
+
+                    if let image = pictures.withoutNames {
+                        ShareLink(item: image,
+                                  message: Text(verbatim: ShareSlipFooter.shareMessage),
+                                  preview: SharePreview(L10n.string("Your year in subscriptions"), image: image)) {
+                            Label(L10n.string("Share my year"), systemImage: "square.and.arrow.up")
+                        }
+                        .buttonStyle(.ink(.quiet))
+                        .padding(.top, 16)
+                        .accessibilityIdentifier("wrappedShareBottomButton")
+                    }
                 }
             }
             .padding(.horizontal, Layout.margin)
@@ -380,7 +471,9 @@ struct SubscriptionWrappedView: View {
         .inkScreen()
         .preferredColorScheme(.dark)
         .task(id: "\(subscriptions.count)|\(currencyManager.selectedCurrency)") {
-            picture = isEmpty ? nil : YearSlip.image(stats: stats, currency: currencyManager.selectedCurrency)
+            pictures = isEmpty ? (nil, nil)
+                : (YearSlip.image(stats: stats, currency: currencyManager.selectedCurrency, hideNames: true),
+                   YearSlip.image(stats: stats, currency: currencyManager.selectedCurrency, hideNames: false))
         }
     }
 }
@@ -389,6 +482,8 @@ struct SubscriptionWrappedView: View {
 private struct YearSlip: View {
     let stats: WrappedStats
     let currency: String
+    var hideNames: Bool = false
+    var forSharing: Bool = false
 
     private func money(_ amount: Decimal) -> String {
         MoneyFormat.total(amount, currency, converted: stats.isConverted, locale: L10n.locale)
@@ -404,7 +499,9 @@ private struct YearSlip: View {
                 ProofLine(label: L10n.string("Each month"), value: money(stats.monthlyCost))
                 ProofLine(label: L10n.string("Each year"), value: money(stats.yearlyCost), emphasised: true)
                 Perforation()
-                ProofLine(label: L10n.string("Biggest"), value: stats.topService)
+                if !hideNames {
+                    ProofLine(label: L10n.string("Biggest"), value: stats.topService)
+                }
                 ProofLine(label: L10n.string("Most goes to"), value: SubscriptionCategory.localizedLabel(for: stats.topCategory))
                 if stats.cancelledCount > 0 || !kept.isEmpty {
                     Perforation()
@@ -415,13 +512,16 @@ private struct YearSlip: View {
                             .foregroundStyle(Color.paperKept)
                     }
                 }
+                if forSharing {
+                    ShareSlipFooter()
+                }
             }
         }
     }
 
     @MainActor
-    static func image(stats: WrappedStats, currency: String) -> Image? {
-        let renderer = ImageRenderer(content: YearSlip(stats: stats, currency: currency)
+    static func image(stats: WrappedStats, currency: String, hideNames: Bool = false) -> Image? {
+        let renderer = ImageRenderer(content: YearSlip(stats: stats, currency: currency, hideNames: hideNames, forSharing: true)
             .frame(width: 360).padding(24).background(Color.ink)
             .inTheAppsLanguage())
         renderer.scale = 3

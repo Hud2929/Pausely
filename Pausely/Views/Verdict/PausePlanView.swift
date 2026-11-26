@@ -14,11 +14,18 @@ struct PausePlanView: View {
     @State private var selected: Set<UUID> = []
     @State private var firstId: UUID?
     @State private var didSetDefaults = false
-    @State private var showPaywall = false
+    @State private var paywallRequest: PaywallRequest?
     @State private var cancelTarget: Subscription?
     @State private var confirmEnd = false
     @State private var isWorking = false
     @Environment(\.dynamicTypeSize) private var typeSize
+
+    private struct PaywallRequest: Identifiable {
+        let id = UUID()
+        let context: PaywallContext
+        let pendingStartSub: Subscription?
+        let autoStartPlan: Bool
+    }
 
     private var eligible: [Subscription] {
         store.subscriptions.filter(PausePlanSchedule.isEligible).sorted { $0.name < $1.name }
@@ -52,8 +59,14 @@ struct PausePlanView: View {
             }
         }
         .preferredColorScheme(.dark)
-        .sheet(isPresented: $showPaywall) {
-            StoreKitUpgradeView(trigger: .pausePlan)
+        .sheet(item: $paywallRequest) { request in
+            StoreKitUpgradeView(context: request.context) {
+                if request.autoStartPlan {
+                    startSelectedPlan()
+                } else if let sub = request.pendingStartSub {
+                    Task { _ = await planStore.markStarted(sub) }
+                }
+            }
         }
         .sheet(item: $cancelTarget) { sub in
             CancelSubscriptionFlow(subscription: sub)
@@ -75,6 +88,21 @@ struct PausePlanView: View {
     }
 
     // MARK: - Setup
+
+    private func startSelectedPlan() {
+        guard chosen.count >= 2, !isWorking else { return }
+        isWorking = true
+        Task {
+            var order = PausePlanSchedule.suggestedOrder(chosen, now: Date())
+            if let firstId, let index = order.firstIndex(of: firstId) {
+                order.remove(at: index)
+                order.insert(firstId, at: 0)
+            }
+            await planStore.start(order: order)
+            Feel.landed()
+            isWorking = false
+        }
+    }
 
     private func setDefaults() {
         guard !didSetDefaults else { return }
@@ -132,19 +160,20 @@ struct PausePlanView: View {
             Button {
                 guard chosen.count >= 2 else { return }
                 if paymentManager.isUnlocked(.pausePlan) {
-                    isWorking = true
-                    Task {
-                        var order = PausePlanSchedule.suggestedOrder(chosen, now: Date())
-                        if let firstId, let index = order.firstIndex(of: firstId) {
-                            order.remove(at: index)
-                            order.insert(firstId, at: 0)
-                        }
-                        await planStore.start(order: order)
-                        Feel.landed()
-                        isWorking = false
-                    }
+                    startSelectedPlan()
                 } else {
-                    showPaywall = true
+                    let info = PausePlanCard.yearlySavingsInfo(in: chosen, currency: currencyManager)
+                    paywallRequest = PaywallRequest(
+                        context: PaywallContext(
+                            trigger: .pausePlan,
+                            pausePlanYearlySavings: info?.amount,
+                            pausePlanCurrency: info?.currency,
+                            pausePlanIsConverted: info?.isConverted ?? false,
+                            pausePlanServices: chosen.map(\.name)
+                        ),
+                        pendingStartSub: nil,
+                        autoStartPlan: true
+                    )
                 }
             } label: {
                 Label(paymentManager.isUnlocked(.pausePlan) ? L10n.string("Start Pause Plan") : L10n.string("Start Pause Plan with Pro"),
@@ -312,8 +341,33 @@ struct PausePlanView: View {
                 .filter { $0.index > current.index }
             let nextSub = upcoming.first.flatMap { subs[$0.subscriptionId] }
 
+            if !paymentManager.isUnlocked(.pausePlan) {
+                VStack(alignment: .leading, spacing: 10) {
+                    Text("Your Pausely Pro plan ended")
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(Color.inkText)
+                    Text("Your schedule stays here. Renew Pro to keep rotating with Pause Plan.")
+                        .font(.footnote)
+                        .foregroundStyle(Color.inkTextMuted)
+                        .fixedSize(horizontal: false, vertical: true)
+                    Button {
+                        paywallRequest = PaywallRequest(
+                            context: PaywallContext(trigger: .pausePlan),
+                            pendingStartSub: nil,
+                            autoStartPlan: false
+                        )
+                    } label: { Text("Renew Pausely Pro") }
+                        .buttonStyle(.ink(.quiet))
+                }
+                .padding(.vertical, 8)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                Hairline()
+            }
+
             nowCard(currentSub, until: current.end, next: nextSub)
-            todoCard(plan, current: current, currentSub: currentSub, next: upcoming.first, today: today)
+            if paymentManager.isUnlocked(.pausePlan) {
+                todoCard(plan, current: current, currentSub: currentSub, next: upcoming.first, today: today)
+            }
             scheduleCard(upcoming)
             savedCard(plan)
 
@@ -377,7 +431,8 @@ struct PausePlanView: View {
                               action: .start))
         }
         for id in plan.subscriptionIds where id != current.subscriptionId {
-            guard let sub = subs[id], sub.renewsAutomatically, let renewal = sub.nextRenewal(onOrAfter: today),
+            guard let sub = subs[id], sub.renewsAutomatically,
+                  let renewal = RenewalDecisions.upcomingCharge(for: sub, now: today)?.date,
                   PausePlanSchedule.shouldPause(id, renewingOn: renewal, plan: plan, current: current) else { continue }
             items.append(Todo(id: "cancel-\(id)", sub: sub,
                               // A free trial doesn't renew: it ends, and that is its first charge.
@@ -433,7 +488,18 @@ struct PausePlanView: View {
                             switch item.action {
                             case .cancel: cancelTarget = item.sub
                             case .start: Task {
-                                if !(await planStore.markStarted(item.sub)) { showPaywall = true }
+                                if !(await planStore.markStarted(item.sub)) {
+                                    paywallRequest = PaywallRequest(
+                                        context: PaywallContext(
+                                            trigger: .unlimitedSubscriptions,
+                                            serviceName: item.sub.name,
+                                            serviceChargeAmount: item.sub.amount,
+                                            serviceChargeCurrency: item.sub.currency
+                                        ),
+                                        pendingStartSub: item.sub,
+                                        autoStartPlan: false
+                                    )
+                                }
                             }
                             }
                         } label: {
@@ -523,6 +589,23 @@ struct PausePlanCard: View {
         plan != nil || subscriptions.filter(PausePlanSchedule.isEligible).count >= 2
     }
 
+    /// Strict yearly savings across eligible active streaming subscriptions; nil if any eligible
+    /// subscription cannot be converted (no silent zero-drops).
+    @MainActor static func yearlySavingsInfo(in subscriptions: [Subscription], currency: CurrencyManager)
+        -> (amount: Decimal, currency: String, isConverted: Bool, names: [String])? {
+        let eligible = subscriptions.filter { PausePlanSchedule.isEligible($0) && $0.status != .cancelled }
+        guard eligible.count >= 2 else { return nil }
+        let display = currency.selectedCurrency
+        var costs: [Decimal] = []
+        for sub in eligible {
+            guard let converted = currency.convertToSelected(sub.monthlyCost, from: sub.currency) else { return nil }
+            costs.append(converted)
+        }
+        let savings = PausePlanSchedule.yearlySavings(monthlyCosts: costs)
+        guard savings > 0 else { return nil }
+        return (savings, display, eligible.isConverted(to: display), eligible.map(\.name))
+    }
+
     var body: some View {
         // A row like the ones around it: words on the margin, no picture, the way in at the end.
         // (It was an icon in a circle with caption-size text, set 16 points in from everything else.)
@@ -561,17 +644,19 @@ struct PausePlanCard: View {
 
     private var subtitle: String {
         let byId = Dictionary(store.subscriptions.map { ($0.id, $0) }, uniquingKeysWith: { a, _ in a })
-        if let plan = planStore.activePlan,
-           let current = PausePlanSchedule.currentTurn(plan, subscriptions: byId, now: Date()),
-           let sub = byId[current.subscriptionId] {
-            return L10n.string("\(sub.name) is on until \(DayText.date(current.end, locale: L10n.locale)).")
+        if let plan = planStore.activePlan {
+            if !paymentManager.isUnlocked(.pausePlan) {
+                return L10n.string("Pausely Pro ended. Renew to keep rotating.")
+            }
+            if let current = PausePlanSchedule.currentTurn(plan, subscriptions: byId, now: Date()),
+               let sub = byId[current.subscriptionId] {
+                return L10n.string("\(sub.name) is on until \(DayText.date(current.end, locale: L10n.locale)).")
+            }
         }
-        let eligible = store.subscriptions.filter { PausePlanSchedule.isEligible($0) && $0.status != .cancelled }
-        let costs = eligible.compactMap { currencyManager.convertToSelected($0.monthlyCost, from: $0.currency) }
-        let savings = PausePlanSchedule.yearlySavings(monthlyCosts: costs)
-        guard savings > 0 else {
+        guard let info = Self.yearlySavingsInfo(in: store.subscriptions, currency: currencyManager) else {
             return L10n.string("Rotate your streaming services and watch one at a time.")
         }
-        return L10n.string("Watch one streaming service at a time and get about \(currencyManager.format(savings)) a year back.")
+        let formatted = MoneyFormat.total(info.amount, info.currency, converted: info.isConverted, locale: L10n.locale)
+        return L10n.string("Watch one streaming service at a time and get about \(formatted) a year back.")
     }
 }

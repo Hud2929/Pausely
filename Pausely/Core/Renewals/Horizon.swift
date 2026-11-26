@@ -77,6 +77,24 @@ enum Horizon {
     }
 
     static func undated(_ subscriptions: [Subscription]) -> [Subscription] {
-        subscriptions.filter { $0.status == .active && $0.nextBillingDate == nil }
+        subscriptions.filter { $0.renewsAutomatically && RenewalDecisions.upcomingCharge(for: $0, now: Date()) == nil }
+    }
+
+    /// Non-monthly renewals (quarterly, semi-annual, annual) landing 32–90 days out, soonest first.
+    /// Keeps large upcoming annual bills visible in Insights well before the 30-day Home horizon.
+    static func laterLargeRenewals(for subscriptions: [Subscription], now: Date, calendar: Calendar = .billing) -> [Charge] {
+        let today = calendar.startOfDay(for: now)
+        let windowEnd = 90
+        var result: [Charge] = []
+        for sub in subscriptions where sub.renewsAutomatically && [.quarterly, .semiannual, .yearly].contains(sub.billingFrequency) {
+            guard sub.status != .trial, let anchor = sub.nextBillingDate else { continue }
+            let next = RenewalSchedule.nextRenewal(anchor: anchor, frequency: sub.billingFrequency,
+                                                   onOrAfter: now, calendar: calendar)
+            let offset = calendar.calendarDays(from: today, to: next)
+            guard offset >= days && offset <= windowEnd else { continue }
+            result.append(Charge(subscriptionId: sub.id, name: sub.name, category: sub.category, date: next,
+                                 dayOffset: offset, amount: sub.amount, currency: sub.currency, isTrialEnd: false))
+        }
+        return result.sorted { ($0.dayOffset, $0.name) < ($1.dayOffset, $1.name) }
     }
 }

@@ -14,26 +14,52 @@ final class ReviewPromptManager: ObservableObject {
     private let lastRequestDateKey = "review_last_request_date"
     private let currentYearKey = "review_current_year"
     private let receiptMilestoneKey = "review_receipt_milestone_last"
+    private let decisionMilestoneKey = "review_decision_milestone_last"
     private let maxRequestsPerYear = 3
 
-    /// Pausely asks for a rating only after it has visibly saved money, never before.
+    /// Pausely asks for a rating only after proven value (money kept or repeated renewal verdicts),
+    /// never during onboarding and never over a modal.
     enum ReviewTrigger {
         /// A cancellation is on the Savings Receipt. Asks at the 1st, 3rd and 10th cancellation.
         case moneyKept(receiptLines: Int)
+        /// Renewal decisions completed (kept or cancelled). Asks at the 3rd and 10th decision.
+        case decisionsMade(count: Int)
     }
 
     nonisolated static let receiptMilestones = [1, 3, 10]
+    nonisolated static let decisionMilestones = [3, 10]
 
     /// The highest milestone a receipt with this many cancellations has reached (0 when none).
     nonisolated static func milestone(forReceiptLines lines: Int) -> Int {
         receiptMilestones.last { lines >= $0 } ?? 0
     }
 
+    /// The highest milestone reached for total renewal decisions made (0 when below 3).
+    nonisolated static func milestone(forDecisions count: Int) -> Int {
+        decisionMilestones.last { count >= $0 } ?? 0
+    }
+
     private init() {}
+
+    /// Anchors the waiting window to when the user first reached Home so cancellations or decisions
+    /// after 3+ days of use aren't artificially delayed another 3 days.
+    func recordFirstSeenIfNeeded() {
+        if UserDefaults.standard.object(forKey: firstChanceKey) == nil {
+            UserDefaults.standard.set(Date(), forKey: firstChanceKey)
+        }
+    }
 
     /// Asks once the Savings Receipt reaches the next milestone. Safe to call often.
     func askAfterMoneyKept() {
+        recordFirstSeenIfNeeded()
         requestReviewIfAppropriate(after: .moneyKept(receiptLines: SavingsSummary.current().lines.count))
+    }
+
+    /// Asks once the user has completed enough Keep/Cancel renewal verdicts. Safe to call often.
+    func askAfterDecisionMade() {
+        recordFirstSeenIfNeeded()
+        let decisions = LifecycleEventLog.shared.events.filter { $0.kind == .kept || $0.kind == .cancelled }.count
+        requestReviewIfAppropriate(after: .decisionsMade(count: decisions))
     }
 
     func requestReviewIfAppropriate(after trigger: ReviewTrigger) {
@@ -48,6 +74,11 @@ final class ReviewPromptManager: ObservableObject {
             let lastAsked = UserDefaults.standard.integer(forKey: receiptMilestoneKey)
             guard reached > lastAsked else { return }
             presentReviewRequest { UserDefaults.standard.set(reached, forKey: self.receiptMilestoneKey) }
+        case .decisionsMade(let count):
+            let reached = Self.milestone(forDecisions: count)
+            let lastAsked = UserDefaults.standard.integer(forKey: decisionMilestoneKey)
+            guard reached > lastAsked else { return }
+            presentReviewRequest { UserDefaults.standard.set(reached, forKey: self.decisionMilestoneKey) }
         }
     }
 

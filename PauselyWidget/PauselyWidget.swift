@@ -76,7 +76,8 @@ struct ChargesWidgetView: View {
             }
         }
         .environment(\.locale, entry.locale)
-        .widgetURL(entry.upcoming.first.flatMap { WidgetLink.subscription($0.charge.id) })
+        .environment(\.layoutDirection, entry.locale.language.characterDirection == .rightToLeft ? .rightToLeft : .leftToRight)
+        .widgetURL(entry.upcoming.first.flatMap { WidgetLink.destination(for: $0) })
         .inkGround()
     }
 }
@@ -185,7 +186,7 @@ struct ChargeRow: View {
     let item: WidgetFeed.Upcoming
 
     var body: some View {
-        Link(destination: WidgetLink.subscription(item.charge.id) ?? URL(string: "pausely://")!) {
+        Link(destination: WidgetLink.destination(for: item) ?? URL(string: "pausely://")!) {
             HStack(alignment: .firstTextBaseline, spacing: 8) {
                 VStack(alignment: .leading, spacing: 2) {
                     Text(verbatim: item.charge.name)
@@ -326,6 +327,7 @@ struct PauselyWidgetBundle: WidgetBundle {
     var body: some Widget {
         PauselyWidget()
         TrialCountdownWidget()
+        SavingsReceiptWidget()
     }
 }
 

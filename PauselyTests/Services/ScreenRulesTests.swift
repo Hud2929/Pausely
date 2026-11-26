@@ -97,7 +97,7 @@ final class ScreenRulesTests: XCTestCase {
     /// it was cleared when the drag reported its end, and a drag the scroll view takes over (a scroll
     /// that begins on the line) never does: the rows after that day could stay faded to a third.
     func testTheDayPickedOnHomesLineLetsGoWithTheFinger() throws {
-        let home = root.appendingPathComponent("Pausely/Views/DashboardView.swift")
+        let home = root.appendingPathComponent("Pausely/Views/DashboardComponents.swift")
         try XCTSkipUnless(FileManager.default.fileExists(atPath: home.path), "Sources aren't readable from this test run")
         let source = try String(contentsOf: home, encoding: .utf8)
         XCTAssertTrue(source.contains("@GestureState private var selectedDay: Int?"))
@@ -315,8 +315,8 @@ final class ScreenRulesTests: XCTestCase {
         try XCTSkipUnless(FileManager.default.fileExists(atPath: sources.path), "Sources aren't readable from this test run")
         let drawn: [(file: String, with: String)] = [
             ("Views/SubscriptionsView.swift", "Facts(detail)"),
-            ("Views/DashboardView.swift", "Facts(detail)"),
-            ("Views/DashboardView.swift", "Facts(when)"),
+            ("Views/DashboardComponents.swift", "Facts(detail)"),
+            ("Views/DashboardComponents.swift", "Facts(when)"),
             ("Views/Verdict/RenewalVerdictView.swift", "Facts(whenText(charge))"),
             ("Views/Verdict/RenewalVerdictView.swift", "Facts(text)"),
             ("Views/SubscriptionManagementView.swift", "Facts(line.text)"),
@@ -549,13 +549,15 @@ final class ScreenRulesTests: XCTestCase {
         XCTAssertEqual(DashboardView.notInTotal([netflix, undated("Hulu")]),
                        "2 subscriptions aren't in this total: they have no renewal date.")
 
-        let url = root.appendingPathComponent("Pausely/Views/DashboardView.swift")
-        try XCTSkipUnless(FileManager.default.fileExists(atPath: url.path), "Sources aren't readable from this test run")
-        let source = try String(contentsOf: url, encoding: .utf8)
-        XCTAssertTrue(source.contains("notInTotal: Self.notInTotal(Horizon.undated(store.subscriptions))"))
+        let dashboard = root.appendingPathComponent("Pausely/Views/DashboardView.swift")
+        let components = root.appendingPathComponent("Pausely/Views/DashboardComponents.swift")
+        try XCTSkipUnless(FileManager.default.fileExists(atPath: dashboard.path), "Sources aren't readable from this test run")
+        let dashSource = try String(contentsOf: dashboard, encoding: .utf8)
+        let compSource = try String(contentsOf: components, encoding: .utf8)
+        XCTAssertTrue(dashSource.contains("notInTotal: Self.notInTotal(Horizon.undated(store.subscriptions))"))
         // Said right under the total it qualifies, before the line and the rows.
-        let header = try XCTUnwrap(source.range(of: ".accessibilityAddTraits(.isHeader)"))
-        let after = source[header.upperBound...]
+        let header = try XCTUnwrap(compSource.range(of: ".accessibilityAddTraits(.isHeader)"))
+        let after = compSource[header.upperBound...]
         let said = try XCTUnwrap(after.range(of: "if let notInTotal {"))
         let line = try XCTUnwrap(after.range(of: "line.padding(.top, 10)"))
         XCTAssertTrue(said.lowerBound < line.lowerBound)
@@ -1291,7 +1293,7 @@ final class ScreenRulesTests: XCTestCase {
                 XCTAssertTrue(source[start..<end].contains(".inTheAppsLanguage()"), file.lastPathComponent)
             }
         }
-        XCTAssertEqual(pictures, 2, "the year slip and the Savings Receipt")
+        XCTAssertEqual(pictures, 4, "the year slip, the Savings Receipt, the first-run gap slip, and the cancelled savings slip")
     }
 
     /// "Rate Pausely" opens the review form on Pausely's App Store page. It used to ask iOS for its

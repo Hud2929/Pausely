@@ -55,7 +55,8 @@ struct TrialsWidgetView: View {
             }
         }
         .environment(\.locale, entry.locale)
-        .widgetURL(trials.first.flatMap { WidgetLink.subscription($0.charge.id) })
+        .environment(\.layoutDirection, entry.locale.language.characterDirection == .rightToLeft ? .rightToLeft : .leftToRight)
+        .widgetURL(trials.first.flatMap { WidgetLink.destination(for: $0) })
         .inkGround()
     }
 }

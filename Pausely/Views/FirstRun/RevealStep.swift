@@ -8,10 +8,26 @@ struct RevealStep: View {
     let onKeep: () -> Void
     var onContinueWithoutAccount: (() -> Void)? = nil
 
+    @ObservedObject private var paymentManager = PaymentManager.shared
     @State private var printed = 0
     @State private var showTotals = false
     @State private var editing: TallyLine?
     @State private var choosingTracked = false
+    @State private var showingPaywall = false
+    @State private var pendingPaywallFromPicker = false
+    @State private var shareImage: Image?
+
+    private var overflowLines: [TallyLine] {
+        let limit = FreeTier.room(in: [])
+        let ranked = tally.lines.sorted {
+            (rates.convert($0.yearlyCost, from: $0.currency, to: tally.currency) ?? -1)
+                > (rates.convert($1.yearlyCost, from: $1.currency, to: tally.currency) ?? -1)
+        }
+        let chosen: Set<String> = tally.preferredNames.isEmpty
+            ? Set(ranked.prefix(limit).map(\.name))
+            : Set(tally.preferredNames.prefix(limit))
+        return ranked.filter { !chosen.contains($0.name) }
+    }
 
     private var monthly: String { money(tally.monthlyTotal(rates: rates)) }
     private var yearly: String { money(tally.yearlyTotal(rates: rates)) }
@@ -25,7 +41,23 @@ struct RevealStep: View {
     var body: some View {
         ActionScreen {
             VStack(alignment: .leading, spacing: 0) {
-                FirstRunBackButton(action: onBack)
+                HStack {
+                    FirstRunBackButton(action: onBack)
+                    Spacer()
+                    if showTotals, let image = shareImage {
+                        ShareLink(item: image,
+                                  message: Text(verbatim: ShareSlipFooter.shareMessage),
+                                  preview: SharePreview(L10n.string("Your subscriptions"), image: image)) {
+                            Image(systemName: "square.and.arrow.up")
+                                .font(.body.weight(.semibold))
+                                .foregroundStyle(Color.inkText)
+                                .frame(width: Layout.tapTarget, height: Layout.tapTarget, alignment: .trailing)
+                                .contentShape(Rectangle())
+                        }
+                        .accessibilityLabel(Text("Share"))
+                        .accessibilityIdentifier("revealShareButton")
+                    }
+                }
 
                 Text(verbatim: headline)
                     .font(.question(.title))
@@ -47,31 +79,63 @@ struct RevealStep: View {
                 // cleanly above the fold before the person keeps their list.
                 if FreeTier.isExceeded(by: tally.subscriptions()) {
                     VStack(alignment: .leading, spacing: 4) {
-                        Text(tally.preferredNames.isEmpty
-                             ? L10n.string("The free plan tracks \(FreeTier.subscriptionLimit), the most expensive first. The rest wait until you make room or go Pro.")
-                             : L10n.string("You chose \(tally.preferredNames.count) to track. The rest wait until you make room or go Pro."))
-                            .font(.footnote)
-                            .foregroundStyle(Color.inkTextMuted)
-                            .fixedSize(horizontal: false, vertical: true)
-                            .accessibilityIdentifier("revealFreeLimit")
-                        Button { choosingTracked = true } label: {
+                        if paymentManager.isPremium {
+                            Text("Pausely Pro tracks all \(tally.lines.count) subscriptions.")
+                                .font(.footnote)
+                                .foregroundStyle(Color.kept)
+                                .fixedSize(horizontal: false, vertical: true)
+                        } else {
                             Text(tally.preferredNames.isEmpty
-                                 ? L10n.string("Choose which \(FreeTier.subscriptionLimit)")
-                                 : L10n.string("Change which \(FreeTier.subscriptionLimit)"))
-                                .font(.footnote.weight(.semibold))
-                                .foregroundStyle(Color.inkText)
-                                .underline()
-                                .tapArea(.leading)
+                                 ? L10n.string("The free plan tracks \(FreeTier.subscriptionLimit), the most expensive first. The rest wait until you make room or go Pro.")
+                                 : L10n.string("You chose \(tally.preferredNames.count) to track. The rest wait until you make room or go Pro."))
+                                .font(.footnote)
+                                .foregroundStyle(Color.inkTextMuted)
+                                .fixedSize(horizontal: false, vertical: true)
+                                .accessibilityIdentifier("revealFreeLimit")
+                            LineOrStack(spacing: 16, lineSpacing: 0) {
+                                Button { choosingTracked = true } label: {
+                                    Text(tally.preferredNames.isEmpty
+                                         ? L10n.string("Choose which \(FreeTier.subscriptionLimit)")
+                                         : L10n.string("Change which \(FreeTier.subscriptionLimit)"))
+                                        .font(.footnote.weight(.semibold))
+                                        .foregroundStyle(Color.inkText)
+                                        .underline()
+                                        .tapArea(.leading)
+                                }
+                                .buttonStyle(.plain)
+                                .accessibilityIdentifier("revealChooseFiveButton")
+
+                                Button {
+                                    showingPaywall = true
+                                } label: {
+                                    Text("Track all \(tally.lines.count) with Pro")
+                                        .font(.footnote.weight(.semibold))
+                                        .foregroundStyle(Color.inkTextMuted)
+                                        .underline()
+                                        .tapArea(.leading)
+                                }
+                                .buttonStyle(.plain)
+                                .accessibilityIdentifier("revealSeeProButton")
+                            }
                         }
-                        .buttonStyle(.plain)
-                        .accessibilityIdentifier("revealChooseFiveButton")
                     }
                     .padding(.bottom, 14)
                     .opacity(showTotals ? 1 : 0)
                 }
 
                 slip
+                    .padding(.bottom, showTotals && shareImage != nil ? 12 : 20)
+
+                if showTotals, let image = shareImage {
+                    ShareLink(item: image,
+                              message: Text(verbatim: ShareSlipFooter.shareMessage),
+                              preview: SharePreview(L10n.string("Your subscriptions"), image: image)) {
+                        Label(L10n.string("Share my gap"), systemImage: "square.and.arrow.up")
+                    }
+                    .buttonStyle(.ink(.quiet))
                     .padding(.bottom, 20)
+                    .accessibilityIdentifier("revealShareGapBottomButton")
+                }
             }
             .padding(.horizontal, Layout.margin)
             .padding(.top, 8)
@@ -101,12 +165,34 @@ struct RevealStep: View {
             .padding(.bottom, 10)
         }
         .task { await printSlip() }
+        .task(id: "\(showTotals)|\(tally.monthlyTotal(rates: rates))|\(tally.lines.count)|\(tally.isApproximate)") {
+            guard showTotals, !tally.lines.isEmpty else { shareImage = nil; return }
+            let gapText: String? = {
+                if case .more(_, let yearlyGap) = tally.verdict(rates: rates) {
+                    return round(yearlyGap)
+                }
+                return nil
+            }()
+            shareImage = GapShareSlip.image(
+                guessText: guessText,
+                monthlyText: monthly,
+                yearlyText: yearly,
+                yearlyGapText: gapText,
+                subscriptionCount: tally.lines.count,
+                isApproximate: tally.isApproximate
+            )
+        }
         .sheet(item: $editing) { line in
             PriceSheet(name: line.name, placeholder: line.amount, currency: line.currency, frequency: line.frequency ?? .monthly) { amount in
                 tally.setAmount(amount, for: line.name)
             }
         }
-        .sheet(isPresented: $choosingTracked) {
+        .sheet(isPresented: $choosingTracked, onDismiss: {
+            if pendingPaywallFromPicker {
+                pendingPaywallFromPicker = false
+                showingPaywall = true
+            }
+        }) {
             FreeLimitPickerSheet(
                 candidates: tally.lines.map { line in
                     FreeLimitPickerSheet.Candidate(
@@ -115,13 +201,24 @@ struct RevealStep: View {
                         amount: line.amount,
                         currency: line.currency,
                         frequency: line.frequency ?? .monthly,
-                        yearlyInDisplay: rates.convert(line.yearlyCost, from: line.currency, to: tally.currency) ?? 0
+                        yearlyInDisplay: rates.convert(line.yearlyCost, from: line.currency, to: tally.currency)
                     )
                 },
                 initialSelection: tally.preferredNames,
                 maxSelection: FreeTier.room(in: []),
-                onSave: { chosen in tally.preferredNames = chosen }
+                displayCurrency: tally.currency,
+                onSave: { chosen in tally.preferredNames = chosen },
+                onSeePro: { pendingPaywallFromPicker = true }
             )
+        }
+        .sheet(isPresented: $showingPaywall) {
+            StoreKitUpgradeView(context: PaywallContext(
+                trigger: .unlimitedSubscriptions,
+                pendingWaitingLines: overflowLines,
+                pendingTotalCount: tally.lines.count,
+                pendingCurrency: tally.currency,
+                fromFirstRunReveal: true
+            ))
         }
     }
 

@@ -31,7 +31,7 @@ struct CatalogAddSheet: View {
     @State private var nextBillingDate: Date?
     @State private var hasFreeTrial = false
     @State private var trialEndsAt: Date?
-    @State private var reminderDays: Int = 3
+    @State private var reminderDays: Int = OnboardingProfile.load().validReminderDays
     @State private var paymentMethod = ""
     @State private var notes = ""
     @FocusState private var amountFocused: Bool
