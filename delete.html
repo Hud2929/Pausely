@@ -50,7 +50,7 @@
     <p class="meta">Exercise your right to data deletion under GDPR / CCPA</p>
 
     <p>You can delete your Pausely account and all associated data directly in the app via <strong>Profile → Privacy &amp; security → Delete account</strong>. It deletes your account and data right away.</p>
-    <p>If you no longer have access to the app, use this form to submit a deletion request. We will process it within 30 days and confirm via email.</p>
+    <p>If you no longer have access to the app, fill out the fields below to open a pre-addressed deletion email to <a href="mailto:pausely@proton.me">pausely@proton.me</a>. Once you send that email, we will process it within 30 days and confirm by reply.</p>
 
     <div class="warning">
         ⚠️ <strong>This action is permanent.</strong> All your subscription data, account information, and history will be permanently deleted and cannot be recovered.
@@ -79,12 +79,12 @@
             <label for="confirm">I understand that deleting my account is permanent and irreversible. All my data, subscription history, and account information will be permanently deleted.</label>
         </div>
 
-        <button type="submit" id="submit-btn">Submit Deletion Request</button>
+        <button type="submit" id="submit-btn">Open Deletion Email</button>
     </form>
 
     <div class="success" id="success-msg">
-        <h2>✓ Request Received</h2>
-        <p>We've received your deletion request and will process it within 30 days. You'll receive a confirmation email at the address you provided.</p>
+        <h2>Email Draft Opened</h2>
+        <p>Please send the email from your mail app to complete your request. If your mail app did not open, email <a href="mailto:pausely@proton.me">pausely@proton.me</a> directly with your account email address. We process every deletion request within 30 days.</p>
     </div>
 </div>
 <footer>
@@ -95,18 +95,14 @@
     <a href="/support">Support</a>
 </footer>
 <script>
-    document.getElementById('delete-form').addEventListener('submit', async function(e) {
+    document.getElementById('delete-form').addEventListener('submit', function(e) {
         e.preventDefault();
         const btn = document.getElementById('submit-btn');
         const email = document.getElementById('email').value.trim();
         const reason = document.getElementById('reason').value;
         const notes = document.getElementById('notes').value.trim();
 
-        btn.disabled = true;
-        btn.textContent = 'Submitting...';
-
         try {
-            // Send deletion request via email (mailto fallback — replace with Edge Function if desired)
             const subject = encodeURIComponent('Data Deletion Request - ' + email);
             const body = encodeURIComponent('Account email: ' + email + '\nReason: ' + (reason || 'Not specified') + '\nNotes: ' + (notes || 'None'));
             window.location.href = 'mailto:pausely@proton.me?subject=' + subject + '&body=' + body;
@@ -115,8 +111,8 @@
             document.getElementById('success-msg').style.display = 'block';
         } catch (err) {
             btn.disabled = false;
-            btn.textContent = 'Submit Deletion Request';
-            alert('Error submitting request. Please email pausely@proton.me directly.');
+            btn.textContent = 'Open Deletion Email';
+            alert('Could not open your mail app. Please email pausely@proton.me directly.');
         }
     });
 </script>
