@@ -361,6 +361,8 @@
                     </label>
                 </div>
 
+                <div id="turnstile-widget" style="display: none; justify-content: center; margin-bottom: 20px;"></div>
+
                 <button type="submit" class="btn-primary" id="submit-btn">
                     <span class="btn-text">Join the Waitlist</span>
                     <div class="spinner"></div>
@@ -372,7 +374,7 @@
             <div class="success-state" id="success-state">
                 <div class="success-icon">&#10003;</div>
                 <h3>You're on the list!</h3>
-                <p>We've sent a welcome email to your inbox (check the spam folder too). We'll write again when the new version is on the App Store.</p>
+                <p id="success-message">We'll write to you when the next version is on the App Store.</p>
             </div>
 
             <div class="trust-badge">
@@ -386,11 +388,37 @@
     <script>
         // Edge Function URL
         const EDGE_FUNCTION_URL = 'https://ddaotwyaowspwspyddzs.supabase.co/functions/v1/waitlist-signup';
+        // Optional Cloudflare Turnstile site key; set alongside TURNSTILE_SECRET_KEY in Supabase secrets.
+        const TURNSTILE_SITE_KEY = '';
 
         const form = document.getElementById('waitlist-form');
         const submitBtn = document.getElementById('submit-btn');
         const errorMsg = document.getElementById('error-msg');
         const successState = document.getElementById('success-state');
+        const successMessage = document.getElementById('success-message');
+        const turnstileContainer = document.getElementById('turnstile-widget');
+        let turnstileToken = '';
+        let turnstileWidgetId = null;
+
+        if (TURNSTILE_SITE_KEY) {
+            turnstileContainer.style.display = 'flex';
+            const script = document.createElement('script');
+            script.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';
+            script.async = true;
+            script.defer = true;
+            script.onload = () => {
+                if (window.turnstile) {
+                    turnstileWidgetId = window.turnstile.render(turnstileContainer, {
+                        sitekey: TURNSTILE_SITE_KEY,
+                        theme: 'dark',
+                        callback: (token) => { turnstileToken = token; },
+                        'expired-callback': () => { turnstileToken = ''; },
+                        'error-callback': () => { turnstileToken = ''; }
+                    });
+                }
+            };
+            document.head.appendChild(script);
+        }
 
         function showError(msg) {
             errorMsg.textContent = msg;
@@ -408,9 +436,14 @@
             const email = document.getElementById('email').value.trim().toLowerCase();
             const source = document.getElementById('source').value;
 
-            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            if (!emailRegex.test(email)) {
+            const emailRegex = /^[a-z0-9.!#$%&'*+/=?^_`{|}~-]{1,64}@(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,63}$/i;
+            if (!emailRegex.test(email) || email.includes('..') || email.length > 254) {
                 showError('Please enter a valid email address.');
+                return;
+            }
+
+            if (TURNSTILE_SITE_KEY && !turnstileToken) {
+                showError('Please complete the verification check and try again.');
                 return;
             }
 
@@ -418,35 +451,43 @@
             submitBtn.classList.add('loading');
 
             try {
+                const payload = {
+                    email: email,
+                    source: source !== 'waitlist' ? source : 'organic'
+                };
+                if (turnstileToken) {
+                    payload.captcha_token = turnstileToken;
+                }
+
                 const response = await fetch(EDGE_FUNCTION_URL, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        email: email,
-                        source: source !== 'waitlist' ? source : 'organic'
-                    })
+                    body: JSON.stringify(payload)
                 });
 
                 const result = await response.json();
 
                 if (response.ok && result.success) {
                     form.style.display = 'none';
+                    successMessage.textContent = result.email_sent
+                        ? "We've sent a confirmation email to your inbox (check the spam folder too). We'll write again when the next version is on the App Store."
+                        : "We'll write to you when the next version is on the App Store.";
                     successState.classList.add('visible');
-
-                    if (result.email_sent) {
-                        const emailNote = document.createElement('p');
-                        emailNote.style.cssText = 'font-size: 14px; color: rgba(255,255,255,0.5); margin-top: 12px;';
-                        emailNote.textContent = 'Check your inbox for a confirmation email!';
-                        successState.querySelector('p').after(emailNote);
-                    }
-
                     localStorage.setItem('pausely_waitlist_email', email);
                 } else {
                     showError(result.error || 'Something went wrong. Please try again.');
+                    if (window.turnstile && turnstileWidgetId !== null) {
+                        window.turnstile.reset(turnstileWidgetId);
+                        turnstileToken = '';
+                    }
                 }
             } catch (err) {
                 console.error('Waitlist signup error:', err);
                 showError('Network error. Please check your connection and try again.');
+                if (window.turnstile && turnstileWidgetId !== null) {
+                    window.turnstile.reset(turnstileWidgetId);
+                    turnstileToken = '';
+                }
             } finally {
                 submitBtn.disabled = false;
                 submitBtn.classList.remove('loading');
