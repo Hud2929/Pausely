@@ -90,12 +90,11 @@ extension AppleSignInCoordinator: ASAuthorizationControllerDelegate {
 extension AppleSignInCoordinator: ASAuthorizationControllerPresentationContextProviding {
     @MainActor
     func presentationAnchor(for controller: ASAuthorizationController) -> ASPresentationAnchor {
-        guard
-            let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
-            let window = scene.windows.first
-        else {
-            return ASPresentationAnchor()
+        let scenes = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }
+        let activeScene = scenes.first(where: { $0.activationState == .foregroundActive }) ?? scenes.first
+        if let window = activeScene?.windows.first(where: \.isKeyWindow) ?? activeScene?.windows.first {
+            return window
         }
-        return window
+        return ASPresentationAnchor()
     }
 }

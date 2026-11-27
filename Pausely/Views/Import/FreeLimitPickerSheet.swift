@@ -31,17 +31,23 @@ struct FreeLimitPickerSheet: View {
     init(candidates: [Candidate], initialSelection: Set<String>, maxSelection: Int,
          displayCurrency: String? = nil,
          onSave: @escaping (Set<String>) -> Void, onSeePro: (() -> Void)? = nil) {
-        self.candidates = candidates
+        var unique: [Candidate] = []
+        for candidate in candidates where !unique.contains(where: { ServiceName.same($0.name, candidate.name) }) {
+            unique.append(candidate)
+        }
+        self.candidates = unique
         let limit = max(1, maxSelection)
         self.maxSelection = limit
         self.displayCurrency = displayCurrency ?? CurrencyManager.shared.selectedCurrency
         self.onSave = onSave
         self.onSeePro = onSeePro
-        let ranked = candidates.sorted { ($0.yearlyInDisplay ?? -1) > ($1.yearlyInDisplay ?? -1) }
+        let ranked = unique.sorted { ($0.yearlyInDisplay ?? -1) > ($1.yearlyInDisplay ?? -1) }
         if initialSelection.isEmpty {
             _selected = State(initialValue: Set(ranked.prefix(limit).map(\.name)))
         } else {
-            let validOrdered = ranked.map(\.name).filter { initialSelection.contains($0) }
+            let validOrdered = ranked.map(\.name).filter { name in
+                initialSelection.contains { ServiceName.same($0, name) }
+            }
             let clamped = Array(validOrdered.prefix(limit))
             _selected = State(initialValue: clamped.isEmpty ? Set(ranked.prefix(limit).map(\.name)) : Set(clamped))
         }
@@ -62,8 +68,9 @@ struct FreeLimitPickerSheet: View {
                 yearlyInDisplay: rates.convert(sub.annualCost, from: sub.currency, to: display)
             )
         }
-        let activeNames = Set(activeCandidates.map { $0.name.lowercased() })
-        let waitingCandidates = TallyImporter.waitingLines().filter { !activeNames.contains($0.name.lowercased()) }.map { line in
+        let waitingCandidates = TallyImporter.waitingLines().filter { line in
+            !activeCandidates.contains { ServiceName.same($0.name, line.name) }
+        }.map { line in
             Candidate(
                 name: line.name,
                 category: line.category,
@@ -127,9 +134,11 @@ struct FreeLimitPickerSheet: View {
 
                 let riskText: String = {
                     if unselectedCount > 0, let total = unselectedYearlyTotal {
-                        let yearly = MoneyFormat.total(total.amount, displayCurrency, converted: total.isConverted,
-                                                       locale: L10n.locale, wholeUnits: true)
-                        return L10n.string("\(selected.count) of \(maxSelection) selected. \(unselectedCount) left unwatched (about \(yearly) a year, no reminders).")
+                        let yearlyAmount = total.amount
+                        let yearly = MoneyFormat.string(yearlyAmount, displayCurrency, locale: L10n.locale, wholeUnits: true)
+                        return unselectedCount == 1
+                            ? L10n.string("\(selected.count) of \(maxSelection) selected. 1 left unwatched (about \(yearly) a year, no reminders).")
+                            : L10n.string("\(selected.count) of \(maxSelection) selected. \(unselectedCount) left unwatched (about \(yearly) a year, no reminders).")
                     }
                     return L10n.string("\(selected.count) of \(maxSelection) selected. The rest wait safely until you swap or go Pro.")
                 }()
@@ -197,26 +206,26 @@ struct FreeLimitPickerSheet: View {
         return Button {
             toggle(item.name)
         } label: {
-            HStack(spacing: 12) {
+            MarkedWords(alignment: .top, spacing: 12) {
                 Image(systemName: isOn ? "checkmark.circle.fill" : "circle")
                     .font(.title3)
                     .foregroundStyle(isOn ? Color.paper : (atCap ? Color.inkTextFaint : Color.inkTextMuted))
                     .accessibilityHidden(true)
+            } words: {
+                HStack(spacing: 12) {
+                    if !typeSize.isAccessibilitySize {
+                        ServiceLogoView(name: item.name, category: item.category, size: 36)
+                    }
 
-                // At the accessibility sizes the words take the row and the price goes under the name, whole:
-                // beside them it broke as "US$239." over "88/yr" (the reach rating of 2026-11-23).
-                if !typeSize.isAccessibilitySize {
-                    ServiceLogoView(name: item.name, category: item.category, size: 36)
-                }
-
-                LineOrStack(spacing: 8, lineSpacing: 2, spread: true, besideShare: typeSize.isAccessibilitySize ? 0 : 0.45) {
-                    Text(verbatim: item.name)
-                        .font(.body.weight(.medium))
-                        .foregroundStyle(atCap ? Color.inkTextMuted : Color.inkText)
-                        .multilineTextAlignment(.leading)
-                    Text(verbatim: item.frequency.pricedShort(MoneyFormat.string(item.amount, item.currency, locale: L10n.locale)))
-                        .font(.body.monospacedDigit())
-                        .foregroundStyle(Color.inkTextMuted)
+                    LineOrStack(spacing: 8, lineSpacing: 2, spread: true, besideShare: typeSize.isAccessibilitySize ? 0 : 0.45) {
+                        Text(verbatim: item.name)
+                            .font(.body.weight(.medium))
+                            .foregroundStyle(atCap ? Color.inkTextMuted : Color.inkText)
+                            .multilineTextAlignment(.leading)
+                        Text(verbatim: item.frequency.pricedShort(MoneyFormat.string(item.amount, item.currency, locale: L10n.locale)))
+                            .font(.body.monospacedDigit())
+                            .foregroundStyle(Color.inkTextMuted)
+                    }
                 }
             }
             .padding(.vertical, 12)

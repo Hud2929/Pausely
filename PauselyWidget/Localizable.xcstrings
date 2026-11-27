@@ -715,36 +715,70 @@
         }
       }
     },
-    "Pause Plan": {
+    "No upcoming charges": {
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "‏Pause Plan"
+            "value": "لا توجد خصومات قادمة"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Pause Plan"
+            "value": "Keine anstehenden Abbuchungen"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Pause Plan"
+            "value": "Sin cobros próximos"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Pause Plan"
+            "value": "Aucun prélèvement à venir"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Pause Plan"
+            "value": "予定されている請求はありません"
+          }
+        }
+      }
+    },
+    "Pause Plan": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "خطة الإيقاف"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pausenplan"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Plan de Pausa"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Plan de pause"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "一時停止プラン"
           }
         }
       }

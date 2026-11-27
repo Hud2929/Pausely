@@ -29,4 +29,13 @@ extension InboxImportView {
     static func money(_ amount: Decimal, _ currency: String) -> String {
         MoneyFormat.string(amount, currency)
     }
+
+    static func paywallContext(waiting: [TallyLine], existingChargingCount: Int, displayCurrency: String) -> PaywallContext {
+        PaywallContext(
+            trigger: .unlimitedSubscriptions,
+            pendingWaitingLines: waiting,
+            pendingTotalCount: existingChargingCount + waiting.count,
+            pendingCurrency: displayCurrency
+        )
+    }
 }

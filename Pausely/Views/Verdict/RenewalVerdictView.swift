@@ -66,7 +66,8 @@ struct RenewalVerdictView: View {
         }
         .sheet(isPresented: $enteringUsage) {
             if let sub = subscription {
-                UsageInputSheet(subscriptionName: sub.name, currentMinutes: screenTime.getCurrentMonthUsage(for: sub)) { minutes in
+                UsageInputSheet(subscriptionName: sub.name, currentMinutes: screenTime.getCurrentMonthUsage(for: sub),
+                                hasLoggedUsage: screenTime.getUsage(for: sub) != nil) { minutes in
                     screenTime.setMonthlyUsage(minutes: minutes, for: sub)
                 }
             }
@@ -122,7 +123,9 @@ struct RenewalVerdictView: View {
                         .underline()
                         .font(.subheadline.weight(.semibold))
                         .foregroundStyle(Color.inkText)
-                        .frame(minHeight: Layout.tapTarget, alignment: .leading)
+                        .multilineTextAlignment(.leading)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .frame(maxWidth: .infinity, minHeight: Layout.tapTarget, alignment: .leading)
                         .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
@@ -187,7 +190,7 @@ struct RenewalVerdictView: View {
     /// except where money went up or was kept.
     private func facts(_ sub: Subscription, charge: (date: Date, isTrialEnd: Bool)?) -> some View {
         VStack(alignment: .leading, spacing: 10) {
-            if let method = sub.paymentMethod, !method.isEmpty {
+            if let method = sub.paymentMethod?.trimmingCharacters(in: .whitespacesAndNewlines), !method.isEmpty {
                 factLine(L10n.string("Billed to \(method)"))
             }
             if let notes = sub.notes?.trimmingCharacters(in: .whitespacesAndNewlines), !notes.isEmpty {
@@ -204,21 +207,33 @@ struct RenewalVerdictView: View {
             }
 
             if let renewed = VerdictFacts.renewedSoFar(for: sub, events: eventLog.events) {
-                let since = renewed.since.formatted(.dateTime.month(.abbreviated).year().locale(L10n.locale))
+                let since = DayText.monthYear(renewed.since, locale: L10n.locale)
                 factLine(L10n.string("Renewals since \(since): \(MoneyFormat.string(renewed.total, sub.currency, locale: L10n.locale))"))
             }
 
             if let usage = usageText(sub) { factLine(usage) }
 
             if let charge {
-                // The same promise for a renewal as for a trial's end, and one Pausely can make of any
-                // service: cancelled before the day, the charge doesn't happen.
-                factLine(L10n.string("Cancel before \(DayText.date(charge.date, locale: L10n.locale)) and you won't be charged."))
+                let days = daysUntil(charge.date)
+                let isApple = CancelHelp.find(for: sub).kind == .appleSubscription
+                if days <= 0 {
+                    factLine(charge.isTrialEnd
+                             ? L10n.string("Your free trial ends today — cancel right away if you don't want to be charged.")
+                             : L10n.string("Today is the renewal day — cancel right away if it hasn't charged yet."),
+                             color: .paperDue)
+                } else if isApple {
+                    factLine(L10n.string("Apple needs at least 24 hours' notice before \(DayText.date(charge.date, locale: L10n.locale)) so it won't charge."))
+                } else {
+                    factLine(L10n.string("Cancel before \(DayText.date(charge.date, locale: L10n.locale)) and you won't be charged."))
+                }
             } else {
                 factLine(L10n.string("Add the date and Pausely will ask you before it charges."))
             }
 
-            if let kept = VerdictFacts.lastKept(for: sub.id, events: eventLog.events) {
+            if let charge,
+               RenewalDecisions.keptKeys(in: eventLog.events).contains(RenewalDecisions.key(sub.id, charge.date)) {
+                factLine(L10n.string("Already kept for this charge — no more reminders until the next one."), color: .paperKept)
+            } else if let kept = VerdictFacts.lastKept(for: sub.id, events: eventLog.events) {
                 factLine(L10n.string("You kept it on \(DayText.date(kept, locale: L10n.locale))."))
             }
 
@@ -321,7 +336,8 @@ struct RenewalVerdictView: View {
         isKeeping = true
         defer { isKeeping = false }
         let charge = RenewalDecisions.upcomingCharge(for: sub, now: Date())
-        await VerdictCenter.shared.keep(subscriptionId: sub.id)
+        let recorded = await VerdictCenter.shared.keep(subscriptionId: sub.id)
+        guard recorded else { return }
         Feel.keep()
         withAnimation(Motion.unlessReduced(Motion.arrive)) {
             outcome = .kept(askAgain: charge.flatMap { VerdictFacts.renewal(after: $0.date, for: sub) })
@@ -345,7 +361,7 @@ struct RenewalVerdictView: View {
             case .cancelled:
                 VStack(alignment: .leading, spacing: 20) {
                     CancelledSlip(subscription: sub)
-                    if !authManager.isGuest {
+                    if !sub.isPausely, difficulty.canRate(serviceName: sub.name) {
                         CancelDifficultyPrompt(serviceName: sub.name)
                     }
                 }
@@ -410,13 +426,18 @@ struct OutcomeSlip<Detail: View>: View {
     let torn: Bool
     @ViewBuilder var detail: Detail
 
+    @Environment(\.layoutDirection) private var layoutDirection
     @State private var landed = false
+
+    private var stampAngle: Double { layoutDirection == .rightToLeft ? 4 : -4 }
+    private var tearAngle: Double { layoutDirection == .rightToLeft ? -9 : 9 }
 
     var body: some View {
         PaperSlip(tornTop: true, tornBottom: true) {
             VStack(alignment: .leading, spacing: 14) {
-                HStack(spacing: 10) {
+                MarkedWords(alignment: .center, spacing: 10) {
                     ServiceLogoView(name: name, category: category, size: 36)
+                } words: {
                     Text(verbatim: name).font(.question(.title2))
                         .fixedSize(horizontal: false, vertical: true)
                 }
@@ -431,9 +452,9 @@ struct OutcomeSlip<Detail: View>: View {
                     .padding(.horizontal, 12)
                     .padding(.vertical, 6)
                     .overlay(RoundedRectangle(cornerRadius: Layout.markRadius, style: .continuous).stroke(torn ? Color.paperInk : Color.paperKept, lineWidth: 2))
-                    .rotationEffect(.degrees(-4))
+                    .rotationEffect(.degrees(stampAngle))
                     .scaleEffect(landed ? 1 : 1.5)
-                    .opacity(landed ? 1 : 0)
+                    .opacity(landed ? 1 : 0.01)
                 Perforation()
                 detail
             }
@@ -450,9 +471,10 @@ struct OutcomeSlip<Detail: View>: View {
                         }
                     }
                 }
-                .offset(y: landed ? 420 : 44)
-                .rotationEffect(.degrees(landed ? 9 : 0), anchor: .topLeading)
+                .offset(y: landed ? 160 : 44)
+                .rotationEffect(.degrees(landed ? tearAngle : 0), anchor: .topLeading)
                 .opacity(landed ? 0 : 1)
+                .allowsHitTesting(false)
                 .accessibilityHidden(true)
             }
         }
@@ -465,6 +487,7 @@ struct OutcomeSlip<Detail: View>: View {
             }
             if torn { Feel.tearStart() }
             try? await Task.sleep(for: .milliseconds(180))
+            guard !Task.isCancelled else { return }
             withAnimation(torn ? Motion.leave : Motion.arrive) { landed = true }
             if torn { Feel.tearEnd() }
         }
@@ -475,11 +498,16 @@ struct OutcomeSlip<Detail: View>: View {
 /// The torn slip for a cancelled subscription, with what the cancellation keeps over 12 months.
 struct CancelledSlip: View {
     let subscription: Subscription
+    @ObservedObject private var eventLog = LifecycleEventLog.shared
+    @ObservedObject private var currencyManager = CurrencyManager.shared
 
     var body: some View {
-        // A line with no charges to count (no renewal day was known) says so: "$0.00 you won't pay" was
-        // celebrated for a $14.95 subscription (the rating of 2026-11-23).
-        let line = SavingsSummary.current().lines.last { $0.subscriptionId == subscription.id && !$0.avoidedCharges.isEmpty }
+        let _ = (eventLog.events.count, currencyManager.selectedCurrency)
+        // Only the open cancellation line counts here; a past closed line from an earlier cancel/restart
+        // cycle must not be shown if the latest cancellation had no renewal date.
+        let line = SavingsSummary.current().lines.last {
+            $0.subscriptionId == subscription.id && $0.endedOn == nil && !$0.avoidedCharges.isEmpty
+        }
         OutcomeSlip(name: subscription.name, category: subscription.category, stamp: L10n.string("Cancelled"), torn: true) {
             VStack(alignment: .leading, spacing: 10) {
                 if let line {
@@ -487,8 +515,19 @@ struct CancelledSlip: View {
                               value: MoneyFormat.string(line.onTrack, line.currency), emphasised: true)
                         .foregroundStyle(Color.paperKept)
                 }
-                Text(line.map { L10n.string("That's \(MoneyFormat.string($0.onTrack, $0.currency)) you won't pay over the next 12 months. It's on your Savings Receipt.") }
-                     ?? L10n.string("Pausely counts what you avoid from its renewal day, which it didn't have, so nothing is counted for it."))
+                let detailText: String = {
+                    if subscription.isPausely {
+                        return L10n.string("Pausely's own subscription is marked cancelled. It never counts toward your Savings Receipt.")
+                    }
+                    if let line {
+                        return L10n.string("That's \(MoneyFormat.string(line.onTrack, line.currency)) you won't pay over the next 12 months. It's on your Savings Receipt.")
+                    }
+                    if subscription.nextBillingDate == nil && subscription.trialEndsAt == nil {
+                        return L10n.string("Pausely counts what you avoid from its renewal day, which it didn't have, so nothing is counted for it.")
+                    }
+                    return L10n.string("No upcoming charges remain in the next 12 months, so nothing is added to your Savings Receipt.")
+                }()
+                Text(verbatim: detailText)
                     .font(.proof(.footnote))
                     .fixedSize(horizontal: false, vertical: true)
             }
@@ -499,6 +538,7 @@ struct CancelledSlip: View {
 
 struct PauselyPromiseCard: View {
     var isTrial: Bool = false
+    var summary: SavingsSummary? = nil
     @ObservedObject private var store = SubscriptionStore.shared
     @ObservedObject private var eventLog = LifecycleEventLog.shared
     @ObservedObject private var currencyManager = CurrencyManager.shared
@@ -506,8 +546,8 @@ struct PauselyPromiseCard: View {
     /// Printed on Pausely's own slip: what it has kept (and during a free trial, what it is actively
     /// watching before renewals arrive) against what it costs.
     var body: some View {
-        let summary = SavingsSummary.current()
-        let protection = isTrial && summary.isEmpty
+        let activeSummary = summary ?? SavingsSummary.current()
+        let protection = isTrial && activeSummary.isEmpty
             ? ProtectionSummary.current(subscriptions: store.subscriptions,
                                         displayCurrency: currencyManager.selectedCurrency,
                                         rates: currencyManager.rates)
@@ -520,9 +560,9 @@ struct PauselyPromiseCard: View {
                     .font(.footnote)
                     .fixedSize(horizontal: false, vertical: true)
             }
-            Text(verbatim: message(summary))
+            Text(verbatim: message(activeSummary))
                 .font(.footnote)
-                .foregroundStyle(isTrial && summary.isEmpty ? Color.paperMuted : Color.paperInk)
+                .foregroundStyle(isTrial && activeSummary.isEmpty ? Color.paperMuted : Color.paperInk)
                 .fixedSize(horizontal: false, vertical: true)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -533,8 +573,8 @@ struct PauselyPromiseCard: View {
         guard protection.watchedCount > 0 else { return nil }
         var sentences: [String] = []
         if let yearly = protection.yearlySpend, yearly > 0 {
-            let formatted = MoneyFormat.total(yearly, protection.displayCurrency,
-                                              converted: protection.isConverted, locale: L10n.locale, wholeUnits: true)
+            let formatted = MoneyFormat.string(yearly, protection.displayCurrency,
+                                               locale: L10n.locale, wholeUnits: true)
             sentences.append(protection.watchedCount == 1
                              ? L10n.string("Watching 1 subscription (about \(formatted) a year).")
                              : L10n.string("Watching \(protection.watchedCount) subscriptions (about \(formatted) a year)."))
@@ -552,19 +592,24 @@ struct PauselyPromiseCard: View {
             sentences.append(L10n.string("Next reminder: \(next.name) on \(DayText.date(next.date, locale: L10n.locale))."))
         }
         if let pause = PausePlanCard.yearlySavingsInfo(in: store.subscriptions, currency: currencyManager) {
-            let formatted = MoneyFormat.total(pause.amount, pause.currency,
-                                              converted: pause.isConverted, locale: L10n.locale, wholeUnits: true)
+            let formatted = MoneyFormat.string(pause.amount, pause.currency,
+                                               locale: L10n.locale, wholeUnits: true)
             sentences.append(L10n.string("Pause Plan can save about \(formatted) a year."))
         }
         return L10n.sentences(sentences)
     }
 
     private func message(_ summary: SavingsSummary) -> String {
+        if summary.isPaidProWithoutKnownPrice {
+            return summary.isEmpty
+                ? L10n.string("Nothing is on your Savings Receipt yet. Once you cancel a subscription, Pausely tracks whether it pays for itself.")
+                : L10n.string("Your cancellations are on track to keep you \(summary.onTrackText) over 12 months.")
+        }
         guard let cost = summary.pauselyCostText else {
             // Free customers: nothing to weigh yet, but the promise holds if they ever pay.
             return summary.isEmpty
                 ? L10n.string("If you ever pay for Pausely and it doesn't save you more than it costs, it will tell you to cancel it.")
-                : L10n.string("Pausely is free for you, and your cancellations are on track to keep you \(summary.total(summary.onTrack)) over 12 months. If you ever pay for it, it has to save you more than it costs.")
+                : L10n.string("Pausely is free for you, and your cancellations are on track to keep you \(summary.onTrackText) over 12 months. If you ever pay for it, it has to save you more than it costs.")
         }
         if summary.isEmpty {
             return isTrial
@@ -573,8 +618,11 @@ struct PauselyPromiseCard: View {
         }
         if summary.paysForItself, let multiple = summary.returnMultiple {
             let times = multiple.formatted(.number.precision(.fractionLength(1)).locale(L10n.locale))
-            return L10n.string("Your cancellations are on track to keep you \(summary.total(summary.onTrack)) over 12 months, \(times)× what Pausely costs. Keeping it pays.")
+            return L10n.string("Your cancellations are on track to keep you \(summary.onTrackText) over 12 months, \(times)× what Pausely costs. Keeping it pays.")
         }
-        return L10n.string("So far your cancellations are on track to keep you \(summary.total(summary.onTrack)) over 12 months, less than Pausely's \(cost). We'd rather you cancel than pay for nothing.")
+        if summary.excludedUnconvertibleCount > 0 {
+            return L10n.string("Your converted cancellations are on track to keep you \(summary.onTrackText) over 12 months. Some cancellations in other currencies aren't included in this comparison.")
+        }
+        return L10n.string("So far your cancellations are on track to keep you \(summary.onTrackText) over 12 months, less than Pausely's \(cost). We'd rather you cancel than pay for nothing.")
     }
 }

@@ -66,6 +66,7 @@ struct SubscriptionEditView: View {
                         if isDirty { showDiscardConfirm = true } else { dismiss() }
                     }
                     .foregroundStyle(Color.inkTextMuted)
+                    .disabled(isSaving)
                     .accessibilityIdentifier("editCancelButton")
                     .asksFirst(Text("Discard your changes?"), isPresented: $showDiscardConfirm,
                                largeText: typeSize.isAccessibilitySize) {
@@ -102,9 +103,10 @@ struct SubscriptionEditView: View {
 
     private var header: some View {
         VStack(alignment: .leading, spacing: 8) {
-            HStack(spacing: 12) {
+            MarkedWords(alignment: .center, spacing: 12) {
                 ServiceLogoView(name: draft.trimmedName.isEmpty ? original.name : draft.trimmedName,
                                 category: draft.category, size: 48)
+            } words: {
                 TextField(text: $draft.name, prompt: Hint.text(L10n.string("Name")), axis: .vertical) { Text("Name") }
                     .lineLimit(1...3)
                     .font(.question(.title))
@@ -150,6 +152,7 @@ struct SubscriptionEditView: View {
                             .font(.caption2.weight(.bold))
                     }
                     .foregroundStyle(Color.inkTextMuted)
+                    .tapArea(.leading)
                 }
                 .accessibilityLabel("Currency, \(draft.currency)")
 
@@ -200,15 +203,15 @@ struct SubscriptionEditView: View {
                 .accessibilityLabel("Billing cycle, \(draft.frequency.displayName)")
             }
 
-            if !draft.isTrial {
-                divider
-
-                row("Next renewal") {
-                    OptionalDatePicker(title: L10n.string("Next renewal"), date: $draft.nextBillingDate)
-                }
-            }
-
             if original.status != .cancelled {
+                if !draft.isTrial {
+                    divider
+
+                    row("Next renewal") {
+                        OptionalDatePicker(title: L10n.string("Next renewal"), date: $draft.nextBillingDate, allowClear: true)
+                    }
+                }
+
                 divider
                 Toggle(isOn: $draft.isTrial.animation(Motion.unlessReduced(Motion.touch))) {
                     Text("Free trial")
@@ -222,7 +225,20 @@ struct SubscriptionEditView: View {
                 if draft.isTrial {
                     divider
                     row("Trial ends") {
-                        OptionalDatePicker(title: L10n.string("Trial ends"), date: $draft.trialEndsAt)
+                        OptionalDatePicker(title: L10n.string("Trial ends"),
+                                           date: $draft.trialEndsAt,
+                                           earliest: Calendar.billing.startOfDay(for: Date()))
+                    }
+                    if showValidation, let error = draft.trialEndError {
+                        ProblemLine(message: error, identifier: "editTrialEndProblem")
+                            .padding(.bottom, 10)
+                    } else if draft.trialEndsAt == nil {
+                        Text("Add the day the trial ends, so Pausely can ask you before it charges.")
+                            .font(.footnote)
+                            .foregroundStyle(Color.decide)
+                            .fixedSize(horizontal: false, vertical: true)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding(.bottom, 10)
                     }
                 }
             }
@@ -248,25 +264,27 @@ struct SubscriptionEditView: View {
                 .accessibilityLabel("Category, \(SubscriptionCategory.localizedLabel(for: draft.category))")
             }
 
-            divider
+            if original.status != .cancelled {
+                divider
 
-            row("Remind me") {
-                Menu {
-                    ForEach(SubscriptionEditDraft.reminderOptions, id: \.self) { days in
-                        Button {
-                            draft.reminderDays = days
-                        } label: {
-                            if days == draft.reminderDays {
-                                Label(SubscriptionEditDraft.reminderLabel(days), systemImage: "checkmark")
-                            } else {
-                                Text(SubscriptionEditDraft.reminderLabel(days))
+                row("Remind me") {
+                    Menu {
+                        ForEach(SubscriptionEditDraft.reminderOptions, id: \.self) { days in
+                            Button {
+                                draft.reminderDays = days
+                            } label: {
+                                if days == draft.reminderDays {
+                                    Label(SubscriptionEditDraft.reminderLabel(days), systemImage: "checkmark")
+                                } else {
+                                    Text(SubscriptionEditDraft.reminderLabel(days))
+                                }
                             }
                         }
+                    } label: {
+                        valueLabel(SubscriptionEditDraft.reminderLabel(draft.reminderDays))
                     }
-                } label: {
-                    valueLabel(SubscriptionEditDraft.reminderLabel(draft.reminderDays))
+                    .accessibilityLabel("Remind me, \(SubscriptionEditDraft.reminderLabel(draft.reminderDays))")
                 }
-                .accessibilityLabel("Remind me, \(SubscriptionEditDraft.reminderLabel(draft.reminderDays))")
             }
         }
     }
@@ -331,12 +349,12 @@ struct SubscriptionEditView: View {
     @ViewBuilder
     private var footnote: some View {
         VStack(alignment: .leading, spacing: 6) {
-            if let yearly = draft.yearlyCost {
+            if original.status != .cancelled, let yearly = draft.yearlyCost {
                 Text(L10n.string("That's \(MoneyFormat.string(yearly, draft.currency)) a year"))
                     .font(.footnote)
                     .foregroundStyle(Color.inkTextFaint)
             }
-            if draft.reminderDays > 0 && draft.nextBillingDate == nil && !(draft.isTrial && draft.trialEndsAt != nil) {
+            if original.status != .cancelled && draft.reminderDays > 0 && !draft.isTrial && draft.nextBillingDate == nil {
                 Text("Add its renewal date to get reminders.")
                     .font(.footnote)
                     .foregroundStyle(Color.decide)
@@ -386,7 +404,11 @@ struct SubscriptionEditView: View {
         focus = nil
         guard let updated = draft.applied(to: original) else {
             showValidation = true
-            focus = draft.nameError != nil ? .name : .amount
+            if draft.nameError != nil {
+                focus = .name
+            } else if draft.amountError != nil {
+                focus = .amount
+            }
             return
         }
         isSaving = true

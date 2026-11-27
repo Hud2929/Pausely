@@ -303,12 +303,13 @@ enum ScreenshotParser {
 
             let priceAndFreq = extractPriceAndFrequency(in: text, defaultCurrency: defaultCurrency)
             let price = priceAndFreq.price
-            let freq = priceAndFreq.frequency ?? extractFrequency(in: lower)
-            let dateInfo = extractDateInfo(in: text, now: now, calendar: calendar)
-            let isExpiredLine = containsExpiryWord(lower)
-            let isTrialLine = containsTrialWord(lower)
             let fourWeeks = isEveryFourWeeks(lower)
             let twoMonths = isEveryTwoMonths(lower)
+            let freq = (fourWeeks || twoMonths) ? nil : (priceAndFreq.frequency ?? extractFrequency(in: lower))
+            let dateInfo = extractDateInfo(in: text, now: now, calendar: calendar)
+            let isTrialLine = containsTrialWord(lower)
+            let isFutureTrialExpiry = isTrialLine && !containsPastExpiryWord(lower)
+            let isExpiredLine = !isFutureTrialExpiry && containsExpiryWord(lower)
 
             if price != nil, isIncomeOrTransfer(lower, inAppleSubscriptions: context.isApple) {
                 flushCurrent()
@@ -365,7 +366,7 @@ enum ScreenshotParser {
                     card.amount = price.amount
                     card.currency = price.currency
                 }
-                if let freq { card.frequency = freq; card.repeats = true }
+                if let freq, (price != nil || card.frequency == nil) { card.frequency = freq; card.repeats = true }
                 if fourWeeks { card.everyFourWeeks = true; card.repeats = true }
                 if twoMonths { card.everyTwoMonths = true; card.repeats = true }
                 if dateInfo.hasKeyword { card.repeats = true }
@@ -385,11 +386,14 @@ enum ScreenshotParser {
             }
 
             // 3. Plan subtitle for the currently open card (e.g. "Standard Plan", "200 GB", "All-Access", "Forfait Essentiel").
+            // Also accepts explicit plan subtitles sitting directly below a single-line "Name  Price" header row.
             if var card = current,
+               price == nil,
                (card.lastMinY - line.maxY) <= 0.048,
-               card.amount == nil, card.renewalDate == nil,
+               card.renewalDate == nil,
                isPlanSubtitle(text, forService: card.name, nextLine: next, defaultCurrency: defaultCurrency,
-                              inSubscriptionList: context.listRepeats, now: now, calendar: calendar, catalog: catalog) {
+                              inSubscriptionList: context.listRepeats, cardAlreadyHasPrice: card.amount != nil,
+                              now: now, calendar: calendar, catalog: catalog) {
                 if let freq { card.frequency = freq }
                 let plan = text.trimmingCharacters(in: .whitespaces)
                 if !plan.contains(" "), let entry = CatalogData.entries.first(where: {
@@ -447,6 +451,7 @@ enum ScreenshotParser {
             let wasCancelled = beforeIdx.map { list[$0].isCancelled } ?? false
             let wasMayNotRepeat = beforeIdx.map { list[$0].doubt == .mayNotRepeat } ?? false
             let hadNoAmount = beforeIdx.map { list[$0].amount == nil } ?? false
+            let previousAmount = beforeIdx.map { list[$0].amount } ?? nil
             let hadNoDate = beforeIdx.map { list[$0].renewalDate == nil } ?? false
             merge(item, into: &list)
             if beforeIdx == nil {
@@ -455,6 +460,7 @@ enum ScreenshotParser {
                 let nowEligible = (wasCancelled && !list[idx].isCancelled)
                     || (wasMayNotRepeat && list[idx].doubt != .mayNotRepeat)
                     || (hadNoAmount && list[idx].amount != nil)
+                    || (previousAmount != nil && list[idx].amount != previousAmount)
                     || (hadNoDate && list[idx].renewalDate != nil)
                 if nowEligible {
                     addedIDs.insert(list[idx].id)
@@ -488,6 +494,13 @@ enum ScreenshotParser {
             if existing.amount == nil, let amount = incoming.amount {
                 existing.amount = amount
                 existing.currency = incoming.currency
+            } else if let existingDate = existing.renewalDate, let incomingDate = incoming.renewalDate,
+                      incomingDate > existingDate {
+                existing.renewalDate = incomingDate
+                if let amount = incoming.amount {
+                    existing.amount = amount
+                    existing.currency = incoming.currency
+                }
             }
             if existing.renewalDate == nil, let renewal = incoming.renewalDate { existing.renewalDate = renewal }
             if existing.trialEndsAt == nil, let trial = incoming.trialEndsAt { existing.trialEndsAt = trial }

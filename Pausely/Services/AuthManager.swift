@@ -17,7 +17,15 @@ class AuthManager: ObservableObject {
     @Published var isAuthenticated = false
     @Published var currentUser: User?
     /// A password-reset code or link was accepted: the next thing the person sees is "choose a new password".
-    @Published var needsNewPassword = false
+    @Published var needsNewPassword = false {
+        didSet {
+            if needsNewPassword {
+                UserDefaults.standard.set(true, forKey: Self.needsNewPasswordKey)
+            } else {
+                UserDefaults.standard.removeObject(forKey: Self.needsNewPasswordKey)
+            }
+        }
+    }
     /// Why a link from an account email didn't work, in words the person can act on.
     @Published var linkProblem: String?
 
@@ -26,13 +34,30 @@ class AuthManager: ObservableObject {
     // MARK: - Private Properties
     private var client: SupabaseClient { SupabaseManager.shared.client }
     private var refreshTask: Task<Void, Never>?
-    private var pendingPassword: String?
-    /// The address `pendingPassword` was typed for. The password is saved only on that account.
-    private var pendingPasswordEmail: String?
+    private static let pendingPasswordKey = "pending_signup_password"
+    private static let pendingPasswordEmailKey = "pending_signup_password_email"
+    private static let needsNewPasswordKey = "auth_needs_new_password"
     private static let resetRequestedKey = "auth_reset_requested_at"
     /// The address this device last asked a code or a reset for, and when (see `AuthLinkGate`).
     private static let linkRequestedEmailKey = "auth_link_requested_email"
     private static let linkRequestedAtKey = "auth_link_requested_at"
+
+    private func holdPendingSignupPassword(_ password: String, for email: String) {
+        KeychainManager.shared.save(password, forKey: Self.pendingPasswordKey)
+        KeychainManager.shared.save(email, forKey: Self.pendingPasswordEmailKey)
+    }
+
+    private func takePendingSignupPassword() -> (password: String, email: String)? {
+        defer { Self.clearPendingSignupPassword() }
+        guard let password = KeychainManager.shared.get(Self.pendingPasswordKey),
+              let email = KeychainManager.shared.get(Self.pendingPasswordEmailKey) else { return nil }
+        return (password, email)
+    }
+
+    static func clearPendingSignupPassword() {
+        KeychainManager.shared.delete(key: pendingPasswordKey)
+        KeychainManager.shared.delete(key: pendingPasswordEmailKey)
+    }
 
     /// Where the links in sign-up and sign-in emails come back to. It has to be on the account service's
     /// list of allowed redirect addresses; if it isn't, the service uses its own default address instead.
@@ -85,6 +110,10 @@ class AuthManager: ObservableObject {
         if leftByADeletedCopy {
             KeychainManager.shared.deleteAll()
             MailboxAccountStore.deleteAllSecrets()
+        }
+
+        if !leftByADeletedCopy && UserDefaults.standard.bool(forKey: Self.needsNewPasswordKey) {
+            needsNewPassword = true
         }
 
         // Restore session synchronously so the UI is correct on the very first frame,
@@ -171,19 +200,19 @@ class AuthManager: ObservableObject {
             do {
                 activeSession = try await client.auth.session
             } catch {
+                guard !Task.isCancelled else { return }
                 if SyncQueue.isUnreachable(error) {
                     activeSession = cached
                 } else {
                     PauselyLogger.info("Stored session could not be refreshed — signing out", category: "auth")
                     try? await client.auth.signOut(scope: .local)
-                    AccountMemory.forgetSession()
-                    currentUser = nil
-                    isAuthenticated = false
-                    state = .unauthenticated
-                    LocalUserData.hideWhileSignedOut()
+                    guard !Task.isCancelled else { return }
+                    await clearLocalSignedOutSession()
                     return
                 }
             }
+            guard !Task.isCancelled else { return }
+            if needsNewPassword { return }
             UserDefaults.standard.removeObject(forKey: Self.guestModeKey)
             let user = makeUser(from: activeSession.user)
             AccountMemory.rememberSession(userId: activeSession.user.id.uuidString,
@@ -201,19 +230,25 @@ class AuthManager: ObservableObject {
         } else if isAuthenticated {
             // Cache said we're logged in but Supabase disagrees — token expired.
             PauselyLogger.info("Cached session invalid — signing out", category: "auth")
-            AccountMemory.forgetSession()
-            currentUser = nil
-            isAuthenticated = false
-            state = .unauthenticated
-            LocalUserData.hideWhileSignedOut()
+            await clearLocalSignedOutSession()
         } else {
+            needsNewPassword = false
             state = .unauthenticated
-            // Nobody is signed in. What the last person left on this iPhone (their list loads from its
-            // saved copy at every launch) stays out of sight until they sign back in. Decided here and
-            // not at launch, because here it is known: the sign-in library's session can be read
-            // whenever the app's own data can.
             if !LaunchFlag.isDemoLaunch { LocalUserData.hideWhileSignedOut() }
         }
+    }
+
+    private func clearLocalSignedOutSession() async {
+        needsNewPassword = false
+        Self.clearPendingSignupPassword(); forgetCodeRequest(); refreshTask?.cancel(); refreshTask = nil
+        AccountMemory.forgetSession()
+        AgeConsentManager.shared.clearDeviceGate()
+        PaymentManager.shared.clearProGrantSynchronously()
+        await InboxScanner.shared.disconnectAll()
+        currentUser = nil
+        isAuthenticated = false
+        state = .unauthenticated
+        LocalUserData.hideWhileSignedOut()
     }
     
     /// Every fifteen minutes while signed in, asks the account service for the session, which renews
@@ -239,9 +274,8 @@ class AuthManager: ObservableObject {
         state = .loading
 
         do {
-            // Store password and profile temporarily for after OTP verification
-            pendingPassword = password
-            pendingPasswordEmail = email
+            // Persist password transiently in Keychain so iOS background kills between Mail & Pausely don't lose it.
+            holdPendingSignupPassword(password, for: email)
             noteCodeRequested(for: email)
             AccountMemory.holdName(first: firstName, last: lastName, for: email)
 
@@ -255,8 +289,7 @@ class AuthManager: ObservableObject {
             state = .emailConfirmationRequired(email)
 
         } catch {
-            pendingPassword = nil
-            pendingPasswordEmail = nil
+            Self.clearPendingSignupPassword()
             AccountMemory.forgetHeldName()
             let authError = PauselyAuthError.unknown(error)
             state = .error(authError)
@@ -266,6 +299,8 @@ class AuthManager: ObservableObject {
 
     /// Verifies the 6-digit code sent by email, then finishes the sign-up.
     func verifyEmailOTP(email: String, code: String) async throws {
+        verifyTask?.cancel()
+        verifyTask = nil
         state = .loading
         do {
             let response = try await client.auth.verifyOTP(email: email, token: code, type: .email)
@@ -280,36 +315,25 @@ class AuthManager: ObservableObject {
     /// The end of every email sign-up or sign-in, by code or by link: remember the session, apply the name
     /// and password typed on the sign-up form if this finishes one, and show the app.
     private func finishEmailSignIn(_ supabaseUser: Auth.User) async {
+        verifyTask?.cancel(); verifyTask = nil
+        if let pending = takePendingSignupPassword(),
+           AuthLinkGate.sameAddress(pending.email, supabaseUser.email ?? "") {
+            do {
+                _ = try await client.auth.update(user: UserAttributes(password: pending.password))
+            } catch {
+                os_log("Saving the sign-up password failed: %{public}@", log: .default, type: .error, String(describing: type(of: error)))
+                needsNewPassword = true
+                return
+            }
+        }
         let (firstName, lastName) = AccountMemory.heldName(for: supabaseUser.email)
-
         let user = makeUser(from: supabaseUser, firstName: firstName, lastName: lastName)
         AccountMemory.rememberSession(userId: supabaseUser.id.uuidString, email: supabaseUser.email, createdAt: supabaseUser.createdAt)
         if let firstName { AccountMemory.saveName(userId: supabaseUser.id.uuidString, firstName: firstName, lastName: lastName) }
-
-        if let password = pendingPassword {
-            let typedFor = pendingPasswordEmail
-            pendingPassword = nil
-            pendingPasswordEmail = nil
-            // The email is proven and the account exists. If saving the password fails (it's the one the
-            // account already has, or the network dropped), the person is still in, and "Forgot password"
-            // sets one later. A password typed for one address is never saved on a different account.
-            if let typedFor, AuthLinkGate.sameAddress(typedFor, supabaseUser.email ?? "") {
-                do {
-                    _ = try await client.auth.update(user: UserAttributes(password: password))
-                } catch {
-                    os_log("Saving the sign-up password failed: %{public}@", log: .default, type: .error, String(describing: type(of: error)))
-                }
-            }
-        }
-        forgetCodeRequest()
-        AccountMemory.forgetHeldName()
-
+        forgetCodeRequest(); AccountMemory.forgetHeldName()
         UserDefaults.standard.removeObject(forKey: Self.guestModeKey)
-        currentUser = user
-        isAuthenticated = true
-        state = .authenticated(user)
-        startSessionRefresh()
-        postAuthSetup(user: user)
+        currentUser = user; isAuthenticated = true; state = .authenticated(user)
+        startSessionRefresh(); postAuthSetup(user: user)
     }
 
     /// Resend the OTP code to the user's email
@@ -329,6 +353,8 @@ class AuthManager: ObservableObject {
     // MARK: - Sign In
 
     func signIn(email: String, password: String) async throws {
+        verifyTask?.cancel()
+        verifyTask = nil
         state = .loading
         
         do {
@@ -365,6 +391,8 @@ class AuthManager: ObservableObject {
     // MARK: - Sign in with Apple
 
     func signInWithApple(idToken: String, rawNonce: String, fullName: PersonNameComponents?) async throws {
+        verifyTask?.cancel()
+        verifyTask = nil
         state = .loading
 
         do {
@@ -453,18 +481,20 @@ class AuthManager: ObservableObject {
     // MARK: - Sign Out
     
     func signOut() async {
+        verifyTask?.cancel()
+        verifyTask = nil
         refreshTask?.cancel()
         refreshTask = nil
-        
+
         // The cache goes first, whatever the server says. Offline, the library drops its own session and
         // then throws; a cache left behind would open the next launch as the person who just signed out.
         AccountMemory.forgetSession()
+        AgeConsentManager.shared.clearDeviceGate()
         UserDefaults.standard.removeObject(forKey: "last_auth_email")
         LocalUserData.hideWhileSignedOut()
         await InboxScanner.shared.disconnectAll()
-        // Pro given on the account follows the account; a purchase follows the Apple Account and stays.
-        // Not waited for: the tier is read from StoreKit, and signing out must not wait on the App Store.
-        Task { await PaymentManager.shared.setProGrant(false) }
+        // Delete account-linked Pro grant synchronously before any new sign-in can race it.
+        PaymentManager.shared.clearProGrantSynchronously()
         do {
             try await client.auth.signOut()
         } catch {
@@ -476,8 +506,7 @@ class AuthManager: ObservableObject {
         UserDefaults.standard.removeObject(forKey: "debug_auth_bypass")
         #endif
         needsNewPassword = false
-        pendingPassword = nil
-        pendingPasswordEmail = nil
+        Self.clearPendingSignupPassword()
         forgetCodeRequest()
         isAuthenticated = false
         currentUser = nil
@@ -487,6 +516,8 @@ class AuthManager: ObservableObject {
     /// Starts local-only mode without requiring an account. Everything stays on this iPhone until
     /// the person chooses to create an account or sign in.
     func enterGuestMode(persist: Bool = true) {
+        verifyTask?.cancel()
+        verifyTask = nil
         if persist { UserDefaults.standard.set(true, forKey: Self.guestModeKey) }
         #if DEBUG
         // A guest is a guest on the next launch too, not the built-in test user (a rater met the age gate there).
@@ -562,8 +593,7 @@ class AuthManager: ObservableObject {
             guard gate.accepts(accountEmail: user.email) else {
                 // The link opened some other account. Drop that session; nobody is signed in.
                 os_log("An account link for a different address was refused", log: .default, type: .error)
-                pendingPassword = nil
-                pendingPasswordEmail = nil
+                Self.clearPendingSignupPassword()
                 try? await client.auth.signOut(scope: .local)
                 linkProblem = expired
                 return false
@@ -575,6 +605,7 @@ class AuthManager: ObservableObject {
             }
             return true
         } catch {
+            if error is CancellationError || Task.isCancelled { return false }
             os_log("An account link failed: %{public}@", log: .default, type: .error, String(describing: type(of: error)))
             linkProblem = expired
             return false
@@ -649,8 +680,8 @@ class AuthManager: ObservableObject {
 
     /// The person backed out of choosing a password: the reset is dropped and nobody is signed in.
     func cancelNewPassword() async {
-        needsNewPassword = false
         try? await client.auth.signOut(scope: .local)
+        if !isGuest { await clearLocalSignedOutSession() } else { needsNewPassword = false }
     }
 }
 

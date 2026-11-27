@@ -76,10 +76,10 @@ struct FirstRunPlanFlow: View {
                     withAnimation(Motion.unlessReduced(Motion.arrive)) { step -= 1 }
                 }
                 Spacer()
-                LeaveButton("Not now") { dismiss() }
+                LeaveButton("Not now") { dismissSavingProgress() }
                     .accessibilityIdentifier("curateCloseButton")
             } else {
-                LeaveButton("Not now") { dismiss() }
+                LeaveButton("Not now") { dismissSavingProgress() }
                     .accessibilityIdentifier("curateCloseButton")
                 Spacer()
             }
@@ -204,6 +204,18 @@ struct FirstRunPlanFlow: View {
         }
     }
 
+    private func dismissSavingProgress() {
+        if step > 0 {
+            profile.save()
+            let saved = profile
+            let previousLead = initialReminderDays
+            if saved.validReminderDays != previousLead {
+                Task { await saved.applyReminderDays(to: store, from: previousLead) }
+            }
+        }
+        dismiss()
+    }
+
     private func finishCuration() async {
         guard !isFinishing else { return }
         isFinishing = true
@@ -217,6 +229,10 @@ struct FirstRunPlanFlow: View {
         await saved.applyReminderDays(to: store, from: previousLead)
         if saved.validReminderDays == previousLead {
             await ReminderScheduler.shared.reschedule(store.subscriptions)
+        }
+        if PaymentManager.shared.isPremium {
+            dismiss()
+            return
         }
         if StoreKitManager.shared.products.isEmpty {
             await StoreKitManager.shared.loadProducts()

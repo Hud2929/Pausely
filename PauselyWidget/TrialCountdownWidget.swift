@@ -29,20 +29,27 @@ struct TrialsWidgetView: View {
         Group {
             if let first = trials.first {
                 if family == .systemMedium, trials.count > 1 {
+                    let rest = Array(trials.dropFirst())
                     HStack(alignment: .top, spacing: 14) {
-                        TrialEnding(trial: first)
+                        TrialEnding(trial: first, now: entry.date)
                         Rectangle().fill(Color.widgetLine).frame(width: 1)
                         VStack(alignment: .leading, spacing: 0) {
-                            ForEach(Array(trials.dropFirst().prefix(3).enumerated()), id: \.element.id) { index, item in
-                                if index > 0 { Rectangle().fill(Color.widgetLine).frame(height: 1) }
-                                ChargeRow(item: item)
+                            ViewThatFits(in: .vertical) {
+                                ForEach([3, 2, 1], id: \.self) { count in
+                                    VStack(alignment: .leading, spacing: 0) {
+                                        ForEach(Array(rest.prefix(count).enumerated()), id: \.element.id) { index, item in
+                                            if index > 0 { Rectangle().fill(Color.widgetLine).frame(height: 1) }
+                                            ChargeRow(item: item, now: entry.date)
+                                        }
+                                    }
+                                }
                             }
                             Spacer(minLength: 0)
                         }
                         .frame(maxWidth: .infinity, alignment: .leading)
                     }
                 } else {
-                    TrialEnding(trial: first)
+                    TrialEnding(trial: first, now: entry.date)
                 }
             } else {
                 VStack(alignment: .leading, spacing: 6) {
@@ -64,6 +71,7 @@ struct TrialsWidgetView: View {
 /// One trial: what it is, when it ends (the thing that matters), and what it costs from then on.
 struct TrialEnding: View {
     let trial: WidgetFeed.Upcoming
+    var now: Date = Date()
 
     @Environment(\.locale) private var locale
 
@@ -80,7 +88,7 @@ struct TrialEnding: View {
                 .ink()
                 .lineLimit(1)
                 .privacySensitive()
-            Text(verbatim: DayText.text(daysAway: trial.daysAway, day: trial.day, locale: locale))
+            Text(verbatim: DayText.text(daysAway: trial.daysAway, day: trial.day, locale: locale, now: now))
                 .font(.system(.title2, design: .serif).weight(.semibold))
                 .ink()
                 .lineLimit(1)

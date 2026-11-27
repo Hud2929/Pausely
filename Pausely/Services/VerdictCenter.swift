@@ -80,10 +80,12 @@ final class VerdictCenter: ObservableObject {
     /// From the app it is the coming charge. From a reminder it is the charge that reminder was about
     /// (`renewalDay`, the day stamped on it): "Keep it" pressed on yesterday's reminder must not
     /// silence next month's.
-    func keep(subscriptionId: UUID, renewalDay: String? = nil, now: Date = Date()) async {
-        guard recordKeep(subscriptionId: subscriptionId, renewalDay: renewalDay, pressedAt: now) else { return }
+    @discardableResult
+    func keep(subscriptionId: UUID, renewalDay: String? = nil, now: Date = Date()) async -> Bool {
+        guard recordKeep(subscriptionId: subscriptionId, renewalDay: renewalDay, pressedAt: now) else { return false }
         await ReminderScheduler.shared.reschedule(SubscriptionStore.shared.subscriptions, now: now)
         ReviewPromptManager.shared.askAfterDecisionMade()
+        return true
     }
 
     /// "Keep it" pressed before the phone's first unlock, when nothing could be read (`LockedKeeps`).

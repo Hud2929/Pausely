@@ -217,11 +217,13 @@ final class SyncQueue: ObservableObject {
         guard let index = pending.firstIndex(where: { $0.subscriptionId == sent.subscriptionId }) else { return }
         if pending[index].revision == sent.revision {
             pending.remove(at: index)
+            persist()
             return
         }
         // Changed while it was being sent. The server has the row now, so what's left is a change to it.
         if sent.kind == .create, pending[index].kind == .create { pending[index].kind = .update }
         drainAgain = true
+        persist()
     }
 
     private func fail(_ sent: SyncIntent, _ error: Error) {
@@ -235,6 +237,7 @@ final class SyncQueue: ObservableObject {
         pending[index].attempts += 1
         pending[index].refused = !Self.isUnreachable(error)
         pending[index].notBefore = now().addingTimeInterval(Self.wait(afterAttempt: pending[index].attempts))
+        persist()
         os_log("A queued change failed (attempt %{public}d): %{public}@", log: .default, type: .error,
                pending[index].attempts, String(describing: type(of: error)))
     }
@@ -251,6 +254,10 @@ final class SyncQueue: ObservableObject {
 
     /// Forgets every queued change (account deletion, or someone else signing in on this iPhone).
     func removeAll() {
+        retry?.cancel()
+        retry = nil
+        drainAgain = false
+        retryFailuresAgain = false
         pending = []
         noted = [:]
         persist()

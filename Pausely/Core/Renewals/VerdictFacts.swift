@@ -55,7 +55,7 @@ enum VerdictFacts {
 
     /// The renewal after `charge`, for "we'll ask again before …".
     static func renewal(after charge: Date, for sub: Subscription, calendar: Calendar = .billing) -> Date? {
-        guard let anchor = sub.nextBillingDate,
+        guard let anchor = sub.nextBillingDate ?? (sub.status == .trial ? sub.trialEndsAt : nil),
               let dayAfter = calendar.date(byAdding: .day, value: 1, to: calendar.startOfDay(for: charge)) else { return nil }
         return RenewalSchedule.nextRenewal(anchor: anchor, frequency: sub.billingFrequency, onOrAfter: dayAfter, calendar: calendar)
     }

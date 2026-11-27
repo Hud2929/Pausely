@@ -69,11 +69,12 @@ enum ReceiptTextAnalyzer {
         // A declined card is not a charge, whatever amount the email mentions.
         if flags.paymentFailed { return .paymentFailed }
         if flags.trialEnding { return .trialEnding }
-        if flags.priceChange && !flags.refund { return .priceChange }
+        // Refunds are never charges, price changes, or renewal notices.
+        if flags.refund { return .other }
+        if flags.priceChange { return .priceChange }
         if flags.trialStart && !hasAmount { return .trialStarted }
         if flags.trialStart && flags.renewal && !flags.oneTime { return .trialStarted }
-        if hasAmount && !flags.refund { return .charge }
-        if flags.renewal && hasAmount { return .renewalNotice }
+        if hasAmount { return .charge }
         return .other
     }
 
@@ -356,19 +357,26 @@ enum ReceiptTextAnalyzer {
     /// email states them. Both are the plan's own prices, so their difference is the real rise even when
     /// the amount charged has tax on top.
     static func introductoryPrices(in text: String) -> (intro: Decimal?, next: Decimal)? {
-        let amount = #"(?:C\$|CA\$|US\$|A\$|AU\$|\$|€|£)\s?(\d{1,3}(?:,\d{3})*\.\d{2}|\d+\.\d{2})"#
-        let ns = text as NSString
+        let normalized = normalizingDigits(text)
+        let num = #"\d{1,3}(?:[.,]\d{3})*[.,]\d{2}|\d+[.,]\d{2}|\d{1,3}(?:,\d{3})+(?![.,]\d)|\d{3,}(?![.,]\d)"#
+        let sym = #"(?:C\$|CA\$|US\$|A\$|AU\$|\$|€|£|¥|￥|₹|CHF|EUR|USD|GBP|CAD|AUD)"#
+        let amount = "(?:\(sym)\\s*(\(num))|(\(num))\\s*\(sym))"
+        let connector = #"(?:\b(?:then|thereafter|afterwards|danach|anschließend|puis|ensuite|luego|después|poi|depois)\b|その後|以降は?|ثم)"#
+        let ns = normalized as NSString
         let range = NSRange(location: 0, length: min(ns.length, 12_000))
-        func value(_ match: NSTextCheckingResult, _ group: Int) -> Decimal? {
-            guard match.range(at: group).location != NSNotFound else { return nil }
-            return Decimal(string: ns.substring(with: match.range(at: group)).replacingOccurrences(of: ",", with: ""))
+        func value(_ match: NSTextCheckingResult, _ g1: Int, _ g2: Int) -> Decimal? {
+            let token: String?
+            if match.range(at: g1).location != NSNotFound { token = ns.substring(with: match.range(at: g1)) }
+            else if match.range(at: g2).location != NSNotFound { token = ns.substring(with: match.range(at: g2)) }
+            else { token = nil }
+            return token.flatMap { parseAmount($0, currency: nil)?.value }
         }
-        if let both = try? NSRegularExpression(pattern: "(?i)\(amount)[^.\\n]{0,40}?\\bthen\\s+\(amount)"),
-           let match = both.firstMatch(in: text, range: range), let next = value(match, 2) {
-            return (value(match, 1), next)
+        if let both = try? NSRegularExpression(pattern: "(?i)\(amount)[^.\\n]{0,40}?\(connector)\\s+\(amount)"),
+           let match = both.firstMatch(in: normalized, range: range), let next = value(match, 3, 4) {
+            return (value(match, 1, 2), next)
         }
-        if let only = try? NSRegularExpression(pattern: "(?i)\\bthen\\s+\(amount)"),
-           let match = only.firstMatch(in: text, range: range), let next = value(match, 1) {
+        if let only = try? NSRegularExpression(pattern: "(?i)\(connector)\\s+\(amount)"),
+           let match = only.firstMatch(in: normalized, range: range), let next = value(match, 1, 2) {
             return (nil, next)
         }
         return nil

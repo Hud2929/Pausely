@@ -260,13 +260,13 @@ final class EverydayPowerTests: XCTestCase {
         let primeCrunchyroll = Subscription(name: "Crunchyroll", category: "Entertainment", amount: 9.99, currency: "USD",
                                             billingFrequency: .monthly, paymentMethod: "Amazon Prime Video")
         let amazonHelp = CancelHelp.find(for: primeCrunchyroll)
-        XCTAssertEqual(amazonHelp.kind, .cancellationPage)
+        XCTAssertEqual(amazonHelp.kind, .amazonChannel)
         XCTAssertEqual(amazonHelp.link?.absoluteString, "https://www.amazon.com/gp/video/settings/channels")
 
         let googleSpotify = Subscription(name: "Spotify", category: "Music", amount: 11.99, currency: "USD",
                                          billingFrequency: .monthly, paymentMethod: "Google Play")
         let googleHelp = CancelHelp.find(for: googleSpotify)
-        XCTAssertEqual(googleHelp.kind, .cancellationPage)
+        XCTAssertEqual(googleHelp.kind, .googlePlay)
         XCTAssertEqual(googleHelp.link?.absoluteString, "https://play.google.com/store/account/subscriptions")
     }
 

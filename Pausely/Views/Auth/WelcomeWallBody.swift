@@ -84,6 +84,7 @@ struct WelcomeWallBody: View {
             Text(title)
                 .font(.body.weight(.semibold))
                 .foregroundStyle(Color.inkText)
+                .fixedSize(horizontal: false, vertical: true)
             Text(detail)
                 .font(.subheadline)
                 .foregroundStyle(Color.inkTextMuted)

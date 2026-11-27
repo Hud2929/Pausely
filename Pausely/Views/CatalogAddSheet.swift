@@ -12,6 +12,7 @@ struct CatalogAddSheet: View {
         var reminderDays: Int = 3
         var paymentMethod: String? = nil
         var notes: String? = nil
+        var currency: String = CurrencyManager.shared.selectedCurrency
     }
 
     let entry: CatalogEntry
@@ -25,6 +26,7 @@ struct CatalogAddSheet: View {
     @ScaledMetric(relativeTo: .largeTitle) private var amountSize: CGFloat = 44
 
     @State private var frequency: BillingFrequency = .monthly
+    @State private var selectedCurrency: String = CurrencyManager.shared.selectedCurrency
     /// What the person typed. Empty means "the typical price is right".
     @State private var amountText = ""
     /// Both nil until the person picks a day: a date is never filled in for them.
@@ -34,7 +36,16 @@ struct CatalogAddSheet: View {
     @State private var reminderDays: Int = OnboardingProfile.load().validReminderDays
     @State private var paymentMethod = ""
     @State private var notes = ""
+    @State private var isAdding = false
+    @State private var showDiscardConfirm = false
+    @Environment(\.dynamicTypeSize) private var typeSize
     @FocusState private var amountFocused: Bool
+
+    private var hasUnsavedChanges: Bool {
+        !trimmedAmount.isEmpty || nextBillingDate != nil || trialEndsAt != nil
+            || !paymentMethod.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+            || !notes.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    }
 
     // MARK: - Price
 
@@ -42,14 +53,21 @@ struct CatalogAddSheet: View {
     /// (`TallyCatalog`). Otherwise the field starts empty and the person types what they pay.
     private var typical: Decimal? {
         frequency == .monthly
-            ? TallyCatalog.price(forServiceNamed: entry.name, payingIn: currencyManager.selectedCurrency)
+            ? TallyCatalog.price(forServiceNamed: entry.name, payingIn: selectedCurrency)
             : nil
     }
 
+    private var trimmedAmount: String { amountText.trimmingCharacters(in: .whitespacesAndNewlines) }
     private var typed: Decimal? { AmountText.parse(amountText, currency: currency) }
-    private var amount: Decimal? { amountText.isEmpty ? typical : typed }
+    private var amount: Decimal? { trimmedAmount.isEmpty ? typical : typed }
+    private var amountProblem: String? {
+        guard !trimmedAmount.isEmpty, typed == nil else { return nil }
+        return AmountText.isTooLarge(amountText, currency: currency)
+            ? L10n.string("That is more than Pausely can track.")
+            : L10n.string("Enter a valid amount")
+    }
     /// A trial is tracked for the day it ends, so saying "I'm on a free trial" needs that day.
-    private var canAdd: Bool { Self.canAdd(amount: amount, onTrial: hasFreeTrial, trialEnds: trialEndsAt) }
+    private var canAdd: Bool { !isAdding && Self.canAdd(amount: amount, onTrial: hasFreeTrial, trialEnds: trialEndsAt) }
 
     nonisolated static func canAdd(amount: Decimal?, onTrial: Bool, trialEnds: Date?) -> Bool {
         (amount ?? 0) > 0 && !needsTrialDay(onTrial: onTrial, trialEnds: trialEnds)
@@ -61,23 +79,40 @@ struct CatalogAddSheet: View {
     nonisolated static func needsTrialDay(onTrial: Bool, trialEnds: Date?) -> Bool {
         onTrial && trialEnds == nil
     }
-    private var currency: String { currencyManager.selectedCurrency }
+    private var currency: String { selectedCurrency }
 
     // MARK: - Body
 
     var body: some View {
+        NavigationStack {
         ActionScreen(dismissesKeyboard: true) {
             VStack(alignment: .leading, spacing: 24) {
                 // The way out and the name are one group, closer together than the groups below.
                 VStack(alignment: .leading, spacing: 12) {
-                    LeaveButton("Cancel") { dismiss() }
-                    HStack(spacing: 12) {
+                    LeaveButton("Cancel") {
+                        if hasUnsavedChanges { showDiscardConfirm = true } else { dismiss() }
+                    }
+                    .disabled(isAdding)
+                    .accessibilityIdentifier("catalogCancelButton")
+                    .asksFirst(Text("Discard your changes?"), isPresented: $showDiscardConfirm,
+                               largeText: typeSize.isAccessibilitySize) {
+                        Button("Discard changes", role: .destructive) { dismiss() }
+                        Button("Keep editing", role: .cancel) {}
+                    }
+                    MarkedWords(alignment: .center, spacing: 12) {
                         ServiceLogoView(name: entry.name, category: entry.category.rawValue, size: 48)
+                    } words: {
                         Text(verbatim: entry.name)
                             .font(.question(.title))
                             .foregroundStyle(Color.inkText)
                             .fixedSize(horizontal: false, vertical: true)
                             .accessibilityAddTraits(.isHeader)
+                    }
+                    if SubscriptionStore.shared.subscriptions.charging.contains(where: { $0.name.caseInsensitiveCompare(entry.name) == .orderedSame }) {
+                        Text("Already on your list")
+                            .font(.footnote)
+                            .foregroundStyle(Color.inkTextMuted)
+                            .fixedSize(horizontal: false, vertical: true)
                     }
                 }
 
@@ -100,7 +135,8 @@ struct CatalogAddSheet: View {
                         Hairline()
                         row(L10n.string("Next renewal")) {
                             OptionalDatePicker(title: L10n.string("Next renewal"), date: $nextBillingDate,
-                                               earliest: Calendar.billing.startOfDay(for: Date()))
+                                               earliest: Calendar.billing.startOfDay(for: Date()),
+                                               allowClear: true)
                         }
                     }
                     Hairline()
@@ -178,15 +214,16 @@ struct CatalogAddSheet: View {
             .padding(.bottom, 24)
         } actions: {
             Button {
+                guard !isAdding, let amount else { return }
+                isAdding = true
                 Feel.tick()
-                // Saved as what the person confirmed, in their own currency.
-                guard let amount else { return }
                 let trimmedPayment = paymentMethod.trimmingCharacters(in: .whitespacesAndNewlines)
                 let trimmedNotes = notes.trimmingCharacters(in: .whitespacesAndNewlines)
                 let extras = Extras(
                     reminderDays: reminderDays,
                     paymentMethod: trimmedPayment.isEmpty ? nil : trimmedPayment,
-                    notes: trimmedNotes.isEmpty ? nil : trimmedNotes
+                    notes: trimmedNotes.isEmpty ? nil : trimmedNotes,
+                    currency: selectedCurrency
                 )
                 onAdd(frequency, amount, hasFreeTrial ? nil : nextBillingDate, hasFreeTrial ? trialEndsAt : nil, extras)
                 dismiss()
@@ -202,6 +239,15 @@ struct CatalogAddSheet: View {
         }
         .inkScreen()
         .preferredColorScheme(.dark)
+        .toolbar(.hidden, for: .navigationBar)
+        .toolbar {
+            ToolbarItemGroup(placement: .keyboard) {
+                Spacer()
+                Button("Done") { amountFocused = false }
+                    .foregroundStyle(Color.inkText)
+            }
+        }
+        }
     }
 
     /// The price, as a question the person can answer by typing. The catalog's figure is only the
@@ -213,13 +259,14 @@ struct CatalogAddSheet: View {
                 .font(.subheadline)
                 .foregroundStyle(Color.inkTextMuted)
             HStack(alignment: .firstTextBaseline, spacing: 8) {
+                let promptText = typical.map { AmountText.text(for: $0, currency: currency) }
                 // The typical price is shown as a real figure, not a greyed-out hint: it is what
                 // will be saved unless the person types over it.
                 TextField(text: $amountText,
-                          prompt: typical.map { Text(verbatim: MoneyFormat.string($0, currency, locale: L10n.locale)).foregroundStyle(Color.inkText) }
+                          prompt: promptText.map { Text(verbatim: $0).foregroundStyle(Color.inkText) }
                                   ?? Hint.text(AmountText.text(for: 0, currency: currency))) { EmptyView() }
                     .amountFont(for: amountText.isEmpty
-                                ? typical.map { MoneyFormat.string($0, currency, locale: L10n.locale) } ?? AmountText.text(for: 0, currency: currency)
+                                ? promptText ?? AmountText.text(for: 0, currency: currency)
                                 : amountText,
                                 base: amountSize)
                     .foregroundStyle(Color.inkText)
@@ -227,11 +274,33 @@ struct CatalogAddSheet: View {
                     .focused($amountFocused)
                     .accessibilityLabel(Text("Amount"))
                     .accessibilityIdentifier("tierAmountField")
-                Text(verbatim: currency)
-                    .font(.proof(.subheadline))
+                Menu {
+                    ForEach(currencyManager.currencies, id: \.code) { item in
+                        Button {
+                            selectedCurrency = item.code
+                        } label: {
+                            if item.code == selectedCurrency {
+                                Label("\(item.code) · \(item.localizedName())", systemImage: "checkmark")
+                            } else {
+                                Text("\(item.code) · \(item.localizedName())")
+                            }
+                        }
+                    }
+                } label: {
+                    HStack(spacing: 4) {
+                        Text(verbatim: currency)
+                            .font(.proof(.subheadline))
+                        Image(systemName: "chevron.up.chevron.down")
+                            .font(.caption2.weight(.bold))
+                    }
                     .foregroundStyle(Color.inkTextMuted)
+                    .tapArea(.trailing)
+                }
+                .accessibilityLabel(Text("Currency, \(currency)"))
             }
-            if amountText.isEmpty, typical != nil {
+            if let amountProblem {
+                ProblemLine(message: amountProblem, identifier: "tierAmountProblem")
+            } else if trimmedAmount.isEmpty, typical != nil {
                 Text("This is a typical price. Type over it if you pay something else.")
                     .font(.footnote)
                     .foregroundStyle(Color.inkTextFaint)
@@ -264,6 +333,7 @@ struct CatalogAddSheet: View {
             Text(verbatim: title)
                 .font(.body)
                 .foregroundStyle(Color.inkText)
+                .accessibilityHidden(true)
         } value: {
             content()
         }

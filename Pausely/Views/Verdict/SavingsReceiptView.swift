@@ -25,6 +25,8 @@ struct SavingsReceiptView: View {
 
     var body: some View {
         let summary = SavingsSummary.current()
+        let uncounted = SavingsLedger.uncounted(from: eventLog.events,
+                                                excluding: Set(store.subscriptions.filter(\.isPausely).map(\.id)))
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
                 HStack {
@@ -40,14 +42,30 @@ struct SavingsReceiptView: View {
                     .accessibilityAddTraits(.isHeader)
 
                 if summary.isEmpty {
-                    emptyState.padding(.top, 20)
+                    emptyState(uncounted: uncounted).padding(.top, 20)
                 } else {
                     ReceiptRoll(summary: summary, privacy: .full).padding(.top, 20)
+                    if !uncounted.isEmpty {
+                        Text("Cancelled without a renewal day, so no charges could be counted: \(uncounted.formatted(.list(type: .and).locale(L10n.locale))).")
+                            .font(.footnote)
+                            .foregroundStyle(Color.inkTextMuted)
+                            .fixedSize(horizontal: false, vertical: true)
+                            .padding(.top, 12)
+                    }
+                    if summary.excludedUnconvertibleCount > 0 {
+                        Text(summary.excludedUnconvertibleCount == 1
+                             ? L10n.string("1 cancellation is in a currency without an exchange rate and isn't included in the totals above.")
+                             : L10n.string("\(summary.excludedUnconvertibleCount) cancellations are in currencies without an exchange rate and aren't included in the totals above."))
+                            .font(.footnote)
+                            .foregroundStyle(Color.inkTextMuted)
+                            .fixedSize(horizontal: false, vertical: true)
+                            .padding(.top, 8)
+                    }
                     if let image = pictures.withoutNames {
                         ShareLink(item: image,
                                   message: Text(verbatim: ShareSlipFooter.shareMessage),
                                   preview: SharePreview(L10n.string("Savings Receipt"), image: image)) {
-                            Label(L10n.string("Share receipt"), systemImage: "square.and.arrow.up")
+                            Label(L10n.string("Share without service names"), systemImage: "square.and.arrow.up")
                         }
                         .buttonStyle(.ink(.quiet))
                         .padding(.top, 14)
@@ -78,7 +96,8 @@ struct SavingsReceiptView: View {
         .inkScreen()
         .preferredColorScheme(.dark)
         .sheet(isPresented: $showingPaywall) { StoreKitUpgradeView(context: PaywallContext(fromSavingsReceipt: true)) }
-        .task(id: "\(eventLog.events.count)|\(currencyManager.selectedCurrency)") {
+        .task { await storeManager.loadProducts() }
+        .task(id: "\(eventLog.events.count)|\(store.subscriptions.count)|\(store.subscriptions.first(where: \.isPausely)?.amount ?? 0)|\(store.subscriptions.first(where: \.isPausely)?.status.rawValue ?? "")|\(currencyManager.selectedCurrency)|\(currencyManager.ratesDate.timeIntervalSince1970)|\(L10n.locale.identifier)|\(storeManager.products.count)") {
             let summary = SavingsSummary.current()
             pictures = summary.isEmpty ? (nil, nil, nil)
                 : (ReceiptRoll.image(summary: summary, privacy: .hideNames),
@@ -123,11 +142,9 @@ struct SavingsReceiptView: View {
         .accessibilityIdentifier("receiptShare")
     }
 
-    private var emptyState: some View {
+    private func emptyState(uncounted: [String]) -> some View {
         PaperSlip(tornTop: true, tornBottom: true) {
             VStack(alignment: .leading, spacing: 10) {
-                let uncounted = SavingsLedger.uncounted(from: eventLog.events,
-                                                        excluding: Set(store.subscriptions.filter(\.isPausely).map(\.id)))
                 if uncounted.isEmpty {
                     Text("Your Savings Receipt starts with your first cancellation")
                         .font(.question(.title3))
@@ -190,14 +207,14 @@ struct ReceiptRoll: View {
                 }
 
                 Perforation()
-                ProofLine(label: L10n.string("Kept since you cancelled"), value: amount(summary.total(summary.savedSoFar)),
+                ProofLine(label: L10n.string("Kept since you cancelled"), value: amount(summary.savedSoFarText),
                           emphasised: true)
                     .foregroundStyle(Color.paperKept)
-                ProofLine(label: L10n.string("On track over 12 months"), value: amount(summary.total(summary.onTrack)))
+                ProofLine(label: L10n.string("On track over 12 months"), value: amount(summary.onTrackText))
 
                 if !hideAmounts, summary.pauselyYearlyCost != nil || !summary.isEmpty {
                     Perforation()
-                    PauselyPromiseCard()
+                    PauselyPromiseCard(summary: summary)
                 }
                 if forSharing {
                     ShareSlipFooter()
@@ -215,7 +232,7 @@ struct ReceiptRoll: View {
                       emphasised: true)
             // Two lines of the roll, not one sentence: joined, the pair was too long for the roll
             // in every language and broke wherever the line ran out.
-            Text(L10n.string("Cancelled on \(line.cancelledOn.formatted(.dateTime.month(.abbreviated).day().year().locale(L10n.locale)))"))
+            Text(L10n.string("Cancelled on \(DayText.fullDate(line.cancelledOn, locale: L10n.locale))"))
                 .font(.proof(.caption))
                 .foregroundStyle(Color.paperMuted)
                 .fixedSize(horizontal: false, vertical: true)
@@ -248,6 +265,7 @@ struct ReceiptRoll: View {
             .frame(width: 360)
             .padding(24)
             .background(Color.ink)
+            .environment(\.dynamicTypeSize, .large)
             .inTheAppsLanguage()
         let renderer = ImageRenderer(content: card)
         renderer.scale = 3

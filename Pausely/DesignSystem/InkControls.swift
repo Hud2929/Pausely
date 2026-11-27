@@ -88,6 +88,8 @@ struct OptionalDatePicker: View {
     @Binding var date: Date?
     /// The earliest day that can be chosen, if there is one.
     var earliest: Date?
+    /// Shows a clear button once a date is chosen so the person can remove an optional date.
+    var allowClear: Bool = false
     @Environment(\.dynamicTypeSize) private var typeSize
     @State private var choosing = false
 
@@ -121,6 +123,15 @@ struct OptionalDatePicker: View {
                         .navigationTitle(Text(verbatim: title))
                         .navigationBarTitleDisplayMode(.inline)
                         .toolbar {
+                            if allowClear {
+                                ToolbarItem(placement: .topBarLeading) {
+                                    Button("Clear") {
+                                        date = nil
+                                        choosing = false
+                                    }
+                                    .foregroundStyle(Color.inkTextMuted)
+                                }
+                            }
                             ToolbarItem(placement: .topBarTrailing) {
                                 Button("Done") { choosing = false }.foregroundStyle(Color.inkText)
                             }
@@ -128,11 +139,26 @@ struct OptionalDatePicker: View {
                     }
                 }
             } else {
-                DatePicker(title, selection: selection, in: (earliest ?? .distantPast)..., displayedComponents: .date)
-                    .labelsHidden()
-                    .tint(Color.inkText)
-                    // Written in the app's language, not the phone's ("2026-12-02" beside Arabic dates, 2026-11-23).
-                    .environment(\.locale, L10n.locale)
+                HStack(spacing: 4) {
+                    DatePicker(title, selection: selection, in: (earliest ?? .distantPast)..., displayedComponents: .date)
+                        .labelsHidden()
+                        .tint(Color.inkText)
+                        // Written in the app's language, not the phone's ("2026-12-02" beside Arabic dates, 2026-11-23).
+                        .environment(\.locale, L10n.locale)
+                    if allowClear {
+                        Button {
+                            Feel.selection()
+                            date = nil
+                        } label: {
+                            Image(systemName: "xmark.circle.fill")
+                                .font(.body)
+                                .foregroundStyle(Color.inkTextFaint)
+                                .tapArea()
+                        }
+                        .buttonStyle(.plain)
+                        .accessibilityLabel(Text(verbatim: "\(L10n.string("Clear")), \(title)"))
+                    }
+                }
             }
         } else {
             Button {

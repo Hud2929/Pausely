@@ -10,7 +10,7 @@ final class CatalogTests: XCTestCase {
     /// A row is a name, a category and a checked link. One row per service: no name twice, and no
     /// row that is only another row's plan ("iCloud+ 200GB", "Spotify Family").
     func testOneRowPerService() {
-        XCTAssertEqual(catalog.count, 848)
+        XCTAssertEqual(catalog.count, 849)
         XCTAssertEqual(Set(catalog.map { $0.name.lowercased() }).count, catalog.count)
         let names = Set(catalog.map(\.name))
         for gone in ["iCloud+ 200GB", "Spotify Family", "Netflix Premium", "Google One 2TB", "ChatGPT Pro ($100)", "Dropbox Plus"] {

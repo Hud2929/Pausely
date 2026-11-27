@@ -46,9 +46,28 @@ extension ReceiptTextAnalyzer {
     private static let prefixRegex: NSRegularExpression? = try? NSRegularExpression(
         pattern: "(\(symbolAlternation)|\\b(?:\(currencyCodes.joined(separator: "|")))\\b)[ \u{00A0}\u{202F}]{0,2}(\(numberPattern))")
 
-    /// "10,99 €", "49.00 USD", "990円", "29.99 ر.س", "129 kr".
+    /// "10,99 €", "49.00 USD", "990円", "29.99 ر.س", "129 kr", "129 kr.".
     private static let suffixRegex: NSRegularExpression? = try? NSRegularExpression(
-        pattern: "(\(numberPattern))[ \u{00A0}\u{202F}]{0,2}(\(symbolAlternation)|(?:\(currencyCodes.joined(separator: "|")))\\b|kr\\b)")
+        pattern: "(\(numberPattern))[ \u{00A0}\u{202F}]{0,2}(\(symbolAlternation)|(?:\(currencyCodes.joined(separator: "|")))\\b|kr\\.?\\b)")
+
+    /// Resolves ambiguous Nordic "kr"/"kr." from email text cues; returns nil rather than mislabeling
+    /// krone amounts as USD/EUR when no country or currency clue appears.
+    static func inferNordicCurrency(in text: String) -> String? {
+        let lower = text.lowercased()
+        if lower.range(of: #"\bsek\b|sverige|sweden|\.se\b|svenska|månad|/mån\b|prenumeration"#, options: .regularExpression) != nil {
+            return "SEK"
+        }
+        if lower.range(of: #"\bnok\b|norge|norway|\.no\b|norsk|måned\b.*norge|vipps"#, options: .regularExpression) != nil {
+            return "NOK"
+        }
+        if lower.range(of: #"\bdkk\b|danmark|denmark|\.dk\b|dansk|mobilepay"#, options: .regularExpression) != nil {
+            return "DKK"
+        }
+        if lower.range(of: #"\bisk\b|ísland|iceland|\.is\b"#, options: .regularExpression) != nil {
+            return "ISK"
+        }
+        return nil
+    }
 
     /// Trailing ISO code immediately after a bare symbol figure ("$15.49 CAD", "$19.99 USD").
     private static let trailingDollarCodeRegex: NSRegularExpression? = try? NSRegularExpression(
@@ -144,8 +163,13 @@ extension ReceiptTextAnalyzer {
         let ns = text as NSString
         let full = NSRange(location: 0, length: ns.length)
         var found: [(money: Money, range: NSRange)] = []
+        let nordicCurrency = inferNordicCurrency(in: text)
         func add(_ amount: String, _ token: String, _ range: NSRange) {
             var currency = currencyCode(forToken: token)
+            if currency == nil, token.lowercased().hasPrefix("kr") {
+                guard let resolved = nordicCurrency else { return }
+                currency = resolved
+            }
             var finalRange = range
             // "$15.49 CAD" or "$19.99 USD": resolve the trailing code onto the bare "$" figure.
             if currency == nil, token == "$" {
@@ -232,13 +256,20 @@ extension ReceiptTextAnalyzer {
                                   currency: currencyCode(forToken: ns.substring(with: match.range(at: 1))),
                                   range: match.range, numberRange: match.range(at: 2)))
         }
+        let nordicCurrency = inferNordicCurrency(in: text)
         suffixRegex?.enumerateMatches(in: text, range: full) { match, _, _ in
             guard let match else { return }
             // "$49.00 USD" was already read with its symbol; the code after it only names the currency.
             // (And "Qty 1 $12.00" is not one dollar: a figure never shares characters with another.)
             if figures.contains(where: { NSIntersectionRange($0.range, match.range).length > 0 }) { return }
+            let token = ns.substring(with: match.range(at: 2))
+            var code = currencyCode(forToken: token)
+            if code == nil, token.lowercased().hasPrefix("kr") {
+                guard let resolved = nordicCurrency else { return }
+                code = resolved
+            }
             figures.append(Figure(amount: ns.substring(with: match.range(at: 1)),
-                                  currency: currencyCode(forToken: ns.substring(with: match.range(at: 2))),
+                                  currency: code,
                                   range: match.range, numberRange: match.range(at: 1)))
         }
         figures.sort { $0.range.location < $1.range.location }
@@ -343,7 +374,7 @@ extension ReceiptTextAnalyzer {
             var currency = figure.currency
             if currency == nil {
                 let trailing = after.trimmingCharacters(in: .whitespaces).prefix(4).uppercased()
-                for code in ["USD", "CAD", "AUD", "GBP", "EUR", "NZD", "CHF"] where trailing.hasPrefix(code) { currency = code }
+                for code in ["USD", "CAD", "AUD", "NZD", "HKD", "SGD", "MXN", "TWD", "BRL", "GBP", "EUR", "CHF"] where trailing.hasPrefix(code) { currency = code }
             }
             candidates.append((Money(amount: parsed.value, currency: currency), score, range.location, evidence))
         }

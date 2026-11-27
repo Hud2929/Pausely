@@ -24,7 +24,7 @@ final class CurrencyManager: ObservableObject, @unchecked Sendable {
     var ratesTable: CurrencyRates { table.withLock { $0 } }
 
     /// When the rates held were loaded. Nil until live rates have been loaded once on this iPhone.
-    var lastUpdated: Date?
+    @Published var lastUpdated: Date?
 
     /// The day the rates in use are from: the last live load, or the day of the built-in table.
     var ratesDate: Date {
@@ -46,7 +46,7 @@ final class CurrencyManager: ObservableObject, @unchecked Sendable {
         let config = URLSessionConfiguration.default
         config.timeoutIntervalForRequest = 10
         config.timeoutIntervalForResource = 30
-        config.waitsForConnectivity = true
+        config.waitsForConnectivity = false
         return URLSession(configuration: config)
     }()
 
@@ -244,8 +244,8 @@ final class CurrencyManager: ObservableObject, @unchecked Sendable {
 
         for attempt in 0..<tries {
             if let answer = try? await loadLiveRates(), let rates = Self.usable(answer) {
-                exchangeRates = rates
                 lastUpdated = now
+                exchangeRates = rates
                 UserDefaults.standard.set(rates, forKey: ratesCacheKey)
                 UserDefaults.standard.set(now, forKey: ratesDateKey)
                 return

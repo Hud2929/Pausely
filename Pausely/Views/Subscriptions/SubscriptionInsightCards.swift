@@ -7,15 +7,28 @@ struct CancelTimingCard: View {
     let subscription: Subscription
 
     var body: some View {
-        if let next = RenewalDecisions.upcomingCharge(for: subscription, now: Date())?.date {
+        if let charge = RenewalDecisions.upcomingCharge(for: subscription, now: Date()) {
+            let days = Calendar.billing.calendarDays(from: Date(), to: charge.date)
+            let isApple = CancelHelp.find(for: subscription).kind == .appleSubscription
+            let line: String = {
+                if days <= 0 {
+                    return charge.isTrialEnd
+                        ? L10n.string("Your free trial ends today — cancel right away if you don't want to be charged.")
+                        : L10n.string("Today is the renewal day — cancel right away if it hasn't charged yet.")
+                }
+                if isApple {
+                    return L10n.string("Apple needs at least 24 hours' notice before \(DayText.date(charge.date, locale: L10n.locale)) so it won't charge.")
+                }
+                return L10n.string("Cancel before \(DayText.date(charge.date, locale: L10n.locale)) and you won't be charged.")
+            }()
             VStack(alignment: .leading, spacing: 6) {
                 Text("When to cancel")
                     .font(.headline)
                     .foregroundStyle(Color.inkText)
                     .accessibilityAddTraits(.isHeader)
-                Text(L10n.string("Cancel before \(DayText.date(next, locale: L10n.locale)) and you won't be charged."))
+                Text(verbatim: line)
                     .font(.body)
-                    .foregroundStyle(Color.inkTextMuted)
+                    .foregroundStyle(days <= 0 ? Color.due : Color.inkTextMuted)
                     .fixedSize(horizontal: false, vertical: true)
             }
             .frame(maxWidth: .infinity, alignment: .leading)

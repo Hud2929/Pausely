@@ -49,7 +49,11 @@ actor IMAPClient {
         guard let port = NWEndpoint.Port(rawValue: configuration.port) else { throw MailboxError.notConfigured(L10n.string("That port number isn't valid.")) }
         let connection = NWConnection(host: NWEndpoint.Host(configuration.host), port: port, using: parameters)
         self.connection = connection
-        try await Self.waitUntilReady(connection, timeout: configuration.commandTimeout)
+        try await withTaskCancellationHandler {
+            try await Self.waitUntilReady(connection, timeout: configuration.commandTimeout)
+        } onCancel: {
+            connection.cancel()
+        }
 
         let greeting = try await readResponse()
         switch greeting.status {
@@ -168,6 +172,9 @@ actor IMAPClient {
         let tag = "P\(tagCounter)"
         var line = Data((tag + " ").utf8)
         let literalPlus = capabilities.contains("LITERAL+")
+        var untagged: [IMAPResponse] = []
+        let maxUntagged = 5_000
+        let deadline = Date().addingTimeInterval(max(configuration.commandTimeout * 4, 120))
 
         for (index, argument) in arguments.enumerated() {
             if index > 0 { line.append(32) }
@@ -181,9 +188,27 @@ actor IMAPClient {
                     if !literalPlus {
                         try await send(line)
                         line.removeAll()
-                        let next = try await readResponse()
-                        guard next.kind == .continuation else {
-                            throw MailboxError.server(next.text.isEmpty ? L10n.string("The server refused the request.") : next.text)
+                        while true {
+                            if Date() > deadline {
+                                throw MailboxError.network(L10n.string("The server took too long to answer."))
+                            }
+                            let next = try await readResponse()
+                            switch next.kind {
+                            case .continuation:
+                                break
+                            case .untagged:
+                                if next.status == "BYE", !(arguments.first == .raw("LOGOUT")) {
+                                    throw MailboxError.network(next.text.isEmpty ? L10n.string("The server closed the connection.") : next.text)
+                                }
+                                guard untagged.count < maxUntagged else {
+                                    throw MailboxError.server(L10n.string("The server sent more data than expected."))
+                                }
+                                untagged.append(next)
+                                continue
+                            case .tagged:
+                                throw MailboxError.server(next.text.isEmpty ? L10n.string("The server refused the request.") : next.text)
+                            }
+                            break
                         }
                     }
                     line.append(contentsOf: bytes)
@@ -195,9 +220,6 @@ actor IMAPClient {
         line.append(contentsOf: [13, 10])
         try await send(line)
 
-        var untagged: [IMAPResponse] = []
-        let maxUntagged = 5_000
-        let deadline = Date().addingTimeInterval(max(configuration.commandTimeout * 4, 120))
         while true {
             if Date() > deadline {
                 throw MailboxError.network(L10n.string("The server took too long to answer."))
@@ -206,7 +228,7 @@ actor IMAPClient {
             switch response.kind {
             case .untagged:
                 if response.status == "BYE", !(arguments.first == .raw("LOGOUT")) {
-                    throw MailboxError.server(response.text.isEmpty ? L10n.string("The server closed the connection.") : response.text)
+                    throw MailboxError.network(response.text.isEmpty ? L10n.string("The server closed the connection.") : response.text)
                 }
                 guard untagged.count < maxUntagged else {
                     throw MailboxError.server(L10n.string("The server sent more data than expected."))
@@ -265,11 +287,32 @@ actor IMAPClient {
 
     private func send(_ data: Data) async throws {
         guard let connection else { throw MailboxError.network(L10n.string("Not connected.")) }
-        try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
-            connection.send(content: data, completion: .contentProcessed { error in
-                if let error { continuation.resume(throwing: MailboxError.network(error.localizedDescription)) }
-                else { continuation.resume() }
-            })
+        try Task.checkCancellation()
+        let timeout = configuration.commandTimeout
+        do {
+            try await withTaskCancellationHandler {
+                try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
+                    let once = ResumeOnce()
+                    let timer = DispatchWorkItem {
+                        if once.claim() {
+                            connection.cancel()
+                            continuation.resume(throwing: MailboxError.network(L10n.string("The mail server stopped responding.")))
+                        }
+                    }
+                    DispatchQueue.global().asyncAfter(deadline: .now() + timeout, execute: timer)
+                    connection.send(content: data, completion: .contentProcessed { error in
+                        guard once.claim() else { return }
+                        timer.cancel()
+                        if let error { continuation.resume(throwing: Self.describe(error)) }
+                        else { continuation.resume() }
+                    })
+                }
+            } onCancel: {
+                connection.cancel()
+            }
+        } catch {
+            if Task.isCancelled { throw MailboxError.cancelled }
+            throw error
         }
     }
 

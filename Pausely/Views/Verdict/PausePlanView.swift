@@ -620,9 +620,9 @@ struct PausePlanCard: View {
     @ObservedObject private var currencyManager = CurrencyManager.shared
     @State private var showPlan = false
 
-    /// Worth showing: a plan is running, or there are at least two streaming services to rotate.
+    /// Worth showing: a plan is running, or there are at least two charging streaming services to rotate.
     static func isRelevant(plan: PausePlan?, subscriptions: [Subscription]) -> Bool {
-        plan != nil || subscriptions.filter(PausePlanSchedule.isEligible).count >= 2
+        plan != nil || subscriptions.charging.filter(PausePlanSchedule.isEligible).count >= 2
     }
 
     /// Strict yearly savings across eligible active streaming subscriptions; nil if any eligible
@@ -687,7 +687,7 @@ struct PausePlanCard: View {
         guard let info = Self.yearlySavingsInfo(in: store.subscriptions, currency: currencyManager) else {
             return L10n.string("Rotate your streaming services and watch one at a time.")
         }
-        let formatted = MoneyFormat.total(info.amount, info.currency, converted: info.isConverted, locale: L10n.locale)
+        let formatted = MoneyFormat.string(info.amount, info.currency, locale: L10n.locale)
         return L10n.string("Watch one streaming service at a time and get about \(formatted) a year back.")
     }
 }

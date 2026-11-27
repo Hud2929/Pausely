@@ -13,7 +13,7 @@ enum SubscriptionInsights {
     static func all(for detected: [ProvenSubscription], groups: Groups, now: Date, calendar: Calendar) -> [IntelligenceInsight] {
         var insights: [IntelligenceInsight] = []
         for sub in detected { insights.append(contentsOf: about(sub, now: now, calendar: calendar)) }
-        insights.append(contentsOf: priceChangeNotices(groups: groups, detected: detected))
+        insights.append(contentsOf: priceChangeNotices(groups: groups, detected: detected, now: now))
         let introEnds = introductoryPriceEnds(groups: groups, detected: detected)
         insights.append(contentsOf: introEnds)
         insights.append(contentsOf: failedPayments(groups: groups, detected: detected, now: now))
@@ -87,11 +87,14 @@ enum SubscriptionInsights {
     }
 
     private static func priceChangeNotices(groups: Groups,
-                                    detected: [ProvenSubscription]) -> [IntelligenceInsight] {
+                                           detected: [ProvenSubscription],
+                                           now: Date) -> [IntelligenceInsight] {
         var out: [IntelligenceInsight] = []
-        for sub in detected where sub.tier >= .likely {
-            guard let group = groups[sub.merchantKey], group.signals.contains(where: { $0.kind == .priceChange }) else { continue }
-            if sub.status == .priceIncreased { continue } // already covered by an exact price insight
+        for sub in detected where sub.tier >= .likely && (sub.status == .active || sub.status == .trial) {
+            guard let group = groups[sub.merchantKey],
+                  let notice = group.signals.last(where: { $0.kind == .priceChange }),
+                  now.timeIntervalSince(notice.date) < 90 * 86_400 else { continue }
+            if let lastCharge = sub.lastChargeDate, lastCharge >= notice.date { continue }
             out.append(IntelligenceInsight(
                 id: "notice|\(sub.id)", kind: .priceChangeNotice, title: L10n.string("\(sub.name) announced a price change"),
                 detail: L10n.string("They emailed about new pricing. Check what you'll pay next billing."), subscriptionId: sub.id, annualImpact: nil))
@@ -119,10 +122,8 @@ enum SubscriptionInsights {
             // the new price with the same tax, said as an estimate. Money in one sentence is all one way.
             var withTax: Decimal?
             if let stated = signal.introAmount, stated > 0, sub.amount > stated {
-                var estimate = next * sub.amount / stated
-                var rounded = Decimal()
-                NSDecimalRound(&rounded, &estimate, 2, .plain)
-                withTax = rounded
+                let estimate = next * sub.amount / stated
+                withTax = AmountText.rounded(estimate, currency: sub.currency)
             }
             let title = sub.nextBillingDate.map { L10n.string("\(sub.name) goes up to \(newPrice) around \(shortDate($0))") }
                 ?? L10n.string("\(sub.name) goes up to \(newPrice) at the next renewal")

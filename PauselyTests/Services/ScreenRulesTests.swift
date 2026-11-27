@@ -333,7 +333,7 @@ final class ScreenRulesTests: XCTestCase {
         // for the roll and broke wherever the line ran out.
         let receipt = try String(contentsOf: sources.appendingPathComponent("Views/Verdict/SavingsReceiptView.swift"), encoding: .utf8)
         XCTAssertFalse(receipt.contains("Facts("))
-        XCTAssertTrue(receipt.contains("Text(L10n.string(\"Cancelled on \\(line.cancelledOn."))
+        XCTAssertTrue(receipt.contains("Text(L10n.string(\"Cancelled on \\(DayText.fullDate(line.cancelledOn, locale: L10n.locale))\"))"))
         let design = try String(contentsOf: sources.appendingPathComponent("DesignSystem/InkLayout.swift"), encoding: .utf8)
         XCTAssertTrue(design.contains("Text(verbatim: L10n.facts(line, oneToALine: typeSize.isAccessibilitySize))"))
     }
@@ -953,7 +953,7 @@ final class ScreenRulesTests: XCTestCase {
                 XCTAssertFalse(text.contains(".confirmationDialog("), "\(file) asks in its own way")
             }
         }
-        XCTAssertEqual(asked, 6, "sign out, remove (twice), discard changes, end Pause Plan, disconnect an inbox")
+        XCTAssertEqual(asked, 8, "sign out, remove (twice), discard changes (edit, add, catalog), end Pause Plan, disconnect an inbox")
         // Both shapes are attached and one is shown, so the screen underneath is not rebuilt
         // when the text size changes.
         let controls = try String(contentsOf: sources.appendingPathComponent("DesignSystem/InkControls.swift"), encoding: .utf8)
@@ -972,6 +972,8 @@ final class ScreenRulesTests: XCTestCase {
         let sources = root.appendingPathComponent("Pausely")
         try XCTSkipUnless(FileManager.default.fileExists(atPath: sources.path), "Sources aren't readable from this test run")
         let hungOn = [
+            "Views/AddSubscription/AddSubscriptionView.swift": ".accessibilityIdentifier(\"cancelButton\")",
+            "Views/CatalogAddSheet.swift": ".accessibilityIdentifier(\"catalogCancelButton\")",
             "Views/ProfileView.swift": ".accessibilityIdentifier(\"signOutButton\")",
             "Views/SubscriptionManagementView.swift": ".accessibilityIdentifier(\"removeSubscriptionButton\")",
             "Views/Verdict/PausePlanView.swift": ".accessibilityIdentifier(\"endPausePlanButton\")",
@@ -1385,9 +1387,9 @@ final class ScreenRulesTests: XCTestCase {
                     }
                     let arguments = String(text[found.upperBound..<end])
                     fields += 1
-                    // A hint is made by `Hint`. A field with none starts with an empty title and has no prompt.
+                    // A hint is made by `Hint`. A field with none starts with an empty title (or `text:` + EmptyView) and has no prompt.
                     let hinted = arguments.contains("Hint.text(")
-                    let bare = arguments.hasPrefix("\"\", text:") && !arguments.contains("prompt:")
+                    let bare = (arguments.hasPrefix("\"\", text:") || arguments.hasPrefix("text:")) && !arguments.contains("prompt:")
                     if !hinted && !bare { unhinted.append("\(file.lastPathComponent): \(opening)\(arguments.prefix(60))") }
                 }
             }

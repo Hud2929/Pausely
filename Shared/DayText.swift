@@ -31,8 +31,22 @@ enum DayText {
         return day.formatted(style.locale(locale))
     }
 
+    /// "Nov 28, 2026" (always with the year), using full month names in Arabic and non-Gregorian calendars.
+    static func fullDate(_ day: Date, locale: Locale) -> String {
+        let wide = locale.language.languageCode?.identifier == "ar" || locale.calendar.identifier != .gregorian
+        let style = Date.FormatStyle.dateTime.month(wide ? .wide : .abbreviated).day().year()
+        return day.formatted(style.locale(locale))
+    }
+
+    /// "Nov 2026", using full month names in Arabic and non-Gregorian calendars.
+    static func monthYear(_ day: Date, locale: Locale) -> String {
+        let wide = locale.language.languageCode?.identifier == "ar" || locale.calendar.identifier != .gregorian
+        let style = Date.FormatStyle.dateTime.month(wide ? .wide : .abbreviated).year()
+        return day.formatted(style.locale(locale))
+    }
+
     /// Words for the week ahead, the date beyond it.
-    static func text(daysAway: Int, day: Date, locale: Locale) -> String {
-        daysAway <= 7 ? relative(daysAway: daysAway, locale: locale) : date(day, locale: locale)
+    static func text(daysAway: Int, day: Date, locale: Locale, now: Date = Date()) -> String {
+        daysAway <= 7 ? relative(daysAway: daysAway, locale: locale) : date(day, locale: locale, now: now)
     }
 }

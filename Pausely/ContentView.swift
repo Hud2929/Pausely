@@ -168,6 +168,7 @@ struct RootView: View {
                 }
             }
             .opacity(showSplash ? 0 : 1)
+            .accessibilityHidden(showSplash)
             // Opened from here, by the screen that is always on: a form opened by a screen as it
             // arrived (the welcome screen sliding in) was a second thing happening at once, and on
             // iPad "Keep my list" ended back on the total with no form.
@@ -230,32 +231,30 @@ struct RootView: View {
             // Time-driven changes (renewals passing, trials ending) and a fresh set of reminders
             // every time the app comes back to the foreground.
             if phase == .active {
+                guard ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] == nil else { return }
                 // The phone is unlocked now: anything a locked-screen action couldn't read can be.
                 LifecycleEventLog.shared.loadIfNeeded()
                 PausePlanStore.shared.loadIfNeeded()
-                // "Keep it" pressed before the first unlock after a restart, written down then.
                 Task { await VerdictCenter.shared.keepPressedWhileLocked() }
-                // Landed somewhere else: every renewal is still on its day.
                 SubscriptionStore.shared.noticeTimeZone()
                 Task {
                     await NotificationManager.shared.refreshStatus()
-                    await SubscriptionLifecycle.shared.run()
-                    // Changes that couldn't be sent earlier go now. If first-sync dedup hasn't succeeded yet
-                    // (e.g. initial sign-in fetch failed offline), retry reconciliation instead of stalling.
+                    await CurrencyManager.shared.refreshRatesWhenDue()
+                    await PaymentManager.shared.updateCurrentEntitlements()
+                    guard authManager.isAuthenticated || isDemoMode else { return }
                     if authManager.isSignedIntoCloud {
+                        if let uid = authManager.currentUser?.id {
+                            await ageConsent.syncPendingConsent(userId: uid)
+                        }
                         if SubscriptionStore.isFirstSync(for: authManager.currentUser?.id) {
                             await SubscriptionStore.shared.fetchSubscriptions(force: true)
                         } else {
                             await SubscriptionStore.shared.sync.drain(force: true)
                         }
+                        await LifecycleSync.shared.sync()
+                        await PausePlanSync.shared.sync()
                     }
-                    await LifecycleSync.shared.sync()
-                    await PausePlanSync.shared.sync()
-                    // An app left open for days still converts at today's rates (asks at most hourly).
-                    await CurrencyManager.shared.refreshRatesWhenDue()
-                    // A subscription that ended or was refunded while the app was in the background stops
-                    // unlocking Pro now, not at the next cold launch.
-                    await PaymentManager.shared.updateCurrentEntitlements()
+                    await SubscriptionLifecycle.shared.run()
                 }
             }
         }

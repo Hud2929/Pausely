@@ -98,11 +98,19 @@ enum AmountText {
             let mark: Character = dots > 0 ? "." : ","
             let count = max(dots, commas)
             let parts = text.split(separator: mark, omittingEmptySubsequences: false)
-            let groupsOfThree = parts.count >= 2 && !parts[0].isEmpty && parts[0].count <= 3
+            // A real thousands group never starts with "0": "0.500" (de_DE) and "0,500" (en_US) are
+            // half a unit, not five hundred. Also recognise Indian lakh grouping ("1,00,000").
+            let leadingNonZero = parts.first.map { !$0.isEmpty && $0.first != "0" } ?? false
+            let groupsOfThree = parts.count >= 2 && leadingNonZero && parts[0].count <= 3
                 && parts.dropFirst().allSatisfy { $0.count == 3 }
+            let indianGrouping = count > 1 && mark == "," && parts.count >= 3
+                && leadingNonZero && parts[0].count <= 2
+                && parts.dropFirst().dropLast().allSatisfy { $0.count == 2 }
+                && parts.last?.count == 3
+            let validGrouping = groupsOfThree || indianGrouping
             let isGrouping = count > 1 || (groupsOfThree && (decimals == 0 || groupingMark(of: locale) == mark))
             if isGrouping {
-                guard groupsOfThree else { return nil }
+                guard validGrouping else { return nil }
                 text = text.replacingOccurrences(of: String(mark), with: "")
             } else if mark == "," {
                 text = text.replacingOccurrences(of: ",", with: ".")

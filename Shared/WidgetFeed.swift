@@ -32,6 +32,24 @@ struct WidgetFeed: Codable, Equatable {
         var id: UUID { charge.id }
     }
 
+    /// One scheduled Pause Plan turn published ahead so widgets roll over cleanly at midnight without opening the app.
+    struct PauseTurn: Codable, Equatable {
+        let name: String
+        /// First day of this turn ("YYYY-MM-DD"), or empty for the currently running turn.
+        let startStamp: String
+        /// Handoff day ("YYYY-MM-DD") when the next turn starts at midnight.
+        let endStamp: String
+        let endText: String
+        let nextName: String
+    }
+
+    /// One midnight-aware Savings Receipt snapshot so "Kept so far" ticks up automatically as avoided charge days pass.
+    struct SavingsSnapshot: Codable, Equatable {
+        let stamp: String
+        let savedSoFarText: String
+        let savedSoFarIsZero: Bool
+    }
+
     var charges: [Charge] = []
     /// What everything charging costs each month and each year, as the app formats it ("≈" included
     /// when something was converted). Empty when nothing is charging.
@@ -41,24 +59,30 @@ struct WidgetFeed: Codable, Equatable {
     var language: String?
     /// False when the list is empty: the widget then says where to add something.
     var hasSubscriptions = false
+    /// True when at least one active or trial subscription is still charging.
+    var hasChargingSubscriptions = false
     /// Formatted Savings Receipt totals for the Savings Receipt widget (empty until first cancellation).
     var savedSoFarText = ""
     var savedSoFarIsZero = true
     var onTrackText = ""
     var cancelledCount = 0
+    /// Ordered snapshots (`stamp` ascending) so Savings Receipt updates at midnight on avoided charge days.
+    var savingsSnapshots: [SavingsSnapshot] = []
     /// Current active Pause Plan streaming turn, if a Pro plan is running, with its end day-stamp ("YYYY-MM-DD")
     /// so widgets automatically stop showing an expired turn at midnight.
     var pauseTurnName = ""
     var pauseTurnEndText = ""
     var pauseTurnEndStamp = ""
     var pauseTurnNextName = ""
+    /// Upcoming Pause Plan turns (current + future) so widgets advance to the next service at midnight.
+    var pauseTurns: [PauseTurn] = []
 
     init() {}
 
     enum CodingKeys: String, CodingKey {
-        case charges, monthlyText, yearlyText, language, hasSubscriptions
-        case savedSoFarText, savedSoFarIsZero, onTrackText, cancelledCount
-        case pauseTurnName, pauseTurnEndText, pauseTurnEndStamp, pauseTurnNextName
+        case charges, monthlyText, yearlyText, language, hasSubscriptions, hasChargingSubscriptions
+        case savedSoFarText, savedSoFarIsZero, onTrackText, cancelledCount, savingsSnapshots
+        case pauseTurnName, pauseTurnEndText, pauseTurnEndStamp, pauseTurnNextName, pauseTurns
     }
 
     init(from decoder: Decoder) throws {
@@ -68,23 +92,43 @@ struct WidgetFeed: Codable, Equatable {
         yearlyText = try c.decodeIfPresent(String.self, forKey: .yearlyText) ?? ""
         language = try c.decodeIfPresent(String.self, forKey: .language)
         hasSubscriptions = try c.decodeIfPresent(Bool.self, forKey: .hasSubscriptions) ?? false
+        hasChargingSubscriptions = try c.decodeIfPresent(Bool.self, forKey: .hasChargingSubscriptions)
+            ?? (hasSubscriptions && (!charges.isEmpty || !monthlyText.isEmpty))
         savedSoFarText = try c.decodeIfPresent(String.self, forKey: .savedSoFarText) ?? ""
         savedSoFarIsZero = try c.decodeIfPresent(Bool.self, forKey: .savedSoFarIsZero) ?? true
         onTrackText = try c.decodeIfPresent(String.self, forKey: .onTrackText) ?? ""
         cancelledCount = try c.decodeIfPresent(Int.self, forKey: .cancelledCount) ?? 0
+        savingsSnapshots = try c.decodeIfPresent([SavingsSnapshot].self, forKey: .savingsSnapshots) ?? []
         pauseTurnName = try c.decodeIfPresent(String.self, forKey: .pauseTurnName) ?? ""
         pauseTurnEndText = try c.decodeIfPresent(String.self, forKey: .pauseTurnEndText) ?? ""
         pauseTurnEndStamp = try c.decodeIfPresent(String.self, forKey: .pauseTurnEndStamp) ?? ""
         pauseTurnNextName = try c.decodeIfPresent(String.self, forKey: .pauseTurnNextName) ?? ""
+        pauseTurns = try c.decodeIfPresent([PauseTurn].self, forKey: .pauseTurns) ?? []
     }
 
-    /// Returns the active Pause Plan turn on `today`, or nil once its end day has passed at midnight.
-    func activePauseTurn(on today: Date, calendar: Calendar = .billing) -> (name: String, endText: String, nextName: String)? {
+    /// Returns the Savings Receipt totals valid on `today`, rolling forward across published avoided-charge snapshots.
+    func savings(on today: Date, calendar: Calendar = .billing) -> (savedSoFarText: String, savedSoFarIsZero: Bool, onTrackText: String) {
+        let todayStamp = calendar.dayStamp(today)
+        if let snapshot = savingsSnapshots.last(where: { $0.stamp <= todayStamp }) {
+            return (snapshot.savedSoFarText, snapshot.savedSoFarIsZero, onTrackText)
+        }
+        return (savedSoFarText, savedSoFarIsZero, onTrackText)
+    }
+
+    /// Returns the active Pause Plan turn on `today`, advancing across published turns at midnight.
+    func activePauseTurn(on today: Date, calendar: Calendar = .billing) -> (name: String, endText: String, endStamp: String, nextName: String)? {
+        let todayStamp = calendar.dayStamp(today)
+        if !pauseTurns.isEmpty {
+            guard let turn = pauseTurns.first(where: {
+                ($0.startStamp.isEmpty || todayStamp >= $0.startStamp) && todayStamp < $0.endStamp
+            }) else { return nil }
+            return (turn.name, turn.endText, turn.endStamp, turn.nextName)
+        }
         guard !pauseTurnName.isEmpty else { return nil }
-        if !pauseTurnEndStamp.isEmpty, calendar.dayStamp(today) > pauseTurnEndStamp {
+        if !pauseTurnEndStamp.isEmpty, todayStamp > pauseTurnEndStamp {
             return nil
         }
-        return (pauseTurnName, pauseTurnEndText, pauseTurnNextName)
+        return (pauseTurnName, pauseTurnEndText, pauseTurnEndStamp, pauseTurnNextName)
     }
 
     // MARK: - What charges next

@@ -8,6 +8,8 @@ struct InboxProviderList: View {
     let onChoose: () -> Void
     /// An inbox reached with an app password: its preset, or nil for any other server.
     let onAppPassword: (IMAPPreset?) -> Void
+    /// Optional deferred OAuth handler so a sheet can finish dismissing before `ASWebAuthenticationSession` presents.
+    var onOAuth: ((MailboxKind) -> Void)? = nil
 
     @ObservedObject private var scanner = InboxScanner.shared
     /// The provider whose sign-in is being opened: its row shows that it was heard until the web
@@ -23,14 +25,22 @@ struct InboxProviderList: View {
         VStack(spacing: 0) {
             if googleSignIn {
                 row(Text(verbatim: "Gmail"), detail: Text("Sign in with Google"), icon: "Gmail", id: "connectGmail") {
-                    onChoose()
-                    connect("connectGmail") { await scanner.connectGmail() }
+                    if let onOAuth {
+                        onOAuth(.gmail)
+                    } else {
+                        onChoose()
+                        connect("connectGmail") { await scanner.connectGmail() }
+                    }
                 }
             }
             if FeatureFlags.microsoftImportEnabled && MicrosoftGraphProvider.isConfigured {
                 row(Text(verbatim: "Outlook, Hotmail, Live, MSN"), detail: Text("Sign in with Microsoft"), icon: "Outlook", id: "connectMicrosoft") {
-                    onChoose()
-                    connect("connectMicrosoft") { await scanner.connectMicrosoft() }
+                    if let onOAuth {
+                        onOAuth(.microsoft)
+                    } else {
+                        onChoose()
+                        connect("connectMicrosoft") { await scanner.connectMicrosoft() }
+                    }
                 }
             }
             if FeatureFlags.imapImportEnabled {
@@ -112,12 +122,13 @@ struct InboxProviderList: View {
 struct ProviderSheet: View {
     let onChoose: () -> Void
     let onAppPassword: (IMAPPreset?) -> Void
+    var onOAuth: ((MailboxKind) -> Void)? = nil
     let onCancel: () -> Void
 
     var body: some View {
         NavigationStack {
             ScrollView {
-                InboxProviderList(onChoose: onChoose, onAppPassword: onAppPassword).padding(Layout.margin)
+                InboxProviderList(onChoose: onChoose, onAppPassword: onAppPassword, onOAuth: onOAuth).padding(Layout.margin)
             }
             .readableScroll()
             .background(Color.ink.ignoresSafeArea())

@@ -18,19 +18,24 @@ struct RevealStep: View {
     @State private var shareImage: Image?
 
     private var overflowLines: [TallyLine] {
-        let limit = FreeTier.room(in: [])
-        let ranked = tally.lines.sorted {
-            (rates.convert($0.yearlyCost, from: $0.currency, to: tally.currency) ?? -1)
-                > (rates.convert($1.yearlyCost, from: $1.currency, to: tally.currency) ?? -1)
+        let plan = PendingTally.plan(
+            lines: tally.lines,
+            existingNames: [],
+            freeSlots: FreeTier.room(in: []),
+            preferredNames: tally.preferredNames
+        ) { line in
+            rates.convert(line.yearlyCost, from: line.currency, to: tally.currency) ?? 0
         }
-        let chosen: Set<String> = tally.preferredNames.isEmpty
-            ? Set(ranked.prefix(limit).map(\.name))
-            : Set(tally.preferredNames.prefix(limit))
-        return ranked.filter { !chosen.contains($0.name) }
+        return plan.wait
     }
 
-    private var monthly: String { money(tally.monthlyTotal(rates: rates)) }
-    private var yearly: String { money(tally.yearlyTotal(rates: rates)) }
+    private var hasConvertedLines: Bool {
+        let display = MoneyFormat.normalizedCode(tally.currency)
+        return tally.lines.contains { MoneyFormat.normalizedCode($0.currency) != display }
+    }
+
+    private var monthly: String { money(tally.monthlyTotal(rates: rates), converted: !tally.isApproximate && hasConvertedLines) }
+    private var yearly: String { money(tally.yearlyTotal(rates: rates), converted: !tally.isApproximate && hasConvertedLines) }
     /// Rounded, for sentences; the slip keeps the cents.
     private var monthlyRound: String { round(tally.monthlyTotal(rates: rates)) }
     private var yearlyRound: String { round(tally.yearlyTotal(rates: rates)) }
@@ -106,6 +111,7 @@ struct RevealStep: View {
                                 .accessibilityIdentifier("revealChooseFiveButton")
 
                                 Button {
+                                    if !tally.lines.isEmpty { PendingTally.save(tally) }
                                     showingPaywall = true
                                 } label: {
                                     Text("Track all \(tally.lines.count) with Pro")
@@ -165,7 +171,7 @@ struct RevealStep: View {
             .padding(.bottom, 10)
         }
         .task { await printSlip() }
-        .task(id: "\(showTotals)|\(tally.monthlyTotal(rates: rates))|\(tally.lines.count)|\(tally.isApproximate)") {
+        .task(id: "\(showTotals)|\(tally.guess)|\(tally.currency)|\(tally.monthlyTotal(rates: rates))|\(tally.lines.count)|\(tally.isApproximate)|\(L10n.locale.identifier)") {
             guard showTotals, !tally.lines.isEmpty else { shareImage = nil; return }
             let gapText: String? = {
                 if case .more(_, let yearlyGap) = tally.verdict(rates: rates) {
@@ -190,6 +196,7 @@ struct RevealStep: View {
         .sheet(isPresented: $choosingTracked, onDismiss: {
             if pendingPaywallFromPicker {
                 pendingPaywallFromPicker = false
+                if !tally.lines.isEmpty { PendingTally.save(tally) }
                 showingPaywall = true
             }
         }) {
@@ -293,8 +300,8 @@ struct RevealStep: View {
         }
     }
 
-    private func money(_ amount: Decimal) -> String {
-        MoneyFormat.string(amount, tally.currency, locale: L10n.locale)
+    private func money(_ amount: Decimal, converted: Bool = false) -> String {
+        MoneyFormat.total(amount, tally.currency, converted: converted, locale: L10n.locale)
     }
 
     private func round(_ amount: Decimal) -> String {

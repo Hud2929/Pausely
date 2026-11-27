@@ -136,8 +136,8 @@ final class CancelHelpTests: XCTestCase {
 
     /// The data holds a link and names for each service, and nothing that was never checked.
     func testEveryServiceHasASecureCancellationLinkOfItsOwn() {
-        XCTAssertEqual(ServiceDatabase.services.count, 201)
-        XCTAssertEqual(Set(ServiceDatabase.services.map(\.id)).count, 201, "no id twice")
+        XCTAssertEqual(ServiceDatabase.services.count, 197)
+        XCTAssertEqual(Set(ServiceDatabase.services.map(\.id)).count, 197, "no id twice")
         for service in ServiceDatabase.services {
             let url = URL(string: service.cancelURL)
             XCTAssertEqual(url?.scheme, "https", service.name)

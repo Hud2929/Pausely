@@ -26,14 +26,28 @@ enum ScreenshotOCR {
     /// overlapping vertical tiles so Vision does not downscale small text below its recognition floor.
     private static let tallAspectThreshold: CGFloat = 2.4
 
+    /// Runs a blocking Vision OCR block on a background executor while propagating Swift task cancellation.
+    private nonisolated static func runOffMain<T: Sendable>(
+        _ work: @Sendable @escaping () throws -> T
+    ) async throws -> T {
+        let task = Task.detached(priority: .userInitiated) {
+            try Task.checkCancellation()
+            return try work()
+        }
+        return try await withTaskCancellationHandler {
+            try await task.value
+        } onCancel: {
+            task.cancel()
+        }
+    }
+
     /// Recognizes text directly from raw image bytes (HEIC, PNG, JPEG), letting Vision read EXIF
     /// orientation natively without decoding a full `UIImage` bitmap first. Tall scrolling captures
     /// are automatically tiled in overlapping vertical strips for full-resolution accuracy.
     nonisolated static func recognizeText(in data: Data) async throws -> [ScreenshotParser.TextObservation] {
         guard !data.isEmpty else { throw Failure.unreadableImage }
         try Task.checkCancellation()
-        return try await Task.detached(priority: .userInitiated) {
-            try Task.checkCancellation()
+        return try await runOffMain {
             if let image = UIImage(data: data),
                image.size.width > 0,
                image.size.height > image.size.width * tallAspectThreshold,
@@ -44,7 +58,7 @@ enum ScreenshotOCR {
             let handler = VNImageRequestHandler(data: data, options: [:])
             try handler.perform([request])
             return extractObservations(from: request)
-        }.value
+        }
     }
 
     nonisolated static func recognizeText(in image: UIImage) async throws -> [ScreenshotParser.TextObservation] {
@@ -52,16 +66,14 @@ enum ScreenshotOCR {
         let orientation = cgOrientation(from: image.imageOrientation)
         let isTall = image.size.width > 0 && image.size.height > image.size.width * tallAspectThreshold
         if isTall, let upright = uprightCGImage(from: image) {
-            return try await Task.detached(priority: .userInitiated) {
-                try Task.checkCancellation()
-                return try performTiledRecognition(on: upright)
-            }.value
+            return try await runOffMain {
+                try performTiledRecognition(on: upright)
+            }
         }
         if let cgImage = image.cgImage {
-            return try await Task.detached(priority: .userInitiated) {
-                try Task.checkCancellation()
-                return try performRecognition(on: cgImage, orientation: orientation)
-            }.value
+            return try await runOffMain {
+                try performRecognition(on: cgImage, orientation: orientation)
+            }
         }
         // Fallback only when UIImage is CIImage-backed with no direct CGImage.
         guard let fallbackData = image.pngData() else {

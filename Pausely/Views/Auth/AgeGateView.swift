@@ -10,14 +10,10 @@ struct AgeGateView: View {
     var cancelTitle: LocalizedStringKey = "Cancel"
 
     @ObservedObject private var consent = AgeConsentManager.shared
-    @State private var birthDate = AgeGateView.neutralDefaultDate
+    @State private var birthDate = Date()
+    @State private var hasPickedDate = false
     @State private var outcome: AgeConsentManager.Outcome?
     @State private var lockoutText: String?
-
-    /// A neutral starting date so the picker doesn't hint at the "right" answer.
-    private static var neutralDefaultDate: Date {
-        Calendar.billing.date(byAdding: .year, value: -30, to: Date()) ?? Date()
-    }
 
     private var isBlocked: Bool { outcome == .underAge || outcome == .lockedOut }
 
@@ -70,6 +66,7 @@ struct AgeGateView: View {
                 .colorScheme(.dark)
                 .accessibilityLabel("Date of birth")
                 .accessibilityHint("Select the year, month and day you were born")
+                .onChange(of: birthDate) { _, _ in hasPickedDate = true }
 
             if outcome == .invalidDate {
                 ProblemLine(message: L10n.string("That date is in the future. Please check your date of birth."))
@@ -79,6 +76,7 @@ struct AgeGateView: View {
                 Text("Continue")
             }
             .buttonStyle(.ink)
+            .disabled(!hasPickedDate)
             .accessibilityIdentifier("ageGateContinueButton")
             .accessibilityHint("Confirms your age and continues")
 
@@ -110,7 +108,9 @@ struct AgeGateView: View {
                 .foregroundStyle(Color.inkText)
                 .fixedSize(horizontal: false, vertical: true)
                 .accessibilityAddTraits(.isHeader)
-            Text("Pausely is only available to people \(AgeConsentManager.minimumAge) and older, so we can't create an account for you right now.")
+            Text(AuthManager.shared.isAuthenticated
+                 ? L10n.string("Pausely is only available to people \(AgeConsentManager.minimumAge) and older.")
+                 : L10n.string("Pausely is only available to people \(AgeConsentManager.minimumAge) and older, so we can't create an account for you right now."))
                 .font(.body)
                 .foregroundStyle(Color.inkTextMuted)
                 .fixedSize(horizontal: false, vertical: true)

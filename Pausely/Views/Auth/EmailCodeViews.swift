@@ -33,7 +33,7 @@ struct CodeField: View {
         .dynamicTypeSize(...DynamicTypeSize.accessibility2)
         .accessibilityHidden(true)
         .overlay(
-            TextField("", text: $code)
+            TextField(text: $code) { EmptyView() }
                 .keyboardType(.numberPad)
                 .textContentType(.oneTimeCode)
                 .focused(isFocused)
@@ -60,7 +60,7 @@ private struct ResendButton: View {
     let action: () -> Void
 
     var body: some View {
-        TimelineView(.explicit(countdown.ticks(from: Date()))) { context in
+        TimelineView(.explicit(countdown.ticks(from: countdown.lastSent))) { context in
             let seconds = countdown.secondsLeft(at: context.date)
             Button(action: action) {
                 if isSending {
@@ -213,7 +213,7 @@ struct EmailConfirmationView: View {
         .interactiveDismissDisabled(isVerifying)
         .onAppear { codeFocused = true }
         .onChange(of: code) { _, typed in
-            problem = nil
+            if !typed.isEmpty { problem = nil }
             if typed.count == EmailCode.length { verify() }
         }
         // The link in the email does the same job as the code; when it signs the person in, this is done.
@@ -269,10 +269,13 @@ struct PasswordResetView: View {
     /// `--demo-reset-code` (DEBUG) opens on the code step, which otherwise needs a code to be sent.
     @State private var sentTo: String? = LaunchFlag.isSet("--demo-reset-code") ? "you@example.com" : nil
     @State private var code = ""
-    @State private var isWorking = false
+    @State private var isSending = false
+    @State private var isVerifying = false
     @State private var problem: String? = AccountProblem.forDemo(CodeProblem.sending(CancellationError()))
     @State private var countdown = ResendCountdown(lastSent: Date())
     @FocusState private var codeFocused: Bool
+
+    private var isWorking: Bool { isSending || isVerifying }
 
     private var trimmedAddress: String { address.trimmingCharacters(in: .whitespacesAndNewlines) }
     private var addressLooksValid: Bool { trimmedAddress.contains("@") && trimmedAddress.contains(".") }
@@ -316,7 +319,7 @@ struct PasswordResetView: View {
                        detail: "Enter the email you signed up with. We'll send a code to prove it's you.")
             VStack(alignment: .leading, spacing: 12) {
                 LabelledField(label: "Email") {
-                    InkTextField(placeholder: "", text: $address, keyboardType: .emailAddress, autocapitalization: .never)
+                    InkTextField(placeholder: "", text: $address, keyboardType: .emailAddress, autocapitalization: .never, leftToRight: true)
                         .textContentType(.emailAddress)
                         .autocorrectionDisabled()
                         .accessibilityLabel(Text("Email"))
@@ -325,7 +328,7 @@ struct PasswordResetView: View {
                 if let problem { ProblemLine(message: problem, identifier: "codeProblem") }
             }
             Button(action: send) {
-                if isWorking { ProgressView().tint(Color.paperInk) } else { Text("Send code") }
+                if isSending { ProgressView().tint(Color.paperInk) } else { Text("Send code") }
             }
             .buttonStyle(.ink)
             .disabled(!addressLooksValid || isWorking)
@@ -343,25 +346,26 @@ struct PasswordResetView: View {
             }
             VStack(spacing: 10) {
                 Button(action: verify) {
-                    if isWorking { ProgressView().tint(Color.paperInk) } else { Text("Continue") }
+                    if isVerifying { ProgressView().tint(Color.paperInk) } else { Text("Continue") }
                 }
                 .buttonStyle(.ink)
                 .disabled(code.count < EmailCode.length || isWorking)
                 .accessibilityIdentifier("verifyCodeButton")
 
-                ResendButton(countdown: countdown, isSending: isWorking && code.isEmpty, action: send)
+                ResendButton(countdown: countdown, isSending: isSending, action: send)
+                    .disabled(isVerifying)
             }
         }
         .onAppear { codeFocused = true }
         .onChange(of: code) { _, typed in
-            problem = nil
+            if !typed.isEmpty { problem = nil }
             if typed.count == EmailCode.length { verify() }
         }
     }
 
     private func send() {
         guard addressLooksValid, !isWorking else { return }
-        isWorking = true
+        isSending = true
         problem = nil
         let target = trimmedAddress
         Task {
@@ -373,13 +377,13 @@ struct PasswordResetView: View {
             } catch {
                 problem = CodeProblem.sending(error)
             }
-            isWorking = false
+            isSending = false
         }
     }
 
     private func verify() {
         guard let sentTo, code.count == EmailCode.length, !isWorking else { return }
-        isWorking = true
+        isVerifying = true
         problem = nil
         Task {
             do {
@@ -389,7 +393,7 @@ struct PasswordResetView: View {
                 code = ""
                 codeFocused = true
             }
-            isWorking = false
+            isVerifying = false
         }
     }
 }
@@ -413,7 +417,7 @@ struct NewPasswordView: View {
                     FormHeader(title: "Choose a new password")
                     VStack(alignment: .leading, spacing: 12) {
                         LabelledField(label: "New password") {
-                            InkTextField(placeholder: "", text: $password, isSecure: true)
+                            InkTextField(placeholder: "", text: $password, isSecure: true, leftToRight: true)
                                 .textContentType(.newPassword)
                                 .accessibilityLabel(Text("New password"))
                                 .accessibilityIdentifier("newPasswordField")

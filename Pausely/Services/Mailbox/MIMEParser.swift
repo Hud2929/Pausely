@@ -86,6 +86,11 @@ enum MIMEParser {
         let headers = firstValues(entity.headers)
         let contentType = ContentType(headers["content-type"])
         let disposition = (headers["content-disposition"] ?? "").lowercased()
+        if contentType.type == "message", contentType.subtype == "rfc822" {
+            let decoded = decodeTransfer(entity.body, encoding: headers["content-transfer-encoding"])
+            collectBodies(parseEntity(decoded), depth: depth + 1, budget: &budget, into: &bodies)
+            return
+        }
         if disposition.hasPrefix("attachment") { return }
 
         if contentType.type == "multipart", let boundary = contentType.parameters["boundary"], !boundary.isEmpty {
@@ -98,7 +103,11 @@ enum MIMEParser {
         guard contentType.type == "text", ["plain", "html"].contains(contentType.subtype) else { return }
         let decoded = decodeTransfer(entity.body, encoding: headers["content-transfer-encoding"])
         let text = decodeText(decoded, charset: contentType.parameters["charset"])
-        if contentType.subtype == "plain", bodies.plain == nil { bodies.plain = text }
+        if contentType.subtype == "plain" {
+            if bodies.plain == nil || (isStub(bodies.plain ?? "", html: bodies.html ?? "") && text.count > (bodies.plain?.count ?? 0)) {
+                bodies.plain = text
+            }
+        }
         if contentType.subtype == "html", bodies.html == nil { bodies.html = text }
     }
 
@@ -169,26 +178,46 @@ enum MIMEParser {
         var output = ""
         var cursor = 0
         var previousWasEncoded = false
+        var pendingCharset: String?
+        var pendingBytes = Data()
+        func flushPending() {
+            guard !pendingBytes.isEmpty else { return }
+            output += decodeText(pendingBytes, charset: pendingCharset)
+            pendingBytes.removeAll(keepingCapacity: true)
+            pendingCharset = nil
+        }
         for match in matches {
             let between = ns.substring(with: NSRange(location: cursor, length: match.range.location - cursor))
+            let whitespaceOnly = between.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
             // Whitespace between two encoded words is dropped (RFC 2047 §6.2).
-            if !(previousWasEncoded && between.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty) {
+            if !(previousWasEncoded && whitespaceOnly) {
+                flushPending()
                 output += between
             }
-            let charset = ns.substring(with: match.range(at: 1))
+            let charset = ns.substring(with: match.range(at: 1)).components(separatedBy: "*").first
             let mode = ns.substring(with: match.range(at: 2)).uppercased()
             let payload = ns.substring(with: match.range(at: 3))
             let bytes: Data? = mode == "B"
                 ? Data(base64Encoded: paddedBase64(payload))
-                : decodeQuotedPrintable(Data(payload.replacingOccurrences(of: "_", with: " ").utf8), header: true)
+                : decodeQuotedPrintable(Data(payload.replacingOccurrences(of: "_", with: " ").utf8))
             if let bytes {
-                output += decodeText(bytes, charset: charset.components(separatedBy: "*").first)
+                // Concatenate adjacent same-charset encoded words before decoding so multibyte UTF-8
+                // sequences split across two chunks never turn into U+FFFD replacement characters.
+                if pendingCharset?.lowercased() == charset?.lowercased() && !pendingBytes.isEmpty {
+                    pendingBytes.append(bytes)
+                } else {
+                    flushPending()
+                    pendingCharset = charset
+                    pendingBytes = bytes
+                }
             } else {
+                flushPending()
                 output += ns.substring(with: match.range)
             }
             cursor = match.range.location + match.range.length
             previousWasEncoded = true
         }
+        flushPending()
         output += ns.substring(from: cursor)
         return output
     }
@@ -283,13 +312,13 @@ enum MIMEParser {
         case "base64":
             return Data(base64Encoded: data, options: .ignoreUnknownCharacters) ?? data
         case "quoted-printable":
-            return decodeQuotedPrintable(data, header: false) ?? data
+            return decodeQuotedPrintable(data) ?? data
         default:
             return data
         }
     }
 
-    static func decodeQuotedPrintable(_ data: Data, header: Bool) -> Data? {
+    static func decodeQuotedPrintable(_ data: Data) -> Data? {
         var output = Data(capacity: data.count)
         var index = data.startIndex
         func hexValue(_ byte: UInt8) -> UInt8? {

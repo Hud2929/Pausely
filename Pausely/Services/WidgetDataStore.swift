@@ -62,6 +62,7 @@ final class WidgetDataStore {
         var feed = WidgetFeed()
         feed.charges = charges
         feed.hasSubscriptions = !subscriptions.isEmpty
+        feed.hasChargingSubscriptions = !charging.isEmpty
         feed.language = language
         if !charging.isEmpty {
             let monthly = charging.monthlyTotal(in: currency, rates: rates)
@@ -72,21 +73,54 @@ final class WidgetDataStore {
         guard includeAccountDetails else { return feed }
         let summary = SavingsSummary.current(now: now)
         if !summary.isEmpty {
-            feed.savedSoFarText = summary.total(summary.savedSoFar)
+            feed.savedSoFarText = summary.savedSoFarText
             feed.savedSoFarIsZero = summary.savedSoFar <= 0
-            feed.onTrackText = summary.total(summary.onTrack)
+            feed.onTrackText = summary.onTrackText
             feed.cancelledCount = summary.lines.count
+            // Publish upcoming avoided-charge milestones so the widget ticks up at midnight without opening the app.
+            let horizonEnd = calendar.date(byAdding: .year, value: 1, to: today) ?? today
+            let futureStamps = Set(summary.lines.flatMap(\.avoidedCharges).compactMap { day -> String? in
+                let d = calendar.startOfDay(for: day)
+                guard d > today, d <= horizonEnd else { return nil }
+                return calendar.dayStamp(d)
+            }).sorted().prefix(12)
+            var snapshots = [WidgetFeed.SavingsSnapshot(stamp: calendar.dayStamp(today),
+                                                        savedSoFarText: summary.savedSoFarText,
+                                                        savedSoFarIsZero: summary.savedSoFar <= 0)]
+            for stamp in futureStamps {
+                guard let day = calendar.noon(onDayStamped: stamp) else { continue }
+                let future = SavingsSummary.current(now: day)
+                snapshots.append(WidgetFeed.SavingsSnapshot(stamp: stamp,
+                                                            savedSoFarText: future.savedSoFarText,
+                                                            savedSoFarIsZero: future.savedSoFar <= 0))
+            }
+            feed.savingsSnapshots = snapshots
         }
         if PaymentManager.shared.isUnlocked(.pausePlan),
            let plan = PausePlanStore.shared.activePlan {
             let byId = Dictionary(subscriptions.map { ($0.id, $0) }, uniquingKeysWith: { a, _ in a })
-            if let current = PausePlanSchedule.currentTurn(plan, subscriptions: byId, now: now),
+            if let current = PausePlanSchedule.currentTurn(plan, subscriptions: byId, now: now, calendar: calendar),
                let sub = byId[current.subscriptionId] {
-                feed.pauseTurnName = sub.name
-                feed.pauseTurnEndText = DayText.date(current.end, locale: L10n.locale)
-                feed.pauseTurnEndStamp = calendar.dayStamp(current.end)
+                let locale = language.map { Locale(identifier: $0) } ?? L10n.locale
                 let nextIndex = (current.index + 1) % plan.subscriptionIds.count
+                feed.pauseTurnName = sub.name
+                feed.pauseTurnEndText = DayText.date(current.end, locale: locale, now: now, calendar: calendar)
+                feed.pauseTurnEndStamp = calendar.dayStamp(current.end)
                 feed.pauseTurnNextName = byId[plan.subscriptionIds[nextIndex]]?.name ?? ""
+
+                let turns = PausePlanSchedule.turns(plan, subscriptions: byId, count: current.index + 6, calendar: calendar)
+                    .filter { $0.index >= current.index }
+                feed.pauseTurns = turns.compactMap { turn in
+                    guard let turnSub = byId[turn.subscriptionId] else { return nil }
+                    let afterIdx = (turn.index + 1) % plan.subscriptionIds.count
+                    return WidgetFeed.PauseTurn(
+                        name: turnSub.name,
+                        startStamp: turn.index == current.index ? "" : (turn.start.map(calendar.dayStamp) ?? ""),
+                        endStamp: calendar.dayStamp(turn.end),
+                        endText: DayText.date(turn.end, locale: locale, now: turn.start ?? now, calendar: calendar),
+                        nextName: byId[plan.subscriptionIds[afterIdx]]?.name ?? ""
+                    )
+                }
             }
         }
         return feed

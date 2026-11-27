@@ -34,6 +34,7 @@ struct LanguageSettingsView: View {
             ReminderActions.registerCategories()
             let subscriptions = SubscriptionStore.shared.subscriptions
             WidgetDataStore.shared.publish(subscriptions: subscriptions)
+            SpotlightManager.shared.index(subscriptions: subscriptions)
             Task { await ReminderScheduler.shared.reschedule(subscriptions) }
         }
     }

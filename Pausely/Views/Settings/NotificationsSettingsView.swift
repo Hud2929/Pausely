@@ -17,25 +17,25 @@ struct NotificationsSettingsView: View {
         SettingsPage(title: "Notifications") {
             permission
 
-            SettingsSection(footer: "Renewal reminders come at 9am the number of days you choose for each subscription (\"Remind me\" when you edit it), again the day before, and the morning of. \"Keep it\" on a reminder stops the rest for that charge.") {
+            SettingsSection(footer: "Renewal reminders come at 9am the number of days you choose for each subscription (\"Remind me\" when you edit it), again at 11am the day before, and at 9am the morning of. \"Keep it\" on a reminder stops the rest for that charge.") {
                 SettingsRow(title: L10n.string("Renewal reminders"),
                             detail: L10n.string("Before each renewal, so you can keep it or cancel it")) {
-                    Toggle("", isOn: $renewalAlerts).labelsHidden().tint(Color.inkTextMuted)
-                        .accessibilityLabel(Text("Renewal reminders"))
+                    Toggle(isOn: $renewalAlerts) { EmptyView() }.labelsHidden().tint(Color.inkTextMuted)
                         .accessibilityIdentifier("renewalRemindersToggle")
                 }
+                .accessibilityElement(children: .combine)
                 SettingsRow(title: L10n.string("Free trial reminders"),
                             detail: L10n.string("2 days before and the day before a free trial starts charging")) {
-                    Toggle("", isOn: $trialEndingAlerts).labelsHidden().tint(Color.inkTextMuted)
-                        .accessibilityLabel(Text("Free trial reminders"))
+                    Toggle(isOn: $trialEndingAlerts) { EmptyView() }.labelsHidden().tint(Color.inkTextMuted)
                         .accessibilityIdentifier("trialRemindersToggle")
                 }
+                .accessibilityElement(children: .combine)
                 SettingsRow(title: L10n.string("Savings milestones"),
                             detail: L10n.string("When a cancelled subscription's charge day passes without billing you")) {
-                    Toggle("", isOn: $savingsMilestoneAlerts).labelsHidden().tint(Color.inkTextMuted)
-                        .accessibilityLabel(Text("Savings milestones"))
+                    Toggle(isOn: $savingsMilestoneAlerts) { EmptyView() }.labelsHidden().tint(Color.inkTextMuted)
                         .accessibilityIdentifier("savingsMilestonesToggle")
                 }
+                .accessibilityElement(children: .combine)
             }
             .disabled(!notifications.isAuthorized)
 

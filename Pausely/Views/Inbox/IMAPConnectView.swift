@@ -16,6 +16,7 @@ struct IMAPConnectView: View {
     @State private var customHost = ""
     @State private var customPort = ""  // empty means the standard port, 993
     @State private var connecting = false
+    @State private var connectTask: Task<Void, Never>?
     @State private var error: String?
     @FocusState private var focused: Field?
     @Environment(\.dynamicTypeSize) private var typeSize
@@ -72,6 +73,9 @@ struct IMAPConnectView: View {
                 ? L10n.string("Enter your password to connect.") : L10n.string("Paste the app password to connect.")
         }
         if needsServer && serverHost.isEmpty { return L10n.string("Enter your provider's IMAP server to connect.") }
+        if needsServer, !customPort.trimmingCharacters(in: .whitespaces).isEmpty, Self.port(customPort) == nil {
+            return L10n.string("Enter a valid port number between 1 and 65535.")
+        }
         return nil
     }
 
@@ -125,16 +129,21 @@ struct IMAPConnectView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
-                    Button("Cancel") { dismiss() }.foregroundStyle(Color.inkTextMuted)
+                    Button("Cancel") { connectTask?.cancel(); connectTask = nil; dismiss() }.foregroundStyle(Color.inkTextMuted)
                 }
             }
             // A problem said about what was typed goes once it is changed: it stayed red over a corrected
             // password (the rating of 2026-11-22).
             // A tap beside the sheet on iPad closed it with an address typed, without a word (2026-11-23).
-            .interactiveDismissDisabled(address != startAddress || !password.isEmpty || !customHost.isEmpty)
+            .interactiveDismissDisabled(address != startAddress || !password.isEmpty || !customHost.isEmpty || !customPort.isEmpty)
             .onChange(of: address) { error = nil }
             .onChange(of: password) { error = nil }
             .onChange(of: customHost) { error = nil }
+            .onChange(of: customPort) { error = nil }
+            .onDisappear {
+                connectTask?.cancel()
+                connectTask = nil
+            }
             .onAppear {
                 if address.isEmpty, !startAddress.isEmpty { address = startAddress }
                 // Not at the accessibility sizes: the keyboard scrolled the page past its own title and
@@ -174,7 +183,7 @@ struct IMAPConnectView: View {
                 HStack(alignment: .firstTextBaseline, spacing: 12) {
                     // A single step is a sentence, not a list of one (the rating of 2026-11-22).
                     if preset.steps.count > 1 {
-                        Text(index + 1, format: .number)
+                        Text(verbatim: L10n.number(index + 1))
                             .font(.proof(.subheadline, weight: .semibold))
                             .foregroundStyle(Color.inkText)
                             .frame(minWidth: 16, alignment: .leading)
@@ -248,12 +257,16 @@ struct IMAPConnectView: View {
                         InkTextField(placeholder: suggestedHost ?? "imap.example.com", text: $customHost, keyboardType: .URL, autocapitalization: .never, leftToRight: true)
                             .autocorrectionDisabled()
                             .focused($focused, equals: .host)
+                            .submitLabel(.next)
+                            .onSubmit { focused = .port }
                             .accessibilityLabel(Text("IMAP server"))
                             .accessibilityIdentifier("imapHost")
                     }
                     LabelledField(label: "Port") {
                         InkTextField(placeholder: "993", text: $customPort, keyboardType: .numberPad, leftToRight: true)
                             .focused($focused, equals: .port)
+                            .submitLabel(.go)
+                            .onSubmit { if canConnect { connect() } else if password.isEmpty { focused = .password } }
                             .accessibilityLabel(Text("Port"))
                             .accessibilityIdentifier("imapPort")
                     }
@@ -270,16 +283,24 @@ struct IMAPConnectView: View {
 
     private func connect() {
         error = nil
+        if needsServer, !customPort.trimmingCharacters(in: .whitespaces).isEmpty, Self.port(customPort) == nil {
+            error = L10n.string("Enter a valid port number between 1 and 65535.")
+            return
+        }
         connecting = true
         let port = Self.port(customPort) ?? 993
-        Task {
+        connectTask?.cancel()
+        connectTask = Task {
             do {
                 _ = try await scanner.connectIMAP(address: address, password: password, preset: effectivePreset,
                                                   host: needsServer ? serverHost : nil,
                                                   port: needsServer ? port : nil)
-                // The page closes as it stands, still saying "Connecting…": emptied first, its password box
-                // and its hint changed under the closing sheet (the rating of 2026-11-23).
+                guard !Task.isCancelled else { return }
                 dismiss()
+            } catch is CancellationError {
+                connecting = false
+            } catch MailboxError.cancelled {
+                connecting = false
             } catch {
                 connecting = false
                 self.error = error.localizedDescription

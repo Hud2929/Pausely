@@ -16,12 +16,37 @@ final class MicrosoftGraphProvider: MailboxProvider {
     var parallelReads: Int { 4 }
 
     /// Several whole messages at once (Graph's 429s are waited out).
-    func rawMessages(_ refs: [MessageRef]) async -> [MessageRef: Data] {
+    func rawMessages(_ refs: [MessageRef]) async throws -> [MessageRef: Data] {
         var out: [MessageRef: Data] = [:]
-        await withTaskGroup(of: (MessageRef, Data?).self) { group in
-            for ref in refs { group.addTask { (ref, try? await self.rawMessage(ref)) } }
-            for await (ref, raw) in group { if let raw { out[ref] = raw } }
+        var succeeded = 0
+        var lastFailure: Error?
+        try Task.checkCancellation()
+        let results: [(MessageRef, Result<Data?, Error>)] = await withTaskGroup(of: (MessageRef, Result<Data?, Error>).self) { group in
+            for ref in refs {
+                group.addTask {
+                    do { return (ref, .success(try await self.rawMessage(ref))) }
+                    catch { return (ref, .failure(error)) }
+                }
+            }
+            var collected: [(MessageRef, Result<Data?, Error>)] = []
+            for await item in group { collected.append(item) }
+            return collected
         }
+        for (ref, result) in results {
+            switch result {
+            case .success(let raw):
+                succeeded += 1
+                if let raw { out[ref] = raw }
+            case .failure(let error):
+                if error is CancellationError { throw error }
+                if case MailboxError.authExpired = error { throw error }
+                if case MailboxError.throttled = error { throw error }
+                if case MailboxError.cancelled = error { throw error }
+                lastFailure = error
+            }
+        }
+        try Task.checkCancellation()
+        if succeeded == 0, !refs.isEmpty, let lastFailure { throw lastFailure }
         return out
     }
 
@@ -66,7 +91,9 @@ final class MicrosoftGraphProvider: MailboxProvider {
     /// After sign-in: read the address, then save the account. The tokens are discarded if anything fails.
     static func finishConnect(_ tokens: OAuthSession.Tokens) async throws -> MailboxAccount {
         let id = UUID().uuidString
-        OAuthSession.store(tokens, for: id)
+        guard OAuthSession.store(tokens, for: id) else {
+            throw MailboxError.server(L10n.string("Couldn't save the sign-in securely on this iPhone."))
+        }
         do {
             let address = try await fetchAddress(token: tokens.accessToken)
             let account = MailboxAccount(id: id, kind: .microsoft, address: address, addedAt: Date())
@@ -110,9 +137,12 @@ final class MicrosoftGraphProvider: MailboxProvider {
                 return (store(changes.messages, limit: plan.maxCandidates), changes.deltaLink ?? deltaLink)
             } catch MailboxError.notFound {}
         }
-        for query in Self.searchQueries(plan) {
+        let queries = Self.searchQueries(plan)
+        let perQueryCap = max(100, (plan.maxCandidates * 2) / max(1, queries.count))
+        for query in queries {
             try Task.checkCancellation()
-            found += try await search(query, maxPages: 4)
+            let batch = try await search(query, maxPages: max(1, min(4, (perQueryCap + 49) / 50)))
+            found += batch.prefix(perQueryCap)
             if found.count >= plan.maxCandidates * 2 { break }
         }
         // Start watching for new mail from now on.
@@ -156,9 +186,7 @@ final class MicrosoftGraphProvider: MailboxProvider {
     }
 
     static func kqlDate(_ date: Date) -> String {
-        let formatter = ISO8601DateFormatter()
-        formatter.formatOptions = [.withFullDate]
-        return formatter.string(from: date)
+        Date.ISO8601FormatStyle(timeZone: TimeZone(secondsFromGMT: 0)!).year().month().day().format(date)
     }
 
     private static let select = "id,subject,from,receivedDateTime,internetMessageId,bodyPreview,parentFolderId"
@@ -184,8 +212,9 @@ final class MicrosoftGraphProvider: MailboxProvider {
     }
 
     private func startDelta() async throws -> String? {
+        // Microsoft Graph v1.0 supports delta queries per mailFolder (`/me/messages/delta` returns 400).
         var components = URLComponents(string: Self.graph.absoluteString + "/me/mailFolders/inbox/messages/delta")!
-        let now = ISO8601DateFormatter().string(from: Date())
+        let now = Date.ISO8601FormatStyle(timeZone: TimeZone(secondsFromGMT: 0)!).format(Date())
         components.queryItems = [
             URLQueryItem(name: "$select", value: Self.select),
             URLQueryItem(name: "$filter", value: "receivedDateTime ge \(now)")
@@ -199,6 +228,7 @@ final class MicrosoftGraphProvider: MailboxProvider {
         var messages: [GraphMessage] = []
         var pages = 0
         while let url = next, pages < 20 {
+            try Task.checkCancellation()
             let page = try JSONDecoder().decode(GraphPage.self, from: try await getURL(url))
             messages += page.value.filter { $0.removed == nil }
             if let delta = page.deltaLink { return (messages, delta) }
@@ -295,7 +325,8 @@ final class MicrosoftGraphProvider: MailboxProvider {
 
         var receivedDate: Date? {
             guard let receivedDateTime else { return nil }
-            return ISO8601DateFormatter().date(from: receivedDateTime)
+            return (try? Date.ISO8601FormatStyle(includingFractionalSeconds: false).parse(receivedDateTime))
+                ?? (try? Date.ISO8601FormatStyle(includingFractionalSeconds: true).parse(receivedDateTime))
         }
     }
 

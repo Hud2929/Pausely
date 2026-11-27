@@ -7,11 +7,13 @@ struct ProfileView: View {
     @ObservedObject private var paymentManager = PaymentManager.shared
     @ObservedObject private var store = SubscriptionStore.shared
     @ObservedObject private var currencyManager = CurrencyManager.shared
+    @ObservedObject private var scanner = InboxScanner.shared
     @Environment(\.openURL) private var openURL
     @AppStorage("app_language") private var appLanguage = "system"
     @AppStorage(TallyImporter.waitingVersionKey) private var waitingVersion = 0
 
     @State private var sheet: Sheet?
+    @State private var legalPage: LegalPage?
     @State private var confirmSignOut = false
     /// Pausely Pro as the App Store states it, for someone paying through it. Nil for the free plan and
     /// for Pro given on the account, where there is nothing to manage or refund.
@@ -39,7 +41,7 @@ struct ProfileView: View {
                     row("doc.text", L10n.string("Savings Receipt"), id: "savingsReceiptButton") { sheet = .receipt }
                     row("calendar", L10n.string("Your year in subscriptions"), id: "wrappedButton") { sheet = .wrapped }
                     if FeatureFlags.inboxImportEnabled {
-                        let inboxes = InboxScanner.shared.accounts
+                        let inboxes = scanner.accounts
                         row("envelope",
                             L10n.string("Find in Email"),
                             value: inboxes.isEmpty ? nil : (inboxes.count == 1 ? inboxes[0].address : L10n.number(inboxes.count)),
@@ -68,8 +70,8 @@ struct ProfileView: View {
 
                 group(L10n.string("About")) {
                     row("sparkles", L10n.string("What's new"), value: version, id: "whatsNewButton") { sheet = .whatsNew }
-                    row("doc.plaintext", L10n.string("Terms of Service"), id: "termsButton") { open(AppConfig.termsOfServiceURL) }
-                    row("hand.raised", L10n.string("Privacy Policy"), id: "privacyPolicyButton", last: true) { open(AppConfig.privacyPolicyURL) }
+                    row("doc.plaintext", L10n.string("Terms of Service"), id: "termsButton") { legalPage = .terms }
+                    row("hand.raised", L10n.string("Privacy Policy"), id: "privacyPolicyButton", last: true) { legalPage = .privacy }
                 }
 
                 // As wide as its words, so the question comes up from them and not from the
@@ -134,6 +136,7 @@ struct ProfileView: View {
             case .language: LanguageSettingsView()
             }
         }
+        .sheet(item: $legalPage) { $0.view }
     }
 
     // MARK: - Who and which plan
@@ -175,8 +178,11 @@ struct ProfileView: View {
         if waiting > 0 {
             return L10n.string("Free plan: \(used) of \(used + waiting) subscriptions tracked (\(waiting) waiting).")
         }
+        if FreeTier.isExceeded(by: store.subscriptions) {
+            return L10n.string("Free plan: \(used) tracked (free limit is \(FreeTier.subscriptionLimit)).")
+        }
         if let info = PausePlanCard.yearlySavingsInfo(in: store.subscriptions, currency: currencyManager) {
-            let formatted = MoneyFormat.total(info.amount, info.currency, converted: info.isConverted, locale: L10n.locale, wholeUnits: true)
+            let formatted = MoneyFormat.string(info.amount, info.currency, locale: L10n.locale, wholeUnits: true)
             return L10n.string("Free plan: rotate streaming in Pro to save about \(formatted) a year.")
         }
         if used > 0 {
@@ -372,10 +378,6 @@ struct ProfileView: View {
             eligibleWinBack = await StoreKitManager.shared.bestEligibleWinBackOffer()?.offer
         }
     }
-
-    private func open(_ address: String) {
-        if let url = URL(string: address) { openURL(url) }
-    }
 }
 
 // MARK: - Your year in subscriptions
@@ -441,7 +443,9 @@ struct SubscriptionWrappedView: View {
                         .fixedSize(horizontal: false, vertical: true)
                         .padding(.top, 10)
                 } else {
-                    Text(L10n.string("Your subscriptions cost about \(MoneyFormat.string(stats.yearlyCost, currencyManager.selectedCurrency, locale: L10n.locale, wholeUnits: true)) a year."))
+                    Text(verbatim: stats.totalCount == 0
+                         ? L10n.string("You cancelled \(stats.cancelledCount) this year.")
+                         : L10n.string("Your subscriptions cost about \(MoneyFormat.string(stats.yearlyCost, currencyManager.selectedCurrency, locale: L10n.locale, wholeUnits: true)) a year."))
                         .font(.question(.title))
                         .foregroundStyle(Color.inkText)
                         .fixedSize(horizontal: false, vertical: true)
@@ -498,17 +502,19 @@ private struct YearSlip: View {
                 ProofLine(label: L10n.string("Subscriptions"), value: L10n.number(stats.totalCount))
                 ProofLine(label: L10n.string("Each month"), value: money(stats.monthlyCost))
                 ProofLine(label: L10n.string("Each year"), value: money(stats.yearlyCost), emphasised: true)
-                Perforation()
-                if !hideNames {
-                    ProofLine(label: L10n.string("Biggest"), value: stats.topService)
+                if stats.totalCount > 0 {
+                    Perforation()
+                    if !hideNames {
+                        ProofLine(label: L10n.string("Biggest"), value: stats.topService)
+                    }
+                    ProofLine(label: L10n.string("Most goes to"), value: SubscriptionCategory.localizedLabel(for: stats.topCategory))
                 }
-                ProofLine(label: L10n.string("Most goes to"), value: SubscriptionCategory.localizedLabel(for: stats.topCategory))
                 if stats.cancelledCount > 0 || !kept.isEmpty {
                     Perforation()
                     ProofLine(label: L10n.string("Cancelled this year"), value: L10n.number(stats.cancelledCount))
                     if !kept.isEmpty {
                         // Every cancellation's charges so far, not only this calendar year's: said as that.
-                        ProofLine(label: L10n.string("Kept so far"), value: kept.total(kept.savedSoFar), emphasised: true)
+                        ProofLine(label: L10n.string("Kept so far"), value: kept.savedSoFarText, emphasised: true)
                             .foregroundStyle(Color.paperKept)
                     }
                 }
@@ -521,9 +527,11 @@ private struct YearSlip: View {
 
     @MainActor
     static func image(stats: WrappedStats, currency: String, hideNames: Bool = false) -> Image? {
-        let renderer = ImageRenderer(content: YearSlip(stats: stats, currency: currency, hideNames: hideNames, forSharing: true)
+        let card = YearSlip(stats: stats, currency: currency, hideNames: hideNames, forSharing: true)
             .frame(width: 360).padding(24).background(Color.ink)
-            .inTheAppsLanguage())
+            .environment(\.dynamicTypeSize, .large)
+            .inTheAppsLanguage()
+        let renderer = ImageRenderer(content: card)
         renderer.scale = 3
         return renderer.uiImage.map(Image.init(uiImage:))
     }

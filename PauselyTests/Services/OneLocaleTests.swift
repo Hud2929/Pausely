@@ -221,18 +221,33 @@ final class OneLocaleTests: XCTestCase {
             return unit?["value"] as? String
         }
         var strays: [String] = []
-        for key in strings.keys {
+        for (key, entry) in strings {
             if let german = value(key, "de"), german.contains("Abonnement"),
                !german.contains("Einstellungen"), !german.contains("„Abonnements“") { strays.append(german) }
             if let japanese = value(key, "ja") {
                 let outsideQuotes = japanese.replacingOccurrences(of: "「[^」]*」", with: "", options: .regularExpression)
                 if outsideQuotes.contains("サブスクリプション") { strays.append(japanese) }
             }
+            if let locs = entry["localizations"] as? [String: Any] {
+                if let jaEntry = locs["ja"] as? [String: Any] {
+                    for text in CatalogTexts.all(in: jaEntry) where text.contains("休止プラン") {
+                        strays.append("ja:\(key):\(text)")
+                    }
+                }
+                if let frEntry = locs["fr"] as? [String: Any] {
+                    for text in CatalogTexts.all(in: frEntry) where text.range(of: #"abonnement[^.]*annul"#, options: [.regularExpression, .caseInsensitive]) != nil {
+                        strays.append("fr:\(key):\(text)")
+                    }
+                }
+            }
         }
         XCTAssertEqual(strays.sorted(), [])
         XCTAssertEqual(value("Home", "de"), "Start")
         XCTAssertEqual(value("Home", "es"), "Inicio")
         XCTAssertEqual(value("Home", "fr"), "Accueil")
+        XCTAssertEqual(value("Pause Plan", "ja"), "一時停止プラン")
+        XCTAssertEqual(value("Pause Plan", "fr"), "Plan de pause")
+        XCTAssertEqual(value("Cancelled", "fr"), "Résilié")
     }
 
     /// English labels are written the way the rest of the app talks: sentence case ("Try again", never
@@ -266,7 +281,7 @@ final class OneLocaleTests: XCTestCase {
         guard !shortcutTitles.contains(key), key.rangeOfCharacter(from: CharacterSet(charactersIn: ".,:")) == nil else { return false }
         var label = key
         for name in ["Pausely Pro", "Pause Plan", "Savings Receipt", "Pausely Promise", "Find in Email", "Privacy Policy",
-                     "Terms of Service", "App Store", "Apple Account", "Screen Time"] {
+                     "Terms of Service", "App Store", "Apple Account", "Screen Time", "Google Play", "Amazon Channels"] {
             label = label.replacingOccurrences(of: name, with: " ")
         }
         let names: Set = ["Pausely", "Apple", "Google", "Microsoft", "Gmail", "Outlook", "IMAP", "Pro", "OK", "AI", "GMX",

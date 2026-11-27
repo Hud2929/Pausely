@@ -264,7 +264,7 @@ final class LiveMailboxTests: XCTestCase {
                          + " | last \(day(sub.lastChargeDate)) next \(day(sub.nextBillingDate))")
             lines += sub.reasons.map { "    · \($0)" }
         }
-        for insight in report.insights { lines.append("INSIGHT \(insight.title) — \(insight.detail ?? "")") }
+        for insight in report.insights { lines.append("INSIGHT \(insight.title) — \(insight.detail)") }
         let text = lines.joined(separator: "\n")
         print(text)
         if let path = environment("PAUSELY_REPORT_PATH") { try text.write(toFile: path, atomically: true, encoding: .utf8) }

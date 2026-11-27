@@ -58,15 +58,17 @@ final class SubscriptionLifecycle {
         var active = trial
         active.status = .active
         if active.nextBillingDate == nil { active.nextBillingDate = end }
+        active.trialEndsAt = nil
         return active
     }
 
     func run(now: Date = Date()) async {
         guard !isRunning else { return }
+        let store = SubscriptionStore.shared
+        guard !store.isHidden, AuthManager.shared.isAuthenticated || LaunchFlag.demoMode.isSet else { return }
         isRunning = true
         defer { isRunning = false }
 
-        let store = SubscriptionStore.shared
         let lastRun = UserDefaults.standard.object(forKey: lastRunKey) as? Date
         let changes = Self.changes(for: store.subscriptions, since: lastRun, now: now)
 

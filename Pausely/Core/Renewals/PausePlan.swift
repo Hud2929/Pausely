@@ -88,18 +88,23 @@ enum PausePlanSchedule {
         "tving", "wavve", "iqiyi", "globoplay", "claro video"
     ]
 
-    /// Monthly video streaming services recommended automatically for rotation. Being filed under
-    /// "Entertainment" is not enough: audiobooks, games and reading stay out of automatic savings
-    /// claims (`GOLD_STANDARD.md` T96) unless the person manually opts them in via `isOptInEligible`.
-    static func isEligible(_ sub: Subscription) -> Bool {
-        guard sub.billingFrequency == .monthly, !sub.isPausely else { return false }
-        let name = sub.name.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+    /// Frequency-agnostic check for known video streaming services (shared with `OverlapDetector`).
+    static func isStreamingService(named rawName: String) -> Bool {
+        let name = rawName.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
         if exactStreamingNames.contains(name) { return true }
         let words = name.split { !$0.isLetter && !$0.isNumber && $0 != "+" }.map(String.init)
         return streamingNames.contains { known in
             if known.contains(" ") || known.count >= 6 { return name.contains(known) }
             return words.contains { $0 == known || $0 == known + "+" }
         }
+    }
+
+    /// Monthly video streaming services recommended automatically for rotation. Being filed under
+    /// "Entertainment" is not enough: audiobooks, games and reading stay out of automatic savings
+    /// claims (`GOLD_STANDARD.md` T96) unless the person manually opts them in via `isOptInEligible`.
+    static func isEligible(_ sub: Subscription) -> Bool {
+        guard sub.billingFrequency == .monthly, !sub.isPausely else { return false }
+        return isStreamingService(named: sub.name)
     }
 
     /// Any other monthly non-Pausely subscription (such as AI tools, creative suites, or gaming passes)
@@ -471,7 +476,8 @@ enum PausePlanSchedule {
         }
 
         func addCancelPair(_ subId: UUID, event: Date) {
-            let lead = max(2, byId[subId]?.notifyBeforeDays ?? 3)
+            guard let sub = byId[subId], sub.notifyBeforeDays > 0 else { return }
+            let lead = max(2, sub.notifyBeforeDays)
             add(.planCancel, subId, event: event, daysBefore: lead, hour: 10, suffix: ".d\(lead)")
             add(.planCancel, subId, event: event, daysBefore: 1, hour: 10)
         }
@@ -491,10 +497,10 @@ enum PausePlanSchedule {
             guard let handoff = turn.start else { continue }
             let outgoing = plan.subscriptionIds[(turn.index - 1) % plan.subscriptionIds.count]
             let isNext = offset == 0
-            if !isNext || byId[outgoing]?.renewsAutomatically == true {
+            if byId[outgoing] != nil, (!isNext || byId[outgoing]?.renewsAutomatically == true) {
                 addCancelPair(outgoing, event: handoff)
             }
-            if !isNext || byId[turn.subscriptionId]?.renewsAutomatically != true {
+            if byId[turn.subscriptionId] != nil, (!isNext || byId[turn.subscriptionId]?.renewsAutomatically != true) {
                 add(.planStart, turn.subscriptionId, event: handoff, daysBefore: 0, hour: 9)
             }
         }

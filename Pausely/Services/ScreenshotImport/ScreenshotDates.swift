@@ -33,9 +33,14 @@ extension ScreenshotParser {
         let hasKeyword = dateKeywords.contains { lower.contains($0) }
         let preferPast = hasPast || !hasFuture
 
-        // 1. Explicit ISO date (2026-12-14)
-        if let iso = parseISODate(in: normalized, calendar: calendar) {
+        // 1. Explicit ISO date (2026-12-14), rejecting explicit out-of-range years without falling through.
+        switch parseISODate(in: normalized, now: now, calendar: calendar) {
+        case .matched(let iso):
             return DateMatch(date: calendar.noon(of: iso), hasKeyword: hasKeyword)
+        case .rejected:
+            return DateMatch(date: nil, hasKeyword: hasKeyword)
+        case .none:
+            break
         }
 
         // 2. Explicit Japanese date (2026年12月14日 or 12月14日)
@@ -48,12 +53,17 @@ extension ScreenshotParser {
             return DateMatch(date: calendar.noon(of: explicit), hasKeyword: hasKeyword)
         }
 
-        // 4. Explicit numeric dates (MM/DD/YYYY, DD.MM.YYYY, MM/DD)
-        if let numeric = parseNumericDate(in: normalized, now: now, calendar: calendar, preferPast: preferPast) {
+        // 4. Explicit numeric dates (MM/DD/YYYY, DD.MM.YYYY, MM/DD), rejecting explicit out-of-range years without falling through.
+        switch parseNumericDate(in: normalized, now: now, calendar: calendar, preferPast: preferPast, hasKeyword: hasKeyword) {
+        case .matched(let numeric):
             return DateMatch(date: calendar.noon(of: numeric), hasKeyword: hasKeyword)
+        case .rejected:
+            return DateMatch(date: nil, hasKeyword: hasKeyword)
+        case .none:
+            break
         }
 
-        // 5. Fallback to per-thread cached NSDataDetector, rejecting durations ("7 days", "1 month") and bare weekdays ("Monday.com").
+        // 5. Fallback to per-thread cached NSDataDetector, rejecting durations ("7 days", "1 month"), ratios ("24/7"), and bare weekdays ("Monday.com").
         if let detector = cachedDateDetector() {
             let ns = normalized as NSString
             let range = NSRange(location: 0, length: ns.length)
@@ -61,6 +71,8 @@ extension ScreenshotParser {
                 guard let detected = match.date else { continue }
                 let fragment = ns.substring(with: match.range)
                 guard isConcreteDateFragment(fragment) else { continue }
+                let year = calendar.component(.year, from: detected)
+                guard (2020...2035).contains(year) else { continue }
                 let days = abs(calendar.calendarDays(from: now, to: detected))
                 if days <= 1_100 {
                     return DateMatch(date: calendar.noon(of: detected), hasKeyword: hasKeyword)
@@ -99,10 +111,17 @@ extension ScreenshotParser {
         try? NSRegularExpression(pattern: #"^\d{1,2}\.?\s+(?:de\s+)?[A-Za-zÀ-ÿ]{3,10}\.?(?:(?:\s+de)?,?\s+\d{4})?(?:\s+|[·•|\-–—]\s*)"#, options: [.caseInsensitive])
     ]
 
-    private static let isoRegex = try? NSRegularExpression(pattern: #"\b(20\d{2})-(\d{1,2})-(\d{1,2})\b"#)
+    private enum ExplicitParseResult {
+        case matched(Date)
+        case rejected
+        case none
+    }
+
+    private static let isoRegex = try? NSRegularExpression(pattern: #"\b(\d{4})-(\d{1,2})-(\d{1,2})\b"#)
     private static let jpRegex = try? NSRegularExpression(pattern: #"(?:(20\d{2})\s*年\s*)?(\d{1,2})\s*月\s*(\d{1,2})\s*日"#)
-    private static let dotDateRegex = try? NSRegularExpression(pattern: #"(?<!\d)(\d{1,2})\.(\d{1,2})\.(20\d{2}|\d{2})?(?!\d)"#)
-    private static let slashDateRegex = try? NSRegularExpression(pattern: #"(?<!\d)(\d{1,2})/(\d{1,2})(?:/(20\d{2}|\d{2}))?(?!\d)"#)
+    private static let dotDateRegex = try? NSRegularExpression(pattern: #"(?<!\d)(\d{1,2})\.(\d{1,2})\.(\d{4}|\d{2})?(?!\d)"#)
+    private static let slashDateRegex = try? NSRegularExpression(pattern: #"(?<!\d)(\d{1,2})/(\d{1,2})(?:/(\d{4}|\d{2}))?(?![\d/])"#)
+    private static let nonDateRatioPattern = try? NSRegularExpression(pattern: #"^\s*(?:24/7|7/24)\s*$"#)
     private static let durationPattern = try? NSRegularExpression(
         pattern: #"(?i)\b(?:\d+\s*[-–]?\s*(?:days?|weeks?|wks?|months?|mos?|years?|yrs?|hours?|hrs?|mins?|minutes?|gb|tb)|today|yesterday|tomorrow|every\s+\d+|for\s+\d+)\b"#
     )
@@ -113,41 +132,50 @@ extension ScreenshotParser {
         guard trimmed.contains(where: \.isNumber) else { return false }
         let full = NSRange(location: 0, length: (trimmed as NSString).length)
         if bareTimePattern?.firstMatch(in: trimmed, range: full) != nil { return false }
+        if nonDateRatioPattern?.firstMatch(in: trimmed, range: full) != nil { return false }
         if durationPattern?.firstMatch(in: trimmed, range: full) != nil { return false }
         return true
     }
 
     private static func buildDate(month: Int, day: Int, year: Int?, now: Date, calendar: Calendar, preferPast: Bool) -> Date? {
         guard (1...12).contains(month), (1...31).contains(day) else { return nil }
-        if let year, (2020...2035).contains(year) {
-            guard let date = calendar.date(from: DateComponents(year: year, month: month, day: day, hour: 12)),
-                  calendar.component(.month, from: date) == month,
-                  calendar.component(.day, from: date) == day else { return nil }
-            return date
+        func exactDate(year y: Int) -> Date? {
+            guard let d = calendar.date(from: DateComponents(year: y, month: month, day: day, hour: 12)),
+                  calendar.component(.month, from: d) == month,
+                  calendar.component(.day, from: d) == day else { return nil }
+            return d
+        }
+        if let year {
+            guard (2020...2035).contains(year) else { return nil }
+            return exactDate(year: year)
         }
         let currentYear = calendar.component(.year, from: now)
-        guard let candidate = calendar.date(from: DateComponents(year: currentYear, month: month, day: day, hour: 12)),
-              calendar.component(.month, from: candidate) == month else { return nil }
+        let candidate = exactDate(year: currentYear)
+            ?? (month == 2 && day == 29 ? exactDate(year: preferPast ? currentYear - 1 : currentYear + 1) : nil)
+        guard let candidate else { return nil }
         let delta = calendar.calendarDays(from: now, to: candidate)
         if preferPast {
             if delta > 14 {
-                return calendar.date(from: DateComponents(year: currentYear - 1, month: month, day: day, hour: 12))
+                return exactDate(year: currentYear - 1) ?? candidate
             }
         } else {
             if delta < -30 {
-                return calendar.date(from: DateComponents(year: currentYear + 1, month: month, day: day, hour: 12))
+                return exactDate(year: currentYear + 1) ?? candidate
             }
         }
         return candidate
     }
 
-    private static func parseISODate(in text: String, calendar: Calendar) -> Date? {
+    private static func parseISODate(in text: String, now: Date, calendar: Calendar) -> ExplicitParseResult {
         let ns = text as NSString
         guard let match = isoRegex?.firstMatch(in: text, range: NSRange(location: 0, length: ns.length)),
               let y = Int(ns.substring(with: match.range(at: 1))),
               let m = Int(ns.substring(with: match.range(at: 2))),
-              let d = Int(ns.substring(with: match.range(at: 3))) else { return nil }
-        return buildDate(month: m, day: d, year: y, now: Date(), calendar: calendar, preferPast: false)
+              let d = Int(ns.substring(with: match.range(at: 3))) else { return .none }
+        if let date = buildDate(month: m, day: d, year: y, now: now, calendar: calendar, preferPast: false) {
+            return .matched(date)
+        }
+        return .rejected
     }
 
     private static func parseJapaneseDate(in text: String, now: Date, calendar: Calendar, preferPast: Bool) -> Date? {
@@ -159,30 +187,58 @@ extension ScreenshotParser {
         return buildDate(month: m, day: d, year: y, now: now, calendar: calendar, preferPast: preferPast)
     }
 
-    private static func parseNumericDate(in text: String, now: Date, calendar: Calendar, preferPast: Bool) -> Date? {
+    /// True when the reader's locale formats slash dates day-first (DD/MM) rather than month-first (MM/DD).
+    private static func prefersDayFirstSlashDates() -> Bool {
+        let locale = L10n.locale
+        let template = DateFormatter.dateFormat(fromTemplate: "yMd", options: 0, locale: locale) ?? "M/d/y"
+        guard let dPos = template.firstIndex(of: "d"), let mPos = template.firstIndex(of: "M") else { return false }
+        return dPos < mPos
+    }
+
+    private static func parseNumericDate(in text: String, now: Date, calendar: Calendar, preferPast: Bool, hasKeyword: Bool = false) -> ExplicitParseResult {
         let ns = text as NSString
         let full = NSRange(location: 0, length: ns.length)
+        var sawOutOfRangeYear = false
         // European dot format: DD.MM.YYYY or DD.MM.
         if let match = dotDateRegex?.firstMatch(in: text, range: full),
            let d = Int(ns.substring(with: match.range(at: 1))),
            let m = Int(ns.substring(with: match.range(at: 2))),
            (1...12).contains(m), (1...31).contains(d) {
             let y: Int? = match.range(at: 3).location != NSNotFound ? normalizeYear(ns.substring(with: match.range(at: 3))) : nil
-            return buildDate(month: m, day: d, year: y, now: now, calendar: calendar, preferPast: preferPast)
+            if let date = buildDate(month: m, day: d, year: y, now: now, calendar: calendar, preferPast: preferPast) {
+                return .matched(date)
+            }
+            if let y, !(2020...2035).contains(y) { sawOutOfRangeYear = true }
         }
-        // Slash format: MM/DD[/YYYY] or DD/MM[/YYYY] when first > 12
-        if let match = slashDateRegex?.firstMatch(in: text, range: full),
-           let a = Int(ns.substring(with: match.range(at: 1))),
-           let b = Int(ns.substring(with: match.range(at: 2))) {
+        // Slash format: MM/DD[/YYYY] or DD/MM[/YYYY]
+        for match in slashDateRegex?.matches(in: text, range: full) ?? [] {
+            guard let a = Int(ns.substring(with: match.range(at: 1))),
+                  let b = Int(ns.substring(with: match.range(at: 2))) else { continue }
             let y: Int? = match.range(at: 3).location != NSNotFound ? normalizeYear(ns.substring(with: match.range(at: 3))) : nil
+            // Reject common non-date ratios ("24/7 support", "7/24") and prose fractions ("1/2 off", "2/3").
+            if y == nil && ((a == 24 && b == 7) || (a == 7 && b == 24)) { continue }
+            if y == nil && !hasKeyword && a < b && b <= 4 && ns.length > match.range.length + 2 { continue }
+            if let y, !(2020...2035).contains(y) {
+                sawOutOfRangeYear = true
+                continue
+            }
+            if (1...12).contains(a), (1...12).contains(b), prefersDayFirstSlashDates() {
+                if let date = buildDate(month: b, day: a, year: y, now: now, calendar: calendar, preferPast: preferPast) {
+                    return .matched(date)
+                }
+            }
             if (1...12).contains(a), (1...31).contains(b) {
-                return buildDate(month: a, day: b, year: y, now: now, calendar: calendar, preferPast: preferPast)
+                if let date = buildDate(month: a, day: b, year: y, now: now, calendar: calendar, preferPast: preferPast) {
+                    return .matched(date)
+                }
             }
             if (13...31).contains(a), (1...12).contains(b) {
-                return buildDate(month: b, day: a, year: y, now: now, calendar: calendar, preferPast: preferPast)
+                if let date = buildDate(month: b, day: a, year: y, now: now, calendar: calendar, preferPast: preferPast) {
+                    return .matched(date)
+                }
             }
         }
-        return nil
+        return sawOutOfRangeYear ? .rejected : .none
     }
 
     private static func normalizeYear(_ token: String) -> Int? {

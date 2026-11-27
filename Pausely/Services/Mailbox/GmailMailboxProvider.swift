@@ -29,7 +29,7 @@ final class GmailMailboxProvider: MailboxProvider {
             redirectURI: "\(scheme):/oauth2redirect",
             callbackScheme: scheme,
             scopes: ["https://www.googleapis.com/auth/gmail.readonly"],
-            extraAuthorizeParameters: ["access_type": "offline", "prompt": "consent"])
+            extraAuthorizeParameters: ["access_type": "offline", "prompt": "select_account consent"])
     }
 
     // MARK: - Connecting
@@ -43,7 +43,9 @@ final class GmailMailboxProvider: MailboxProvider {
     /// After sign-in: read the address, then save the account. The tokens are discarded if anything fails.
     static func finishConnect(_ tokens: OAuthSession.Tokens) async throws -> MailboxAccount {
         let id = UUID().uuidString
-        OAuthSession.store(tokens, for: id)
+        guard OAuthSession.store(tokens, for: id) else {
+            throw MailboxError.server(L10n.string("Couldn't save the sign-in securely on this iPhone."))
+        }
         do {
             let request = URLRequest(url: URL(string: api + "/profile")!)
             let data = try await MailboxHTTP.data(request, token: { tokens.accessToken }, refresh: { throw MailboxError.authExpired })
@@ -71,22 +73,28 @@ final class GmailMailboxProvider: MailboxProvider {
             }
             // The history id expired (Gmail keeps about a week): fall back to a full search.
         }
+        let queries = Self.searchQueries(plan)
+        let perQueryCap = max(150, plan.maxCandidates / max(1, queries.count))
         var ids: [String] = []
         var seen = Set<String>()
-        for query in Self.searchQueries(plan) {
+        for query in queries {
             try Task.checkCancellation()
             var pageToken: String?
             var pages = 0
+            var queryAdded = 0
             repeat {
                 var components = URLComponents(string: Self.api + "/messages")!
                 var items = [URLQueryItem(name: "q", value: query), URLQueryItem(name: "maxResults", value: "100")]
                 if let pageToken { items.append(URLQueryItem(name: "pageToken", value: pageToken)) }
                 components.queryItems = items
                 let list = try JSONDecoder().decode(MessageList.self, from: try await get(components.url!))
-                for message in list.messages ?? [] where seen.insert(message.id).inserted { ids.append(message.id) }
+                for message in list.messages ?? [] where seen.insert(message.id).inserted {
+                    ids.append(message.id)
+                    queryAdded += 1
+                }
                 pageToken = list.nextPageToken
                 pages += 1
-            } while pageToken != nil && pages < 5 && ids.count < plan.maxCandidates
+            } while pageToken != nil && pages < 5 && queryAdded < perQueryCap && ids.count < plan.maxCandidates
             if ids.count >= plan.maxCandidates { break }
         }
         let latest = try? await currentHistoryID()
@@ -151,21 +159,27 @@ final class GmailMailboxProvider: MailboxProvider {
 
     /// Runs `work` for every ref with as many in flight as Google currently allows, a new one starting as
     /// each answers.
-    private func paced<T: Sendable>(_ refs: [MessageRef], _ work: @escaping @Sendable (MessageRef) async -> T?) async -> [(MessageRef, T?)] {
-        var out: [(MessageRef, T?)] = []
+    private func paced<T: Sendable>(_ refs: [MessageRef], _ work: @escaping @Sendable (MessageRef) async throws -> T) async -> [(MessageRef, Result<T, Error>)] {
+        var out: [(MessageRef, Result<T, Error>)] = []
         var queue = refs[...]
         var inFlight = 0
-        await withTaskGroup(of: (MessageRef, T?).self) { group in
+        await withTaskGroup(of: (MessageRef, Result<T, Error>).self) { group in
             while inFlight < inFlightLimit, let ref = queue.popFirst() {
                 inFlight += 1
-                group.addTask { (ref, await work(ref)) }
+                group.addTask {
+                    do { return (ref, .success(try await work(ref))) }
+                    catch { return (ref, .failure(error)) }
+                }
             }
             for await result in group {
                 inFlight -= 1
                 out.append(result)
                 while !Task.isCancelled, inFlight < inFlightLimit, let next = queue.popFirst() {
                     inFlight += 1
-                    group.addTask { (next, await work(next)) }
+                    group.addTask {
+                        do { return (next, .success(try await work(next))) }
+                        catch { return (next, .failure(error)) }
+                    }
                 }
             }
         }
@@ -175,10 +189,32 @@ final class GmailMailboxProvider: MailboxProvider {
     var parallelReads: Int { Self.parallelHeaderReads }
 
     /// Several whole messages at once (the requests are paced, so Google's limit is never met).
-    func rawMessages(_ refs: [MessageRef]) async -> [MessageRef: Data] {
+    func rawMessages(_ refs: [MessageRef]) async throws -> [MessageRef: Data] {
         var out: [MessageRef: Data] = [:]
-        for (ref, raw) in await paced(refs, { try? await self.rawMessage($0) }) { if let raw { out[ref] = raw } }
+        var lastFailure: Error?
+        var succeeded = 0
+        try Task.checkCancellation()
+        for (ref, result) in await paced(refs, { try await self.rawMessage($0) }) {
+            switch result {
+            case .success(let raw):
+                succeeded += 1
+                if let raw { out[ref] = raw }
+            case .failure(let error):
+                if Self.isFatalBatchError(error) { throw error }
+                lastFailure = error
+            }
+        }
+        try Task.checkCancellation()
+        if succeeded == 0, !refs.isEmpty, let lastFailure { throw lastFailure }
         return out
+    }
+
+    private static func isFatalBatchError(_ error: Error) -> Bool {
+        if error is CancellationError { return true }
+        switch error as? MailboxError {
+        case .authExpired, .throttled, .cancelled: return true
+        default: return false
+        }
     }
 
     private func pace() async throws {
@@ -192,24 +228,42 @@ final class GmailMailboxProvider: MailboxProvider {
     func summaries(_ refs: [MessageRef]) async throws -> [MessageSummary] {
         var results: [MessageSummary] = []
         var missed: [MessageRef] = []
+        var lastFailure: Error?
         // As many in flight as Google allows (a new one starting as each answers), within the pace above.
         try Task.checkCancellation()
-        for (ref, summary) in await paced(refs, { try? await self.metadata($0) }) {
-            if let summary { results.append(summary) } else { missed.append(ref) }
+        for (ref, result) in await paced(refs, { try await self.metadata($0) }) {
+            switch result {
+            case .success(let summary):
+                results.append(summary)
+            case .failure(let error):
+                if case MailboxError.authExpired = error { throw MailboxError.authExpired }
+                if case MailboxError.cancelled = error { throw MailboxError.cancelled }
+                if error is CancellationError { throw error }
+                missed.append(ref)
+                lastFailure = error
+            }
         }
         try Task.checkCancellation()
         // What Gmail turned away while busy is asked for again, one at a time, instead of being dropped
-        // unsaid. Access that really was withdrawn now says so rather than ending as "nothing found".
+        // unsaid. Access expiry, persistent throttling, or complete network failure propagates instead of ending empty.
+        var consecutiveFailures = 0
         for ref in missed {
             try Task.checkCancellation()
             do {
                 results.append(try await metadata(ref))
-            } catch MailboxError.authExpired {
-                throw MailboxError.authExpired
+                consecutiveFailures = 0
             } catch {
-                continue
+                if Self.isFatalBatchError(error) { throw error }
+                if let urlError = error as? URLError,
+                   urlError.code == .notConnectedToInternet || urlError.code == .networkConnectionLost {
+                    throw MailboxError.network(urlError.localizedDescription)
+                }
+                lastFailure = error
+                consecutiveFailures += 1
+                if consecutiveFailures >= 3 { throw error }
             }
         }
+        if results.isEmpty, !refs.isEmpty, let lastFailure { throw lastFailure }
         return results
     }
 
@@ -268,9 +322,11 @@ final class GmailMailboxProvider: MailboxProvider {
 
     private func historySince(_ historyID: String) async throws -> [String]? {
         var ids: [String] = []
+        var seen = Set<String>()
         var pageToken: String?
         var pages = 0
         repeat {
+            try Task.checkCancellation()
             var components = URLComponents(string: Self.api + "/history")!
             var items = [URLQueryItem(name: "startHistoryId", value: historyID),
                          URLQueryItem(name: "historyTypes", value: "messageAdded"),
@@ -281,7 +337,7 @@ final class GmailMailboxProvider: MailboxProvider {
             do { data = try await get(components.url!) } catch MailboxError.notFound { return nil }
             let page = try JSONDecoder().decode(HistoryPage.self, from: data)
             for record in page.history ?? [] {
-                for added in record.messagesAdded ?? [] where !ids.contains(added.message.id) { ids.append(added.message.id) }
+                for added in record.messagesAdded ?? [] where seen.insert(added.message.id).inserted { ids.append(added.message.id) }
             }
             pageToken = page.nextPageToken
             pages += 1

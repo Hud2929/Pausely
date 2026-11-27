@@ -114,8 +114,19 @@ enum ReminderPlanner {
                 .map { ($0, 0) }
         }
         for sub in subscriptions where sub.notifyBeforeDays > 0 {   // 0 means "Remind me: Off"
-            if rotating.contains(sub.id) { continue }
             let trialEnd = sub.status == .trial ? sub.trialEndsAt.map { calendar.startOfDay(for: $0) } : nil
+            if rotating.contains(sub.id) {
+                if !preferences.renewals, preferences.trials, let trialEnd,
+                   !kept.contains(RenewalDecisions.key(sub.id, trialEnd, calendar)) {
+                    if let headsUp = make(.trialHeadsUp, sub, calendar.noon(of: trialEnd), daysBefore: 2, hour: 10, now, calendar) {
+                        all.append((headsUp, 0))
+                    }
+                    if let ending = make(.trialEnding, sub, calendar.noon(of: trialEnd), daysBefore: 1, hour: 10, now, calendar) {
+                        all.append((ending, 0))
+                    }
+                }
+                continue
+            }
 
             if preferences.renewals, sub.renewsAutomatically, let anchor = sub.nextBillingDate {
                 let renewals = RenewalSchedule.upcomingRenewals(anchor: anchor, frequency: sub.billingFrequency,

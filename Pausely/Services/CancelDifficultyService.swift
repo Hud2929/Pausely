@@ -97,16 +97,36 @@ final class CancelDifficultyService: ObservableObject {
         loaded = false
     }
 
+    private static let ratedKeysStorage = "rated_cancel_difficulty_keys"
+
+    /// True when the signed-in customer can submit a rating for this service (never in guest mode,
+    /// never for Pausely itself, never for unkeyable names, and at most once per service on this device).
+    func canRate(serviceName: String) -> Bool {
+        guard AuthManager.shared.isSignedIntoCloud, SubscriptionStore.cloudSyncEnabled else { return false }
+        guard serviceName.caseInsensitiveCompare(PaymentManager.ownName) != .orderedSame else { return false }
+        let key = Self.serviceKey(for: serviceName)
+        guard !key.isEmpty else { return false }
+        let rated = Set(UserDefaults.standard.stringArray(forKey: Self.ratedKeysStorage) ?? [])
+        return !rated.contains(key)
+    }
+
+    private func markRatedLocally(_ key: String) {
+        var rated = Set(UserDefaults.standard.stringArray(forKey: Self.ratedKeysStorage) ?? [])
+        rated.insert(key)
+        UserDefaults.standard.set(Array(rated), forKey: Self.ratedKeysStorage)
+    }
+
     /// Submits an anonymous 1 (easy) to 5 (hard) cancellation difficulty rating.
-    /// Gracefully no-ops in guest mode, offline, or tests.
-    func submit(serviceName: String, difficulty: Int) async {
+    /// Returns true only when recorded (or already recorded on another device) so the UI never claims success offline or loops forever on 409.
+    @discardableResult
+    func submit(serviceName: String, difficulty: Int) async -> Bool {
         let clamped = max(1, min(5, difficulty))
-        guard SubscriptionStore.cloudSyncEnabled, !AuthManager.shared.isGuest else { return }
+        guard SubscriptionStore.cloudSyncEnabled, AuthManager.shared.isSignedIntoCloud else { return false }
         let client = SupabaseManager.shared.client
-        guard let userId = client.auth.currentSession?.user.id else { return }
+        guard let userId = client.auth.currentSession?.user.id else { return false }
 
         let key = Self.serviceKey(for: serviceName)
-        guard !key.isEmpty else { return }
+        guard !key.isEmpty else { return false }
         let payload = RatingInsert(
             user_id: userId,
             service_name: key,
@@ -117,8 +137,16 @@ final class CancelDifficultyService: ObservableObject {
                 .from("cancel_difficulty_ratings")
                 .insert(payload)
                 .execute()
+            markRatedLocally(key)
+            return true
         } catch {
+            let desc = String(describing: error).lowercased()
+            if desc.contains("23505") || desc.contains("duplicate key") || desc.contains("409") {
+                markRatedLocally(key)
+                return true
+            }
             os_log("CancelDifficultyService submit failed: %{public}@", log: .default, type: .error, String(describing: type(of: error)))
+            return false
         }
     }
 

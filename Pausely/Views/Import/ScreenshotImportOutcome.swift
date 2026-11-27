@@ -203,6 +203,8 @@ struct ScreenshotReadingView: View {
 }
 
 struct ScreenshotNothingFoundView: View {
+    var note: String? = nil
+
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("No subscriptions found in that image.")
@@ -212,7 +214,7 @@ struct ScreenshotNothingFoundView: View {
                 .padding(.top, 8)
                 .accessibilityAddTraits(.isHeader)
 
-            Text("Try a screenshot of Apple Settings › Subscriptions or a bank screen showing service names and prices.")
+            Text(verbatim: note ?? L10n.string("Try a screenshot of Apple Settings › Subscriptions or a bank screen showing service names and prices."))
                 .font(.body)
                 .foregroundStyle(Color.inkTextMuted)
                 .fixedSize(horizontal: false, vertical: true)
@@ -278,5 +280,120 @@ enum ScreenshotImportSupport {
             datesFilled: current.datesFilled,
             pricesUpdated: current.pricesUpdated
         )
+    }
+
+    static func canFillDate(existing: Subscription, item: ScreenshotParser.DetectedItem) -> Bool {
+        existing.nextBillingDate == nil && item.renewalDate != nil && existing.billingFrequency == item.frequency
+    }
+
+    static func canUpdatePrice(existing: Subscription, item: ScreenshotParser.DetectedItem) -> Bool {
+        guard let amount = item.amount, amount > 0 else { return false }
+        let sameCurrency = MoneyFormat.normalizedCode(existing.currency) == MoneyFormat.normalizedCode(item.currency)
+        let sameCycle = existing.billingFrequency == item.frequency
+        let sameAmount = AmountText.rounded(existing.amount, currency: existing.currency) == AmountText.rounded(amount, currency: item.currency)
+        return !(sameCurrency && sameCycle && sameAmount)
+    }
+
+    /// Compares annualized cost in the existing subscription's currency so switching monthly→yearly
+    /// savings or foreign currencies never paints a cheaper plan red as a price hike.
+    static func isPriceIncrease(existing: Subscription, item: ScreenshotParser.DetectedItem, rates: CurrencyRates) -> Bool {
+        guard let amount = item.amount, amount > 0 else { return false }
+        let itemAnnual = Subscription(name: item.name, category: item.category, amount: amount,
+                                      currency: item.currency, billingFrequency: item.frequency).annualCost
+        guard let convertedAnnual = rates.convert(itemAnnual, from: item.currency, to: existing.currency) else { return false }
+        return convertedAnnual > existing.annualCost
+    }
+
+    static func detailLine(for item: ScreenshotParser.DetectedItem, existing: Subscription?,
+                           fillsDate: Bool, updatesPrice: Bool, keptForLater: Bool) -> String? {
+        var parts: [String] = []
+        if item.isTrial, let trial = item.trialEndsAt {
+            parts.append(L10n.string("Trial ends \(L10n.day(trial))"))
+        } else if let renewal = item.renewalDate {
+            parts.append(renewal < Calendar.billing.startOfDay(for: Date())
+                         ? L10n.string("Last charged \(L10n.day(renewal))") : L10n.string("Renews \(L10n.day(renewal))"))
+        }
+        if updatesPrice, let old = existing, let newAmount = item.amount {
+            let from = old.billingFrequency == item.frequency
+                ? MoneyFormat.string(old.amount, old.currency, locale: L10n.locale)
+                : old.billingFrequency.pricedShort(MoneyFormat.string(old.amount, old.currency, locale: L10n.locale))
+            let to = old.billingFrequency == item.frequency
+                ? MoneyFormat.string(newAmount, item.currency, locale: L10n.locale)
+                : item.frequency.pricedShort(MoneyFormat.string(newAmount, item.currency, locale: L10n.locale))
+            parts.append(L10n.string("Price changed: \(from) → \(to)"))
+        }
+        if fillsDate {
+            parts.append(L10n.string("Adds renewal date"))
+        } else if existing != nil && !updatesPrice {
+            parts.append(L10n.string("Already on your list"))
+        } else if keptForLater {
+            parts.append(L10n.string("Kept for later"))
+        }
+        switch item.doubt {
+        case .mayNotRepeat: parts.append(L10n.string("Nothing here says it repeats"))
+        case .everyFourWeeks: parts.append(L10n.string("Charged every 4 weeks, counted as monthly"))
+        case .everyTwoMonths: parts.append(L10n.string("Charged every 2 months, counted as half each month"))
+        case .aBill: parts.append(L10n.string("A bill rather than a subscription: tick it to track it"))
+        case nil: break
+        }
+        return parts.isEmpty ? nil : L10n.breakingAfterDots(parts.joined(separator: " · "))
+    }
+
+    static func rowSummary(_ item: ScreenshotParser.DetectedItem, existing: Subscription?,
+                           fillsDate: Bool, updatesPrice: Bool, keptForLater: Bool) -> String {
+        var parts = [item.name]
+        if let amount = item.amount {
+            parts.append(item.frequency.priced(MoneyFormat.string(amount, item.currency, locale: L10n.locale)))
+        } else {
+            parts.append(L10n.string("No price found"))
+        }
+        if let detail = detailLine(for: item, existing: existing, fillsDate: fillsDate,
+                                   updatesPrice: updatesPrice, keptForLater: keptForLater) {
+            parts.append(detail)
+        }
+        return parts.joined(separator: ", ")
+    }
+
+    static func reviewPrimaryTitle(isAdding: Bool, isForTally: Bool, chosen: [ScreenshotParser.DetectedItem],
+                                   existingFor: (ScreenshotParser.DetectedItem) -> Subscription?) -> String {
+        if isAdding { return L10n.string("Adding…") }
+        if isForTally {
+            return chosen.count == 1 ? L10n.string("Add 1 to my slip") : L10n.string("Add \(chosen.count) to my slip")
+        }
+        let newCount = chosen.filter { existingFor($0) == nil }.count
+        let dateFills = chosen.filter { item in
+            existingFor(item).map { canFillDate(existing: $0, item: item) } ?? false
+        }.count
+        let priceUpdates = chosen.filter { item in
+            existingFor(item).map { canUpdatePrice(existing: $0, item: item) } ?? false
+        }.count
+        if newCount == 0 {
+            if priceUpdates > 0 && dateFills == 0 {
+                return priceUpdates == 1 ? L10n.string("Update 1 price") : L10n.string("Update \(priceUpdates) prices")
+            }
+            if dateFills > 0 && priceUpdates == 0 {
+                return dateFills == 1 ? L10n.string("Update 1 renewal date") : L10n.string("Update \(dateFills) renewal dates")
+            }
+            if dateFills > 0 || priceUpdates > 0 {
+                return chosen.count == 1 ? L10n.string("Update 1 subscription") : L10n.string("Update \(chosen.count) subscriptions")
+            }
+        }
+        let updates = chosen.count - newCount
+        if newCount > 0 && updates > 0 {
+            return L10n.string("Add \(newCount) & update \(updates)")
+        }
+        return L10n.string("Add \(chosen.count) to my list")
+    }
+
+    static func unreadableNote(failed: Int, total: Int) -> String? {
+        guard failed > 0 else { return nil }
+        if failed == total {
+            return failed == 1
+                ? L10n.string("Couldn't read that image. Check that the photo is downloaded to this iPhone and try again.")
+                : L10n.string("Couldn't read those \(failed) images. Check that the photos are downloaded to this iPhone and try again.")
+        }
+        return failed == 1
+            ? L10n.string("1 image couldn't be read and was skipped.")
+            : L10n.string("\(failed) images couldn't be read and were skipped.")
     }
 }

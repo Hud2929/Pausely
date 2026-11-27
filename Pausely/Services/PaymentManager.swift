@@ -57,6 +57,7 @@ final class PaymentManager: ObservableObject {
     static let shared = PaymentManager()
     
     // MARK: - State
+    private(set) var hasStoreKitEntitlement = false
     private(set) var currentTier: SubscriptionTier = .free {
         didSet {
             guard oldValue != currentTier else { return }
@@ -128,11 +129,41 @@ final class PaymentManager: ObservableObject {
     /// restore, on every transaction update and whenever the app comes to the front.
     func updateCurrentEntitlements() async {
         let before = currentTier
-        currentTier = Self.resolveTier(storeKit: await StoreKitManager.shared.entitledTier(), hasGrant: hasProGrant)
-        if before > .free, currentTier == .free { await endPauselyLine() }
-        // Reschedule reminders when Pro lapses or resumes so Pause Plan vs. standard renewal reminders stay truthful.
+        let storeKitTier = await StoreKitManager.shared.entitledTier()
+        hasStoreKitEntitlement = (storeKitTier != nil && storeKitTier! > .free)
+        currentTier = Self.resolveTier(storeKit: storeKitTier, hasGrant: hasProGrant)
+        if before > .free, currentTier == .free {
+            await endPauselyLine()
+        } else if storeKitTier != nil {
+            await reconcilePauselyLineRenewal()
+        }
+        // Reschedule reminders & republish widgets when Pro lapses or resumes so Pause Plan stays truthful.
         if (before > .free) != (currentTier > .free) {
-            await ReminderScheduler.shared.reschedule(SubscriptionStore.shared.subscriptions)
+            let store = SubscriptionStore.shared
+            if !store.isHidden {
+                WidgetDataStore.shared.publish(subscriptions: store.subscriptions)
+            }
+            await ReminderScheduler.shared.reschedule(store.subscriptions)
+        }
+    }
+
+    /// Reconciles Pausely Pro's own subscription row with StoreKit's `willRenew`: if the person
+    /// turned off auto-renewal in Apple Subscriptions while their paid period or free trial runs out,
+    /// mark the line cancelled immediately so it stops firing renewal reminders and inflating totals.
+    func reconcilePauselyLineRenewal() async {
+        guard currentTier > .free,
+              AuthManager.shared.isAuthenticated,
+              !SubscriptionStore.shared.isHidden,
+              let own = await StoreKitManager.shared.ownSubscription(for: currentTier) else { return }
+        let store = SubscriptionStore.shared
+        guard let existing = store.subscriptions.first(where: \.isPausely) else { return }
+        if own.willRenew == false, existing.renewsAutomatically {
+            await endPauselyLine()
+        } else if own.willRenew != false, existing.status == .cancelled,
+                  UserDefaults.standard.string(forKey: pauselyLineEndedKey) == existing.id.uuidString,
+                  let restarted = Self.restarted(existing, to: own, endedByTheApp: true, now: Date()) {
+            UserDefaults.standard.removeObject(forKey: pauselyLineEndedKey)
+            await store.updateSubscription(restarted)
         }
     }
 
@@ -153,11 +184,19 @@ final class PaymentManager: ObservableObject {
         return KeychainManager.shared.get(proGrantKey) == "true"
     }
 
+    /// Synchronously clears the account-linked Pro grant from Keychain (used on every sign-out path
+    /// so an un-awaited Task can never race a subsequent sign-in or leave a signed-out grant behind).
+    func clearProGrantSynchronously() {
+        UserDefaults.standard.removeObject(forKey: proGrantKey)
+        KeychainManager.shared.delete(key: proGrantKey)
+        Task { await updateCurrentEntitlements() }
+    }
+
     /// Called with the account's `is_pro` on sign-in, and with false on sign-out or account deletion.
     /// Stored in Keychain (AfterFirstUnlockThisDeviceOnly) instead of plaintext UserDefaults.
     func setProGrant(_ active: Bool) async {
         UserDefaults.standard.removeObject(forKey: proGrantKey)
-        if active {
+        if active, !AuthManager.shared.isGuest {
             KeychainManager.shared.save("true", forKey: proGrantKey)
         } else {
             KeychainManager.shared.delete(key: proGrantKey)
@@ -191,21 +230,24 @@ final class PaymentManager: ObservableObject {
             billingFrequency: own.tier == .proAnnual ? .yearly : .monthly,
             nextBillingDate: own.renews,
             trialEndsAt: own.isTrial ? own.renews : nil,
-            status: own.isTrial ? .trial : .active
+            status: own.isTrial ? .trial : .active,
+            paymentMethod: "Apple"
         )
     }
 
     /// A line that is already there, brought in step with the App Store's price, currency, billing
-    /// cycle, and (when switching between Monthly and Annual) renewal date and trial status.
+    /// cycle, Apple payment method, and (when switching between Monthly and Annual) renewal date and trial status.
     /// Earlier versions could add it at US launch prices for any country.
     static func corrected(_ line: Subscription, to own: StoreKitManager.OwnSubscription) -> Subscription? {
         let frequency: BillingFrequency = own.tier == .proAnnual ? .yearly : .monthly
         let switchedPlan = line.billingFrequency != frequency
-        guard switchedPlan || line.amount != own.price || line.currency != own.currency else { return nil }
+        let missingAppleMethod = (line.paymentMethod ?? "").trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        guard switchedPlan || missingAppleMethod || line.amount != own.price || line.currency != own.currency else { return nil }
         var fixed = line
         fixed.amount = own.price
         fixed.currency = own.currency
         fixed.billingFrequency = frequency
+        if missingAppleMethod { fixed.paymentMethod = "Apple" }
         if switchedPlan {
             if let renews = own.renews { fixed.nextBillingDate = renews }
             fixed.status = own.isTrial ? .trial : .active
@@ -221,22 +263,32 @@ final class PaymentManager: ObservableObject {
     func autoAddPauselyProIfNeeded(readdIfRemoved: Bool = false) async {
         guard currentTier > .free else { return }
         let store = SubscriptionStore.shared
+        guard AuthManager.shared.isAuthenticated, !store.isHidden else { return }
+        if AuthManager.shared.isSignedIntoCloud,
+           SubscriptionStore.isFirstSync(for: AuthManager.shared.currentUser?.id) {
+            return
+        }
         guard let own = await StoreKitManager.shared.ownSubscription(for: currentTier) else { return }
 
         if let existing = store.subscriptions.first(where: \.isPausely) {
             var line = Self.corrected(existing, to: own) ?? existing
-            let endedHere = UserDefaults.standard.string(forKey: pauselyLineEndedKey) == existing.id.uuidString
-            // Started again only for a purchase the App Store reports now: Pro given on the account
-            // charges nothing, and the last purchase it remembers may be long over.
-            if (endedHere || readdIfRemoved), await StoreKitManager.shared.entitledTier() != nil,
-               let restarted = Self.restarted(line, to: own, endedByTheApp: true, now: Date()) {
-                line = restarted
-                UserDefaults.standard.removeObject(forKey: pauselyLineEndedKey)
+            if own.willRenew == false, let ended = Self.ended(line) {
+                UserDefaults.standard.set(existing.id.uuidString, forKey: pauselyLineEndedKey)
+                line = ended
+            } else {
+                let endedHere = UserDefaults.standard.string(forKey: pauselyLineEndedKey) == existing.id.uuidString
+                if (endedHere || readdIfRemoved), own.willRenew != false, await StoreKitManager.shared.entitledTier() != nil,
+                   let restarted = Self.restarted(line, to: own, endedByTheApp: true, now: Date()) {
+                    line = restarted
+                    UserDefaults.standard.removeObject(forKey: pauselyLineEndedKey)
+                }
             }
             if line != existing { await store.updateSubscription(line) }
             UserDefaults.standard.set(true, forKey: pauselyProAutoAddedKey)
             return
         }
+        // Do not auto-add a brand-new row if the person already cancelled auto-renewal in Apple Settings.
+        guard own.willRenew != false else { return }
         // Added once. If the person removed it, or tracks it under their own name, it stays that way
         // unless they just explicitly claimed a Win-Back free trial that promises a reminder.
         if !readdIfRemoved {

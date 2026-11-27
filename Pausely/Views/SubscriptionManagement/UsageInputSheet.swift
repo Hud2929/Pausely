@@ -5,9 +5,11 @@ import SwiftUI
 struct UsageInputSheet: View {
     let subscriptionName: String
     let currentMinutes: Int
+    var hasLoggedUsage: Bool = false
     let onSave: (Int) -> Void
 
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.dynamicTypeSize) private var typeSize
     @State private var hours: String
     @State private var minutes: String
     @FocusState private var focus: Field?
@@ -17,12 +19,13 @@ struct UsageInputSheet: View {
     /// Common monthly durations so logging takes one tap instead of typing.
     private static let quickPresets = [1, 4, 10, 20]
 
-    init(subscriptionName: String, currentMinutes: Int, onSave: @escaping (Int) -> Void) {
+    init(subscriptionName: String, currentMinutes: Int, hasLoggedUsage: Bool = false, onSave: @escaping (Int) -> Void) {
         self.subscriptionName = subscriptionName
         self.currentMinutes = currentMinutes
+        self.hasLoggedUsage = hasLoggedUsage
         self.onSave = onSave
-        _hours = State(initialValue: currentMinutes >= 60 ? String(currentMinutes / 60) : "")
-        _minutes = State(initialValue: currentMinutes % 60 > 0 ? String(currentMinutes % 60) : "")
+        _hours = State(initialValue: currentMinutes >= 60 ? L10n.number(currentMinutes / 60) : "")
+        _minutes = State(initialValue: currentMinutes % 60 > 0 ? L10n.number(currentMinutes % 60) : "")
     }
 
     /// Nil until something sensible is typed: hours up to a month's worth, minutes under sixty.
@@ -47,6 +50,13 @@ struct UsageInputSheet: View {
 
     private var total: Int? { Self.totalMinutes(hours: hours, minutes: minutes) }
 
+    private var inputProblem: String? {
+        let h = hours.trimmingCharacters(in: .whitespaces)
+        let m = minutes.trimmingCharacters(in: .whitespaces)
+        guard !(h.isEmpty && m.isEmpty), total == nil else { return nil }
+        return L10n.string("Enter up to 744 hours and under 60 minutes.")
+    }
+
     var body: some View {
         // "Cancel", not "Done": this page saves with its own button, and leaving it keeps nothing.
         SettingsPage(title: "How long did you use \(subscriptionName) this month?",
@@ -54,9 +64,20 @@ struct UsageInputSheet: View {
                      leaveTitle: "Cancel") {
             presetRow
 
-            HStack(alignment: .top, spacing: 12) {
-                field(L10n.string("Hours"), text: $hours, id: "hoursTextField", focus: .hours)
-                field(L10n.string("Minutes"), text: $minutes, id: "minutesTextField", focus: .minutes)
+            if typeSize.isAccessibilitySize {
+                VStack(alignment: .leading, spacing: 12) {
+                    field(L10n.string("Hours"), text: $hours, id: "hoursTextField", focus: .hours)
+                    field(L10n.string("Minutes"), text: $minutes, id: "minutesTextField", focus: .minutes)
+                }
+            } else {
+                HStack(alignment: .top, spacing: 12) {
+                    field(L10n.string("Hours"), text: $hours, id: "hoursTextField", focus: .hours)
+                    field(L10n.string("Minutes"), text: $minutes, id: "minutesTextField", focus: .minutes)
+                }
+            }
+
+            if let inputProblem {
+                ProblemLine(message: inputProblem, identifier: "usageInputProblem")
             }
 
             VStack(spacing: 10) {
@@ -69,9 +90,14 @@ struct UsageInputSheet: View {
                     onSave(0)
                     dismiss()
                 } label: {
-                    Text("I haven't used it this month")
+                    if hasLoggedUsage && currentMinutes == 0 && hours.isEmpty && minutes.isEmpty {
+                        Label("I haven't used it this month", systemImage: "checkmark")
+                    } else {
+                        Text("I haven't used it this month")
+                    }
                 }
                 .buttonStyle(.ink(.quiet))
+                .accessibilityAddTraits(hasLoggedUsage && currentMinutes == 0 ? [.isSelected] : [])
                 .accessibilityIdentifier("notUsedButton")
             }
         }
@@ -94,7 +120,7 @@ struct UsageInputSheet: View {
                     Button {
                         Feel.selection()
                         focus = nil
-                        hours = String(presetHours)
+                        hours = L10n.number(presetHours)
                         minutes = ""
                     } label: {
                         Text(verbatim: label)

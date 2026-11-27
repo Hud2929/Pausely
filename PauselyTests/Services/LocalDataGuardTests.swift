@@ -31,7 +31,6 @@ final class LocalDataGuardTests: XCTestCase {
         "review_decision_milestone_last": "how often this iPhone was asked for a review",
         "current_subscription_tier": "the plan the App Store confirmed for the Apple Account on this iPhone",
         "pending_first_run_tally": "made before any account exists; joins the list of whoever signs in next, then cleared",
-        "age_gate_device_passed": "someone confirmed their age on this iPhone before an account existed",
         "age_gate_blocked_at": "an under-age answer blocks this iPhone, whoever signs in",
         "debug_auth_bypass": "debug builds only",
         "debug_premium_override": "debug builds only",
@@ -51,6 +50,8 @@ final class LocalDataGuardTests: XCTestCase {
         "pending_firstName": "Keychain, removed when a sign-up finishes, fails, or the iPhone is wiped",
         "pending_lastName": "Keychain, removed when a sign-up finishes, fails, or the iPhone is wiped",
         "pending_nameEmail": "Keychain, removed when a sign-up finishes, fails, or the iPhone is wiped",
+        "pending_signup_password": "Keychain, removed when a sign-up finishes, fails, signs out, or wipes",
+        "pending_signup_password_email": "Keychain, removed when a sign-up finishes, fails, signs out, or wipes",
         "profile_": "Keychain, removed by AccountMemory.forgetName when the iPhone is wiped",
     ]
 

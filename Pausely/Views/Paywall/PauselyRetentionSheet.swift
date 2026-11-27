@@ -21,6 +21,7 @@ struct PauselyRetentionSheet: View {
     @State private var notice: String?
     @State private var managingInApple = false
     @State private var redeemingOfferCode = false
+    @State private var ownSubscription: StoreKitManager.OwnSubscription?
 
     private var protection: ProtectionSummary {
         ProtectionSummary.current(subscriptions: store.subscriptions,
@@ -31,10 +32,10 @@ struct PauselyRetentionSheet: View {
     private var monthlyProduct: Product? { storeManager.product(for: .pro) }
     private var annualProduct: Product? { storeManager.product(for: .proAnnual) }
     private var canSwitchToMonthly: Bool {
-        paymentManager.currentTier == .proAnnual && monthlyProduct != nil
+        ownSubscription != nil && paymentManager.currentTier == .proAnnual && monthlyProduct != nil
     }
     private var canSwitchToAnnual: Bool {
-        paymentManager.currentTier == .pro && annualProduct != nil
+        ownSubscription != nil && paymentManager.currentTier == .pro && annualProduct != nil
     }
 
     private var headlineText: String {
@@ -137,6 +138,27 @@ struct PauselyRetentionSheet: View {
                 .buttonStyle(.ink(.quiet))
                 .accessibilityIdentifier("retentionContinueToAppleButton")
 
+                if !isManaging, store.subscriptions.contains(where: { $0.isPausely && $0.status != .cancelled }) {
+                    Button {
+                        Task {
+                            isWorking = true
+                            defer { isWorking = false }
+                            await PaymentManager.shared.endPauselyLine()
+                            dismiss()
+                        }
+                    } label: {
+                        Text("I turned off renewal")
+                            .font(.footnote.weight(.medium))
+                            .foregroundStyle(Color.inkTextMuted)
+                            .fixedSize(horizontal: false, vertical: true)
+                            .frame(minWidth: Layout.tapTarget, minHeight: Layout.tapTarget)
+                            .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                    .disabled(isWorking)
+                    .accessibilityIdentifier("retentionMarkedCancelledButton")
+                }
+
                 Button {
                     Feel.selection()
                     redeemingOfferCode = true
@@ -144,6 +166,7 @@ struct PauselyRetentionSheet: View {
                     Text("Have an offer code?")
                         .font(.footnote.weight(.medium))
                         .foregroundStyle(Color.inkTextMuted)
+                        .fixedSize(horizontal: false, vertical: true)
                         .frame(minWidth: Layout.tapTarget, minHeight: Layout.tapTarget)
                         .contentShape(Rectangle())
                 }
@@ -160,16 +183,26 @@ struct PauselyRetentionSheet: View {
         .offerCodeRedemption(isPresented: $redeemingOfferCode)
         .onChange(of: managingInApple) { _, presented in
             if !presented {
-                Task { await PaymentManager.shared.updateCurrentEntitlements() }
+                Task {
+                    await PaymentManager.shared.updateCurrentEntitlements()
+                    ownSubscription = await storeManager.ownSubscription(for: paymentManager.currentTier)
+                    if !isManaging, ownSubscription?.willRenew == false || !PaymentManager.shared.isPremium {
+                        dismiss()
+                    }
+                }
             }
         }
         .onChange(of: redeemingOfferCode) { _, presented in
             if !presented {
-                Task { await PaymentManager.shared.updateCurrentEntitlements() }
+                Task {
+                    await PaymentManager.shared.updateCurrentEntitlements()
+                    ownSubscription = await storeManager.ownSubscription(for: paymentManager.currentTier)
+                }
             }
         }
         .task {
             await storeManager.loadProducts()
+            ownSubscription = await storeManager.ownSubscription(for: paymentManager.currentTier)
         }
     }
 
@@ -198,11 +231,9 @@ struct PauselyRetentionSheet: View {
                 }
 
                 if !isManaging, protection.overFreeLimitCount > 0 {
-                    Text(protection.overFreeLimitCount == 1
-                         ? L10n.string("1 subscription moves to waiting and stops getting reminders on the free plan.")
-                         : L10n.string("\(protection.overFreeLimitCount) subscriptions move to waiting and stop getting reminders on the free plan."))
+                    Text("Your current subscriptions stay tracked and keep getting reminders. You'll only need Pro to add new ones above \(FreeTier.subscriptionLimit).")
                         .font(.footnote)
-                        .foregroundStyle(Color.paperDue)
+                        .foregroundStyle(Color.paperMuted)
                         .fixedSize(horizontal: false, vertical: true)
                 }
 
@@ -213,8 +244,8 @@ struct PauselyRetentionSheet: View {
                         .fixedSize(horizontal: false, vertical: true)
                 } else if pausePlanStore.activePlan == nil,
                           let pause = PausePlanCard.yearlySavingsInfo(in: store.subscriptions, currency: currencyManager) {
-                    let formatted = MoneyFormat.total(pause.amount, pause.currency, converted: pause.isConverted,
-                                                      locale: L10n.locale, wholeUnits: true)
+                    let formatted = MoneyFormat.string(pause.amount, pause.currency,
+                                                       locale: L10n.locale, wholeUnits: true)
                     Text(L10n.string("Pause Plan can save about \(formatted) a year."))
                         .font(.footnote)
                         .foregroundStyle(Color.paperMuted)

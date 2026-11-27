@@ -17,7 +17,7 @@ enum UsageFacts {
 
         /// What an hour of use cost this month. Nil when none was used.
         var costPerHour: Decimal? {
-            minutes > 0 ? monthly / (Decimal(minutes) / 60) : nil
+            minutes > 0 ? (monthly * 60) / Decimal(minutes) : nil
         }
     }
 

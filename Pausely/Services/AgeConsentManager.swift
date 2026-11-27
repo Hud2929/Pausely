@@ -90,6 +90,13 @@ final class AgeConsentManager: ObservableObject {
         return .underAge
     }
 
+    /// Clears the single-use pre-signup age confirmation so a subsequent account on this device
+    /// must confirm its own age (never clearing an underage lockout).
+    func clearDeviceGate() {
+        defaults.removeObject(forKey: Key.devicePassed)
+        stateVersion += 1
+    }
+
     // MARK: - Per-user consent record
 
     /// True when this user has a confirmed consent record on this device.
@@ -98,10 +105,12 @@ final class AgeConsentManager: ObservableObject {
     }
 
     /// Records consent for a signed-in user: locally first (so the app never blocks on network),
+    /// consumes the single-use device pre-signup confirmation so no other account inherits it,
     /// then syncs to the user's `profiles` row. A failed sync is retried by `syncPendingConsent`.
     func recordConsent(userId: String, now: Date = Date()) async {
         defaults.set(now, forKey: Key.user(userId))
         defaults.set(true, forKey: Key.pendingSync(userId))
+        defaults.removeObject(forKey: Key.devicePassed)
         stateVersion += 1
         await syncPendingConsent(userId: userId)
     }

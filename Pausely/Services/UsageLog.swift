@@ -58,7 +58,27 @@ final class UsageLog: ObservableObject {
     func calculateCostPerHour(for subscription: Subscription, now: Date = Date()) -> Decimal? {
         let minutes = getCurrentMonthUsage(for: subscription, now: now)
         guard minutes > 0 else { return nil }
-        return subscription.monthlyCost / (Decimal(minutes) / 60)
+        return (subscription.monthlyCost * Decimal(60)) / Decimal(minutes)
+    }
+
+    /// Moves local guest usage entries to their matched server UUID on first-sync dedup.
+    func remapSubscriptionIDs(_ map: [UUID: UUID]) {
+        guard !map.isEmpty else { return }
+        var changed = false
+        for (oldID, newID) in map where oldID != newID {
+            let oldMonth = idMonthKey(oldID)
+            let oldMinutes = idMinutesKey(oldID)
+            guard let monthVal = defaults.string(forKey: oldMonth) else { continue }
+            let newMonth = idMonthKey(newID)
+            if defaults.string(forKey: newMonth) == nil {
+                defaults.set(defaults.integer(forKey: oldMinutes), forKey: idMinutesKey(newID))
+                defaults.set(monthVal, forKey: newMonth)
+            }
+            defaults.removeObject(forKey: oldMinutes)
+            defaults.removeObject(forKey: oldMonth)
+            changed = true
+        }
+        if changed { objectWillChange.send() }
     }
 
     func setMonthlyUsage(minutes: Int, for subscription: Subscription, now: Date = Date()) {

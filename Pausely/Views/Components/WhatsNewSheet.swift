@@ -21,13 +21,13 @@ struct WhatsNewSheet: View {
 
                 // Only what this build really does.
                 VStack(alignment: .leading, spacing: 0) {
-                    item("Import from screenshots", "Pick a screenshot of Apple Subscriptions or your recurring charges and read it on this iPhone.")
+                    item("12-month forecast & cut simulator", "Spot your heaviest renewal months ahead and test cancellations side by side in Insights.")
                     Hairline()
-                    item("Try without an account", "Start locally on your device and sign in later if you want backup across devices.")
+                    item("Smarter Pause Plan rotation", "Keep one streaming service on at a time, extend or switch turns live, and sync your plan across devices.")
                     Hairline()
-                    item("Billing notes, payment methods, and overlaps", "Note which card or store bills each subscription, keep reminders for yourself, and spot overlapping services in Insights.")
+                    item("Smarter on-device screenshot import", "Scan Apple Subscriptions or recurring charge screenshots in memory — nothing leaves your iPhone.")
                     Hairline()
-                    item("Cancel and refund email drafts", "Preview and send ready-to-go cancellation or refund emails, plus Savings Receipt and Pause Plan sync.")
+                    item("Cancel & refund email drafts", "Preview and send ready-to-go cancellation or refund emails, and track every avoided charge on your Savings Receipt.")
                 }
                 .padding(.top, 20)
             }
@@ -53,6 +53,7 @@ struct WhatsNewSheet: View {
             Text(title)
                 .font(.body.weight(.semibold))
                 .foregroundStyle(Color.inkText)
+                .fixedSize(horizontal: false, vertical: true)
             Text(detail)
                 .font(.subheadline)
                 .foregroundStyle(Color.inkTextMuted)
@@ -76,22 +77,23 @@ struct WhatsNewSheetModifier: ViewModifier {
     @State private var showSheet = false
 
     /// Identifies the current What's New content. Bump it only when the sheet's content changes.
-    private let currentVersion = "1.11"
+    private let currentVersion = "1.12"
 
     func body(content: Content) -> some View {
         content
-            .onAppear {
-                // UI tests drive the app; release notes over the first screen would block them.
-                if LaunchFlag.uiTesting.isSet { return }
+            .task {
+                // UI tests and demo captures drive the app; release notes over the first screen would block them.
+                if LaunchFlag.uiTesting.isSet || LaunchFlag.isDemoLaunch { return }
                 if lastSeenVersion.isEmpty {
                     // Brand-new install: nothing is "new" yet, so do not greet a first-time
                     // customer with release notes before they have seen any value.
                     lastSeenVersion = currentVersion
                 } else if lastSeenVersion != currentVersion {
-                    // Small delay so it doesn't clash with splash/onboarding
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
-                        showSheet = true
-                    }
+                    try? await Task.sleep(for: .seconds(1))
+                    let center = VerdictCenter.shared
+                    guard !Task.isCancelled, center.presented == nil, !center.showingPausePlan,
+                          !center.showingSavingsReceipt, center.subscriptionToShow == nil else { return }
+                    showSheet = true
                 }
             }
             .sheet(isPresented: $showSheet, onDismiss: {

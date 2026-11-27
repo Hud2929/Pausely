@@ -79,13 +79,27 @@ struct ReminderAskRow: View {
 
     var body: some View {
         let denied = notifications.status == .denied
-        AttentionRow(state: nil, symbol: denied ? "bell.slash" : "bell",
-                     title: denied ? L10n.string("Reminders are off") : L10n.string("Get a heads-up before you're charged"),
-                     detail: denied
-                        ? L10n.string("Turn on notifications for Pausely in Settings so renewals don't surprise you.")
-                        : detail,
-                     action: denied ? L10n.string("Open Settings") : L10n.string("Turn on")) {
-            if denied {
+        let hidden = notifications.isAuthorized && notifications.delivery == .hidden
+        let late = notifications.isAuthorized && notifications.delivery == .late
+        let needsSettings = denied || hidden || late
+        let symbol = (denied || hidden) ? "bell.slash" : (late ? "clock.badge.exclamationmark" : "bell")
+        let title: String = {
+            if denied { return L10n.string("Reminders are off") }
+            if hidden { return L10n.string("Reminders are hidden") }
+            if late { return L10n.string("Reminders may arrive late") }
+            return L10n.string("Get a heads-up before you're charged")
+        }()
+        let subtitle: String = {
+            if denied { return L10n.string("Turn on notifications for Pausely in Settings so renewals don't surprise you.") }
+            if hidden { return L10n.string("Notifications are allowed, but banners, Lock Screen and Notification Center are all off in Settings.") }
+            if late { return L10n.string("Pausely is in Scheduled Summary. Switch it to Immediate Delivery in Settings so renewals arrive on time.") }
+            return detail
+        }()
+        AttentionRow(state: nil, symbol: symbol,
+                     title: title,
+                     detail: subtitle,
+                     action: needsSettings ? L10n.string("Open Settings") : L10n.string("Turn on")) {
+            if needsSettings {
                 notifications.openSystemSettings()
             } else if !isAsking {
                 isAsking = true
@@ -120,6 +134,7 @@ struct HorizonSection: View {
     let currency: String
     let rates: CurrencyRates
     let pendingKeys: Set<String>
+    var onSelectCharge: ((UUID) -> Void)? = nil
 
     @GestureState private var selectedDay: Int?
     @State private var spokenDay: Int?
@@ -127,6 +142,9 @@ struct HorizonSection: View {
     private var pickedDay: Int? { selectedDay ?? spokenDay }
     private var throughDay: Int { pickedDay ?? Horizon.days - 1 }
     private var total: Decimal { Horizon.total(of: charges, through: throughDay, in: currency, rates: rates) }
+    private var unconvertibleCount: Int {
+        Horizon.unconvertibleCount(charges, through: throughDay, to: currency, rates: rates)
+    }
     /// Exact charges awaiting a decision above aren't repeated row-for-row below the timeline.
     private var listedCharges: [Horizon.Charge] {
         charges.filter { !pendingKeys.contains(RenewalDecisions.key($0.subscriptionId, $0.date)) }
@@ -139,7 +157,7 @@ struct HorizonSection: View {
                     .font(.headline)
                     .foregroundStyle(Color.inkText)
             } trailing: {
-                Text(verbatim: MoneyFormat.total(total, currency, converted: Horizon.isConverted(charges, through: throughDay, to: currency),
+                Text(verbatim: MoneyFormat.total(total, currency, converted: Horizon.isConverted(charges, through: throughDay, to: currency, rates: rates),
                                                  locale: L10n.locale))
                     .font(.headline.monospacedDigit())
                     .foregroundStyle(Color.inkText)
@@ -157,6 +175,16 @@ struct HorizonSection: View {
                     .fixedSize(horizontal: false, vertical: true)
                     .padding(.top, 4)
                     .accessibilityIdentifier("notInTotal")
+            }
+
+            if unconvertibleCount > 0 {
+                Text(unconvertibleCount == 1
+                     ? L10n.string("1 charge is in a currency without an exchange rate and isn't in this total.")
+                     : L10n.string("\(unconvertibleCount) charges are in currencies without an exchange rate and aren't in this total."))
+                    .font(.footnote)
+                    .foregroundStyle(Color.inkTextMuted)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .padding(.top, 4)
             }
 
             if charges.isEmpty {
@@ -190,14 +218,25 @@ struct HorizonSection: View {
                 ForEach(Array(listedCharges.prefix(6).enumerated()), id: \.element.id) { index, charge in
                     if index > 0 { Hairline() }
                     ChargeRow(charge: charge, state: state(for: charge),
-                              dimmed: charge.dayOffset > throughDay)
+                              dimmed: charge.dayOffset > throughDay,
+                              onSelect: onSelectCharge)
                 }
                 if listedCharges.count > 6 {
                     Hairline()
-                    Text(L10n.string("And \(listedCharges.count - 6) more in Subscriptions."))
-                        .font(.subheadline)
-                        .foregroundStyle(Color.inkTextMuted)
-                        .padding(.vertical, 12)
+                    Button {
+                        Feel.selection()
+                        NotificationCenter.default.post(name: .switchToSubscriptionsTab, object: nil)
+                    } label: {
+                        HStack {
+                            Text(L10n.string("And \(listedCharges.count - 6) more in Subscriptions."))
+                                .font(.subheadline)
+                                .foregroundStyle(Color.inkTextMuted)
+                            Spacer()
+                            RowChevron()
+                        }
+                        .tapArea(.leading)
+                    }
+                    .buttonStyle(.plain)
                 } else if listedCharges.isEmpty {
                     Text("Everything due in the next month is waiting for a decision above.")
                         .font(.subheadline)
@@ -224,12 +263,17 @@ struct HorizonSection: View {
         GeometryReader { geo in
             let width = geo.size.width
             let largest = charges.compactMap { rates.convert($0.amount, from: $0.currency, to: currency) }.max() ?? 1
+            // Draw largest dots first so smaller charges on the same day remain visible on top.
+            let orderedDots = charges.sorted { lhs, rhs in
+                (rates.convert(lhs.amount, from: lhs.currency, to: currency) ?? 0)
+                    > (rates.convert(rhs.amount, from: rhs.currency, to: currency) ?? 0)
+            }
             ZStack(alignment: .leading) {
                 Rectangle().fill(Color.track).frame(height: 1)
-                if let selectedDay {
-                    Rectangle().fill(Color.inkText).frame(width: x(selectedDay, width), height: 1)
+                if let pickedDay {
+                    Rectangle().fill(Color.inkText).frame(width: x(pickedDay, width), height: 1)
                 }
-                ForEach(charges) { charge in
+                ForEach(orderedDots) { charge in
                     let amount = rates.convert(charge.amount, from: charge.currency, to: currency) ?? 0
                     let share = largest > 0 ? NSDecimalNumber(decimal: amount / largest).doubleValue : 0
                     let size = 7 + 15 * share.squareRoot()
@@ -244,9 +288,11 @@ struct HorizonSection: View {
             .frame(height: geo.size.height)
             .contentShape(Rectangle())
             .gesture(
-                DragGesture(minimumDistance: 0)
+                DragGesture(minimumDistance: 8)
                     .updating($selectedDay) { value, day, _ in
-                        let fraction = min(max(value.location.x / max(width, 1), 0), 1)
+                        guard abs(value.translation.width) >= abs(value.translation.height) else { return }
+                        let usable = max(width - 22, 1)
+                        let fraction = min(max((value.location.x - 11) / usable, 0), 1)
                         day = Int((fraction * Double(Horizon.days - 1)).rounded())
                     }
             )
@@ -257,9 +303,12 @@ struct HorizonSection: View {
         .frame(height: Layout.tapTarget)
         .accessibilityElement()
         .accessibilityLabel(Text("Total by day"))
-        .accessibilityValue(Text(verbatim: L10n.string("By \(dayText(throughDay))") + ", "
-                                 + MoneyFormat.total(total, currency, converted: Horizon.isConverted(charges, through: throughDay, to: currency),
-                                                     locale: L10n.locale)))
+        .accessibilityValue(Text(verbatim: {
+            let formatted = MoneyFormat.string(total, currency, locale: L10n.locale)
+            let isConv = Horizon.isConverted(charges, through: throughDay, to: currency, rates: rates)
+            let amountText = isConv ? L10n.string("about \(formatted)") : formatted
+            return L10n.string("By \(dayText(throughDay))") + ", " + amountText
+        }()))
         .accessibilityAdjustableAction { direction in
             let day = Horizon.stepDay(from: throughDay, forward: direction == .increment, charges: charges)
             spokenDay = day == Horizon.days - 1 ? nil : day
@@ -281,12 +330,17 @@ private struct ChargeRow: View {
     let charge: Horizon.Charge
     let state: MoneyState?
     let dimmed: Bool
+    var onSelect: ((UUID) -> Void)? = nil
     @Environment(\.dynamicTypeSize) private var typeSize
 
     var body: some View {
         Button {
             Feel.selection()
-            VerdictCenter.shared.showSubscription(charge.subscriptionId)
+            if let onSelect {
+                onSelect(charge.subscriptionId)
+            } else {
+                VerdictCenter.shared.showSubscription(charge.subscriptionId)
+            }
         } label: {
             HStack(spacing: 12) {
                 if typeSize.isAccessibilitySize {

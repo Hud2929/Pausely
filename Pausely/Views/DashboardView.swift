@@ -12,14 +12,31 @@ struct DashboardView: View {
     @ObservedObject private var pausePlanStore = PausePlanStore.shared
     @ObservedObject private var paymentManager = PaymentManager.shared
 
-    @State private var showingAdd = false
-    @State private var showingPaywall = false
-    @State private var paywallTrigger: ProFeature? = .unlimitedSubscriptions
-    @State private var showingReceipt = false
-    @State private var showingDates = false
-    @State private var showingInbox = false
-    @State private var showingScreenshotImport = false
-    @State private var showingFreePicker = false
+    private enum ActiveSheet: Identifiable {
+        case add
+        case paywall(ProFeature?)
+        case receipt
+        case dates
+        case inbox
+        case screenshotImport
+        case freePicker
+        case detail(Subscription)
+
+        var id: String {
+            switch self {
+            case .add: return "add"
+            case .paywall(let trigger): return "paywall-\(trigger?.rawValue ?? "general")"
+            case .receipt: return "receipt"
+            case .dates: return "dates"
+            case .inbox: return "inbox"
+            case .screenshotImport: return "screenshotImport"
+            case .freePicker: return "freePicker"
+            case .detail(let sub): return "detail-\(sub.id.uuidString)"
+            }
+        }
+    }
+
+    @State private var activeSheet: ActiveSheet?
     @State private var pendingPaywallFromPicker = false
     @State private var profile = OnboardingProfile.load()
     @State private var eligibleWinBack: StoreKitManager.FreeExtensionOffer?
@@ -52,9 +69,9 @@ struct DashboardView: View {
                 } else if store.listState == .couldNotLoad {
                     ListCouldNotLoad().padding(.top, 40)
                 } else if store.subscriptions.isEmpty {
-                    HomeEmpty(onAdd: { showingAdd = true },
-                              onImportScreenshots: { showingScreenshotImport = true },
-                              onFindInEmail: FeatureFlags.inboxImportEnabled ? { showingInbox = true } : nil)
+                    HomeEmpty(onAdd: { activeSheet = .add },
+                              onImportScreenshots: { activeSheet = .screenshotImport },
+                              onFindInEmail: FeatureFlags.inboxImportEnabled ? { activeSheet = .inbox } : nil)
                         .padding(.top, 40)
                 } else {
                     attention.padding(.top, 28)
@@ -64,12 +81,19 @@ struct DashboardView: View {
                         VStack(spacing: 0) { Hairline(); PausePlanCard() }
                             .padding(.top, 24)
                     }
-                    if Self.showsComingUp(hasCharges: !charges.isEmpty,
-                                          hasUndated: !Horizon.undated(store.subscriptions).isEmpty) {
-                        HorizonSection(charges: charges, notInTotal: Self.notInTotal(Horizon.undated(store.subscriptions)),
-                                       currency: currencyManager.selectedCurrency, rates: currencyManager.rates,
-                                       pendingKeys: Set(VerdictCenter.shared.pendingDecisions(rotating: pausePlanStore.activePlan).map { RenewalDecisions.key($0.subscriptionId, $0.date) }))
-                            .padding(.top, 32)
+                    if !store.activeSubscriptions.isEmpty {
+                        if Self.showsComingUp(hasCharges: !charges.isEmpty,
+                                              hasUndated: !Horizon.undated(store.subscriptions).isEmpty) {
+                            HorizonSection(charges: charges, notInTotal: Self.notInTotal(Horizon.undated(store.subscriptions)),
+                                           currency: currencyManager.selectedCurrency, rates: currencyManager.rates,
+                                           pendingKeys: Set(VerdictCenter.shared.pendingDecisions(rotating: pausePlanStore.activePlan).map { RenewalDecisions.key($0.subscriptionId, $0.date) }),
+                                           onSelectCharge: { id in
+                                               if let sub = store.subscriptions.first(where: { $0.id == id }) {
+                                                   activeSheet = .detail(sub)
+                                               }
+                                           })
+                                .padding(.top, 32)
+                        }
                     }
                     if !hasKept { keptSection.padding(.top, 28) }
                     if showPausePlan && !elevatePausePlan {
@@ -85,18 +109,33 @@ struct DashboardView: View {
         .readableScroll()
         .inkScreen()
         .refreshable { await store.fetchSubscriptions(force: true) }
-        .sheet(isPresented: $showingAdd) { SubscriptionBrowserView() }
-        .sheet(isPresented: $showingPaywall) { StoreKitUpgradeView(trigger: paywallTrigger) }
-        .sheet(isPresented: $showingReceipt) { SavingsReceiptView() }
-        .sheet(isPresented: $showingDates) { RenewalDatesSheet(subscriptions: Horizon.undated(store.subscriptions)) }
-        .sheet(isPresented: $showingInbox) { InboxImportView() }
-        .sheet(isPresented: $showingScreenshotImport) { ScreenshotImportView() }
-        .sheet(isPresented: $showingFreePicker, onDismiss: {
+        .sheet(item: $activeSheet, onDismiss: {
             guard pendingPaywallFromPicker else { return }
             pendingPaywallFromPicker = false
-            paywallTrigger = .unlimitedSubscriptions
-            showingPaywall = true
-        }) { FreeLimitPickerSheet(store: store, currencyManager: currencyManager, onSeePro: { pendingPaywallFromPicker = true }).presentationSizing(.page) }
+            activeSheet = .paywall(.unlimitedSubscriptions)
+        }) { sheet in
+            switch sheet {
+            case .add:
+                SubscriptionBrowserView()
+            case .paywall(let trigger):
+                StoreKitUpgradeView(trigger: trigger)
+            case .receipt:
+                SavingsReceiptView()
+            case .dates:
+                RenewalDatesSheet(subscriptions: Horizon.undated(store.subscriptions))
+            case .inbox:
+                InboxImportView()
+            case .screenshotImport:
+                ScreenshotImportView()
+            case .freePicker:
+                FreeLimitPickerSheet(store: store, currencyManager: currencyManager,
+                                     onSeePro: { pendingPaywallFromPicker = true })
+                    .presentationSizing(.page)
+            case .detail(let sub):
+                SubscriptionManagementView(subscription: sub)
+                    .presentationSizing(.page)
+            }
+        }
         .onAppear {
             profile = OnboardingProfile.load()
             ReviewPromptManager.shared.askAfterMoneyKept()
@@ -121,9 +160,15 @@ struct DashboardView: View {
     private var spokenTotal: String {
         let currency = currencyManager.selectedCurrency
         if showsYear {
-            return L10n.string("Your subscriptions cost about \(MoneyFormat.string(store.totalAnnualSpend, currency)) a year.")
+            let formatted = MoneyFormat.string(store.totalAnnualSpend, currency)
+            return store.totalIsConverted
+                ? L10n.string("Your subscriptions cost about \(formatted) a year.")
+                : L10n.string("Your subscriptions cost \(formatted) a year.")
         }
-        return L10n.string("Your subscriptions cost \(MoneyFormat.total(store.totalMonthlySpend, currency, converted: store.totalIsConverted)) a month.")
+        let formatted = MoneyFormat.string(store.totalMonthlySpend, currency)
+        return store.totalIsConverted
+            ? L10n.string("Your subscriptions cost about \(formatted) a month.")
+            : L10n.string("Your subscriptions cost \(formatted) a month.")
     }
 
     private var header: some View {
@@ -161,7 +206,10 @@ struct DashboardView: View {
     nonisolated static func notInTotal(_ undated: [Subscription]) -> String? {
         switch undated.count {
         case 0: return nil
-        case 1: return L10n.string("\(undated[0].name) isn't in this total: it has no renewal date.")
+        case 1:
+            return undated[0].status == .trial
+                ? L10n.string("\(undated[0].name) isn't in this total: it has no trial end date.")
+                : L10n.string("\(undated[0].name) isn't in this total: it has no renewal date.")
         default: return L10n.string("\(undated.count) subscriptions aren't in this total: they have no renewal date.")
         }
     }
@@ -175,15 +223,18 @@ struct DashboardView: View {
                 Text(showsYear ? L10n.string("Each year") : L10n.string("Each month"))
                     .lineLimit(1)
                     .minimumScaleFactor(0.7)
-                Image(systemName: "arrow.up.arrow.down").font(.caption2.weight(.semibold))
-                    .accessibilityHidden(true)
+                if !store.subscriptions.isEmpty {
+                    Image(systemName: "arrow.up.arrow.down").font(.caption2.weight(.semibold))
+                        .accessibilityHidden(true)
+                }
             }
             .font(.subheadline)
             .foregroundStyle(Color.inkTextMuted)
             .tapArea(.leading)
         }
         .buttonStyle(.plain)
-        .accessibilityHint(Text("Switches between a month and a year"))
+        .disabled(store.subscriptions.isEmpty)
+        .accessibilityHint(store.subscriptions.isEmpty ? Text(verbatim: "") : Text("Switches between a month and a year"))
         .accessibilityIdentifier("spendPeriodToggle")
     }
 
@@ -209,17 +260,27 @@ struct DashboardView: View {
 
     @ViewBuilder private var countLine: some View {
         if !store.subscriptions.isEmpty {
-            Text(L10n.string("\(store.activeSubscriptions.count) subscriptions"))
-                .font(.subheadline)
-                .foregroundStyle(Color.inkTextMuted)
-                .lineLimit(1)
-                .minimumScaleFactor(0.75)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(L10n.string("\(store.activeSubscriptions.count) subscriptions"))
+                    .font(.subheadline)
+                    .foregroundStyle(Color.inkTextMuted)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.75)
+                if store.unconvertibleCount > 0 {
+                    Text(store.unconvertibleCount == 1
+                         ? L10n.string("1 subscription is in a currency without an exchange rate and isn't in this total.")
+                         : L10n.string("\(store.unconvertibleCount) subscriptions are in currencies without an exchange rate and aren't in this total."))
+                        .font(.footnote)
+                        .foregroundStyle(Color.inkTextMuted)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+            }
         }
     }
 
     private var addButton: some View {
         let size = min(addButtonSize, 68)
-        return Button { showingAdd = true } label: {
+        return Button { activeSheet = .add } label: {
             Image(systemName: "plus")
                 .font(.title3.weight(.semibold))
                 .foregroundStyle(Color.inkText)
@@ -246,17 +307,19 @@ struct DashboardView: View {
         let undated = profile.goal == .catchTrials
             ? rawUndated.sorted { ($0.status == .trial) && ($1.status != .trial) }
             : rawUndated
-        let showReminderAsk = !NotificationManager.shared.isAuthorized && !DemoSavings.isScreenshotRun
+        let showReminderAsk = (!NotificationManager.shared.isAuthorized || NotificationManager.shared.delivery != .shown) && !DemoSavings.isScreenshotRun
 
         VStack(spacing: 0) {
             if let first = undated.first {
                 AttentionRow(state: nil, symbol: "calendar.badge.plus",
                              title: undated.count == 1
-                                ? L10n.string("When does \(first.name) renew?")
+                                ? (first.status == .trial
+                                   ? L10n.string("When does \(first.name)'s free trial end?")
+                                   : L10n.string("When does \(first.name) renew?"))
                                 : L10n.string("\(undated.count) subscriptions have no renewal date"),
                              detail: L10n.string("Add the date and Pausely will ask you before it charges."),
                              action: undated.count == 1 ? L10n.string("Add date") : L10n.string("Add dates")) {
-                    showingDates = true
+                    activeSheet = .dates
                 }
                 .accessibilityIdentifier("undatedRow")
                 Hairline()
@@ -281,12 +344,11 @@ struct DashboardView: View {
             }
 
             if let winBack = eligibleWinBack, !paymentManager.isPremium {
-                AttentionRow(state: .kept, symbol: "sparkles",
+                AttentionRow(state: nil, symbol: "sparkles",
                              title: L10n.string("Welcome back to Pausely Pro"),
                              detail: L10n.string("Try Pausely Pro again with \(winBack.days) days free — cancel anytime."),
                              action: L10n.string("Claim free")) {
-                    paywallTrigger = nil
-                    showingPaywall = true
+                    activeSheet = .paywall(nil)
                 }
                 .accessibilityIdentifier("homeWinBackRow")
                 Hairline()
@@ -298,7 +360,7 @@ struct DashboardView: View {
                 let risk = PaywallCase.waitingRisk(lines: waiting, displayCurrency: currencyManager.selectedCurrency,
                                                    proYearly: nil, proCurrency: nil, rates: currencyManager.rates)
                 let noRoom = risk.map {
-                    let y = MoneyFormat.total($0.yearlyAmount, $0.currency, converted: $0.isConverted, locale: L10n.locale, wholeUnits: true)
+                    let y = MoneyFormat.string($0.yearlyAmount, $0.currency, locale: L10n.locale, wholeUnits: true)
                     return L10n.string("About \(y) a year without reminders. Choose which \(FreeTier.subscriptionLimit) to watch, or go Pro for all.")
                 } ?? L10n.string("The free plan tracks \(FreeTier.subscriptionLimit). Choose which ones to watch, or go Pro for all.")
                 AttentionRow(state: nil, symbol: room > 0 ? "plus.circle" : "checklist",
@@ -309,7 +371,7 @@ struct DashboardView: View {
                              detail: room > 0 ? L10n.string("The free plan tracks \(FreeTier.subscriptionLimit). Choose which ones to track.") : noRoom,
                              action: room > 0 && waiting.count <= room ? L10n.string("Add") : L10n.string("Choose")) {
                     if room > 0 && waiting.count <= room { Task { await TallyImporter.importWaiting(into: store) } }
-                    else { showingFreePicker = true }
+                    else { activeSheet = .freePicker }
                 }
                 .accessibilityIdentifier("waitingRow")
                 Hairline()
@@ -330,7 +392,7 @@ struct DashboardView: View {
         let summary = SavingsSummary.current()
         Button {
             Feel.selection()
-            showingReceipt = true
+            activeSheet = .receipt
         } label: {
             if summary.isEmpty {
                 HStack(spacing: 12) {
@@ -352,10 +414,10 @@ struct DashboardView: View {
             } else {
                 PaperSlip(tornTop: true, tornBottom: false) {
                     VStack(alignment: .leading, spacing: 8) {
-                        ProofLine(label: L10n.string("Kept since you cancelled"), value: summary.total(summary.savedSoFar),
+                        ProofLine(label: L10n.string("Kept since you cancelled"), value: summary.savedSoFarText,
                                   emphasised: true)
                             .foregroundStyle(Color.paperKept)
-                        ProofLine(label: L10n.string("On track over 12 months"), value: summary.total(summary.onTrack))
+                        ProofLine(label: L10n.string("On track over 12 months"), value: summary.onTrackText)
                         if let multiple = summary.returnMultiple, summary.paysForItself {
                             Text(L10n.string("On track for \(multiple.formatted(.number.precision(.fractionLength(1)).locale(L10n.locale)))× what Pausely costs a year."))
                                 .font(.footnote)

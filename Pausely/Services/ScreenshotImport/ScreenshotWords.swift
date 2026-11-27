@@ -119,20 +119,31 @@ extension ScreenshotParser {
          "cada 4 semanas", "4週間ごと", "كل 4 أسابيع"].contains { lower.contains($0) }
     }
 
+    private static let trialDurationStripRegex = try? NSRegularExpression(
+        pattern: #"(?i)(?:\b(?:free\s+(?:for\s+)?)?\d+\s*[-]?\s*(?:days?|weeks?|wks?|months?|mos?|years?|yrs?)\s+free\b|\bfree\s+for\s+\d+\s*(?:days?|weeks?|months?|years?)\b|\b(?:free\s+)?trial\s*[:\-–]\s*\d+\s*(?:days?|weeks?|wks?|months?|mos?|years?|yrs?)\b|\b\d+\s*(?:mois\s+offerts?|monate\s+kostenlos|meses\s+gratis)\b|\d+\s*(?:か月|ヶ月|週間|日間)\s*無料)"#
+    )
+
     static func extractFrequency(in rawLower: String) -> BillingFrequency? {
+        if isEveryFourWeeks(rawLower) || isEveryTwoMonths(rawLower) { return nil }
+        // Strip trial-length phrases ("3 months free", "1 month free") so a free-trial banner never
+        // sets the paid billing frequency to quarterly or monthly.
+        let stripped = trialDurationStripRegex.map {
+            $0.stringByReplacingMatches(in: rawLower, range: NSRange(location: 0, length: (rawLower as NSString).length), withTemplate: " ")
+        } ?? rawLower
         // Normalize OCR spaces around slashes ("$19.99 / month" -> "$19.99/month").
-        let lower = rawLower.replacingOccurrences(of: #"\s*/\s*"#, with: "/", options: .regularExpression)
+        let lower = stripped.replacingOccurrences(of: #"\s*/\s*"#, with: "/", options: .regularExpression)
 
         // Check biweekly BEFORE weekly ("biweekly" contains "weekly").
-        if lower.contains("/2wk") || lower.contains("/2 weeks") || lower.contains("every 2 weeks")
+        if lower.range(of: #"/2wk(?![a-z])"#, options: .regularExpression) != nil
+            || lower.contains("/2 weeks") || lower.contains("every 2 weeks")
             || lower.contains("biweekly") || lower.contains("bi-weekly") || lower.contains("fortnightly")
             || lower.contains("alle 2 wochen") || lower.contains("toutes les 2 semaines")
             || lower.contains("cada 2 semanas") || lower.contains("2週間") || lower.contains("كل أسبوعين") {
             return .biweekly
         }
-        if lower.contains("/wk") || lower.contains("/week") || lower.contains("per week") || lower.contains("weekly")
+        if lower.range(of: #"/(?:wk|week|w)(?![a-z])"#, options: .regularExpression) != nil
+            || lower.contains("per week") || lower.contains("weekly")
             || lower.contains("every week") || lower.contains("a week")
-            || lower.range(of: #"/w(?![a-z])"#, options: .regularExpression) != nil
             || lower.contains("/woche") || lower.contains("pro woche") || lower.contains("wöchentlich")
             || lower.contains("/semaine") || lower.contains("par semaine") || lower.contains("hebdomadaire")
             || lower.contains("/semana") || lower.contains("semanal") || lower.contains("cada semana")
@@ -140,7 +151,8 @@ extension ScreenshotParser {
             || lower.contains("/أسبوع") || lower.contains("أسبوعي") || lower.contains("في الأسبوع") {
             return .weekly
         }
-        if lower.contains("/3mo") || lower.contains("/3 months") || lower.contains("every 3 months")
+        if lower.range(of: #"/3mo(?![a-z])"#, options: .regularExpression) != nil
+            || lower.contains("/3 months") || lower.contains("every 3 months")
             || lower.contains("quarterly") || lower.contains("3 months") || lower.contains("every quarter")
             || lower.contains("vierteljährlich") || lower.contains("alle 3 monate") || lower.contains("quartalsweise")
             || lower.contains("trimestriel") || lower.contains("tous les 3 mois")
@@ -150,7 +162,8 @@ extension ScreenshotParser {
             return .quarterly
         }
         // Check semiannual BEFORE yearly ("semi-annual" and "biannual" contain "annual").
-        if lower.contains("/6mo") || lower.contains("/6 months") || lower.contains("every 6 months")
+        if lower.range(of: #"/6mo(?![a-z])"#, options: .regularExpression) != nil
+            || lower.contains("/6 months") || lower.contains("every 6 months")
             || lower.contains("semiannual") || lower.contains("semi-annual") || lower.contains("biannual")
             || lower.contains("bi-annual") || lower.contains("6 months")
             || lower.contains("halbjährlich") || lower.contains("alle 6 monate")
@@ -160,24 +173,24 @@ extension ScreenshotParser {
             || lower.contains("نصف سنوي") || lower.contains("كل 6 أشهر") {
             return .semiannual
         }
-        if lower.contains("/yr") || lower.contains("/year") || lower.contains("/1 year") || lower.contains("per year")
+        if lower.range(of: #"/(?:yr|year|y|jahr|an|année|año)(?![a-zà-ÿ])"#, options: .regularExpression) != nil
+            || lower.contains("/1 year") || lower.contains("per year")
             || lower.contains("per yr") || lower.contains("yearly") || lower.contains("every year")
             || lower.contains("every 12 months") || lower.contains("per annum") || lower.contains("a year")
             || lower.contains("annual") || lower.contains("1 year")
-            || lower.range(of: #"/y(?![a-z])"#, options: .regularExpression) != nil
-            || lower.contains("/jahr") || lower.contains("pro jahr") || lower.contains("jährlich")
-            || lower.contains("/an") || lower.contains("/année") || lower.contains("par an") || lower.contains("annuel")
-            || lower.contains("/año") || lower.contains("al año") || lower.contains("por año") || lower.contains("cada año") || lower.contains("anual")
+            || lower.contains("pro jahr") || lower.contains("jährlich")
+            || lower.contains("par an") || lower.contains("annuel")
+            || lower.contains("al año") || lower.contains("por año") || lower.contains("cada año") || lower.contains("anual")
             || lower.contains("/年") || lower.contains("年額") || lower.contains("年間") || lower.contains("毎年")
             || lower.contains("/سنة") || lower.contains("في السنة") || lower.contains("سنوي") {
             return .yearly
         }
-        if lower.contains("/mo") || lower.contains("/month") || lower.contains("per month") || lower.contains("monthly")
+        if lower.range(of: #"/(?:mo|month|m|monat|mois|mes)(?![a-zà-ÿ])"#, options: .regularExpression) != nil
+            || lower.contains("per month") || lower.contains("monthly")
             || lower.contains("every month") || lower.contains("a month") || lower.contains("1 month")
-            || lower.range(of: #"/m(?![a-z])"#, options: .regularExpression) != nil
-            || lower.contains("/monat") || lower.contains("pro monat") || lower.contains("monatlich")
-            || lower.contains("/mois") || lower.contains("par mois") || lower.contains("mensuel")
-            || lower.contains("/mes") || lower.contains("al mes") || lower.contains("por mes") || lower.contains("cada mes") || lower.contains("mensual")
+            || lower.contains("pro monat") || lower.contains("monatlich")
+            || lower.contains("par mois") || lower.contains("mensuel")
+            || lower.contains("al mes") || lower.contains("por mes") || lower.contains("cada mes") || lower.contains("mensual")
             || lower.contains("/月") || lower.contains("月額") || lower.contains("毎月") || lower.contains("1か月") || lower.contains("1ヶ月")
             || lower.contains("/شهر") || lower.contains("في الشهر") || lower.contains("شهري") {
             return .monthly
@@ -195,19 +208,26 @@ extension ScreenshotParser {
             .contains(lower.trimmingCharacters(in: .whitespaces))
     }
 
-    static func containsExpiryWord(_ lower: String) -> Bool {
+    static func containsPastExpiryWord(_ lower: String) -> Bool {
         let localized = [
             "abgelaufen", "gekündigt", "beendet", "expiré", "résilié", "annulé",
             "venció", "caducó", "caducada", "expiró", "cancelada", "cancelado",
             "期限切れ", "解約済み", "キャンセル済み", "منتهي", "ملغى", "ملغاة"
         ]
         if localized.contains(where: { lower.contains($0) }) { return true }
-        return lower.range(of: #"\b(?:expired|expires|cancelled|canceled|ended)\b"#, options: .regularExpression) != nil
+        return lower.range(of: #"\b(?:expired|cancelled|canceled|ended)\b"#, options: .regularExpression) != nil
+    }
+
+    static func containsExpiryWord(_ lower: String) -> Bool {
+        if containsPastExpiryWord(lower) { return true }
+        return lower.range(of: #"\bexpires\b"#, options: .regularExpression) != nil
     }
 
     static func containsTrialWord(_ lower: String) -> Bool {
-        ["free trial", "trial ends", "essai gratuit", "kostenlose testphase", "gratiszeitraum",
-         "prueba gratis", "prueba gratuita", "無料トライアル", "無料体験", "تجربة مجانية", "فترة تجريبية"]
+        ["free trial", "trial ends", "trial expires", "offer expires", "free period expires", "free period ends",
+         "essai gratuit", "l'essai expire", "essai expire", "kostenlose testphase", "gratiszeitraum", "testphase läuft ab",
+         "prueba gratis", "prueba gratuita", "prueba vence", "無料トライアル", "無料体験",
+         "تجربة مجانية", "فترة تجريبية", "تنتهي التجربة", "ينتهي العرض"]
             .contains { lower.contains($0) }
     }
 

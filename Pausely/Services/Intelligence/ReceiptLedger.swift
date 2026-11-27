@@ -39,35 +39,43 @@ enum ReceiptLedger {
         return []
     }
 
-    static func save(_ signals: [ReceiptSignal], to url: URL? = fileURL) {
-        guard let url else { return }
+    @discardableResult
+    static func save(_ signals: [ReceiptSignal], to url: URL? = fileURL) -> Bool {
+        guard let url else { return false }
         let encoder = JSONEncoder()
         encoder.dateEncodingStrategy = .secondsSince1970
-        guard let data = try? encoder.encode(signals) else { return }
-        try? data.write(to: url, options: [.atomic, .completeFileProtection])
+        guard let data = try? encoder.encode(signals) else { return false }
+        do {
+            try data.write(to: url, options: [.atomic, .completeFileProtection])
+        } catch {
+            return false
+        }
         var values = URLResourceValues()
         values.isExcludedFromBackup = true
         var mutableURL = url
         try? mutableURL.setResourceValues(values)
+        return true
     }
 
-    /// Adds newly found facts to what is saved and returns everything known. While the saved facts
-    /// can't be read, nothing is written: saving then would replace up to three years of history with
-    /// the few facts of this scan. They are returned on their own for this scan, and the next scan
-    /// finds them again, because reading mail never uses it up.
-    static func add(_ new: [ReceiptSignal], to url: URL? = fileURL, now: Date = Date()) -> [ReceiptSignal] {
+    /// Adds newly found facts to what is saved and returns everything known along with whether the write succeeded.
+    /// While the saved facts can't be read, nothing is written: saving then would replace up to three years of history
+    /// with the few facts of this scan. Returning `saved == false` lets the scanner hold back sync cursors so the
+    /// next unlocked scan re-reads these receipts instead of skipping them forever.
+    static func addWithStatus(_ new: [ReceiptSignal], to url: URL? = fileURL, now: Date = Date()) -> (signals: [ReceiptSignal], saved: Bool) {
         switch read(from: url) {
         case .unreadable:
-            return merge(new, into: [], now: now)
+            return (merge(new, into: [], now: now), false)
         case .nothingYet:
             let all = merge(new, into: [], now: now)
-            save(all, to: url)
-            return all
+            return (all, save(all, to: url))
         case .facts(let existing):
             let all = merge(new, into: existing, now: now)
-            save(all, to: url)
-            return all
+            return (all, save(all, to: url))
         }
+    }
+
+    static func add(_ new: [ReceiptSignal], to url: URL? = fileURL, now: Date = Date()) -> [ReceiptSignal] {
+        addWithStatus(new, to: url, now: now).signals
     }
 
     /// Idempotent merge: dedupes by message id (the same receipt in two inboxes is one fact, remembering

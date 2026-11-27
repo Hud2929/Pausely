@@ -193,7 +193,8 @@ struct AnalysisView: View {
             )
         }
         .sheet(item: $loggingUsageFor) { sub in
-            UsageInputSheet(subscriptionName: sub.name, currentMinutes: usageLog.getCurrentMonthUsage(for: sub)) { minutes in
+            UsageInputSheet(subscriptionName: sub.name, currentMinutes: usageLog.getCurrentMonthUsage(for: sub),
+                            hasLoggedUsage: usageLog.getUsage(for: sub) != nil) { minutes in
                 usageLog.setMonthlyUsage(minutes: minutes, for: sub)
             }
         }
@@ -493,6 +494,14 @@ struct AnalysisView: View {
                                     Text(L10n.string("\(MoneyFormat.total(group.annualTotal, currencyManager.selectedCurrency, converted: group.isConverted, locale: L10n.locale)) a year"))
                                         .font(.footnote.monospacedDigit())
                                         .foregroundStyle(Color.inkTextFaint)
+                                    if group.unconvertibleCount > 0 {
+                                        Text(group.unconvertibleCount == 1
+                                             ? L10n.string("1 subscription is in a currency without an exchange rate and isn't in this total.")
+                                             : L10n.string("\(group.unconvertibleCount) subscriptions are in currencies without an exchange rate and aren't in this total."))
+                                            .font(.caption2)
+                                            .foregroundStyle(Color.inkTextMuted)
+                                            .fixedSize(horizontal: false, vertical: true)
+                                    }
                                 }
                             }
                             RowChevron()

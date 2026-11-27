@@ -23,9 +23,9 @@ enum ReminderActions {
     static let pausePlanStartCategory = "PAUSE_PLAN_START"
     static let openPausePlan = "OPEN_PAUSE_PLAN"
     static let markStarted = "MARK_STARTED"
-    /// Require device unlock before marking a rotated subscription started so protected local files
-    /// and Keychain session state are readable (never silently dropped pre-unlock).
-    static let markStartedOptions: UNNotificationActionOptions = [.authenticationRequired]
+    /// Require device unlock and foreground activation before marking a rotated subscription started so
+    /// protected files/Keychain are readable and Pause Plan can open if the free limit is full.
+    static let markStartedOptions: UNNotificationActionOptions = [.authenticationRequired, .foreground]
 
     /// Registered on every launch; iOS forgets categories that aren't re-registered.
     static func registerCategories(on center: UNUserNotificationCenter = .current()) {

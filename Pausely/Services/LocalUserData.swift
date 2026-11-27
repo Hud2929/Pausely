@@ -39,9 +39,10 @@ enum LocalUserData {
     /// `LocalDataGuardTests` reads the sources: a value saved under a new name has to be listed here,
     /// or in the test as a setting of the device with the reason it may outlive an account.
     static let personalKeys = [
-        ownerKey, "local_guest_mode", "last_auth_email", "lifecycle_last_run",
-        SubscriptionStore.syncedUserKey, "cached_subscriptions", "subscriptions_cache_date", "sync_queue_operations",
-        "pausely_user_corrections_v1", "pausely_pro_auto_added", "pausely_pro_grant", "pausely_pro_line_ended",
+        ownerKey, "local_guest_mode", "last_auth_email", "lifecycle_last_run", "age_gate_device_passed",
+        "auth_needs_new_password", SubscriptionStore.syncedUserKey, "cached_subscriptions",
+        "subscriptions_cache_date", "sync_queue_operations", "pausely_user_corrections_v1",
+        "pausely_pro_auto_added", "pausely_pro_grant", "pausely_pro_line_ended", "rated_cancel_difficulty_keys",
         "first_run_tally_waiting", "first_run_tally_waiting_version", "onboarding_profile_v1",
         "gmail_connected_email", "gmail_last_history_id", "mailbox_accounts_v1",
         "auth_reset_requested_at", "auth_link_requested_email", "auth_link_requested_at",
@@ -50,7 +51,7 @@ enum LocalUserData {
 
     /// Saved once per subscription, under its name (the hours a person typed in), once per account,
     /// under its id (when that person confirmed their age), and once per inbox (delta cursors).
-    static let personalKeyPrefixes = ["usage_", "age_consent_", "mailbox_cursor_"]
+    nonisolated static let personalKeyPrefixes = ["usage_", "age_consent_", "mailbox_cursor_"]
 
     static func removeSavedValues(from defaults: UserDefaults = .standard) {
         for key in personalKeys { defaults.removeObject(forKey: key) }
@@ -65,10 +66,12 @@ enum LocalUserData {
             AccountMemory.forgetName(userId: owner)
         }
         AccountMemory.forgetHeldName()
+        AuthManager.clearPendingSignupPassword()
         LifecycleEventLog.shared.removeAll()
         PausePlanStore.shared.removeAll()
         SubscriptionStore.shared.removeAllLocalData()
         CancelDifficultyService.shared.reset()
+        PendingTally.clear()
         TallyImporter.clearWaiting()
         await InboxScanner.shared.disconnectAll()
         await PaymentManager.shared.setProGrant(false)

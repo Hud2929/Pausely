@@ -24,7 +24,7 @@ struct LifecycleEventRecord: Codable, Equatable {
         let trimmed = event.subscriptionName.trimmingCharacters(in: .whitespacesAndNewlines)
         self.subscription_name = String((trimmed.isEmpty ? "Subscription" : trimmed).prefix(200))
         self.kind = event.kind.rawValue
-        self.occurred_at = event.date.iso8601String
+        self.occurred_at = event.date.iso8601FractionalString
         self.amount = max(0, event.amount)
         self.currency = String(event.currency.prefix(10))
         self.frequency = event.frequency.rawValue
@@ -112,6 +112,7 @@ final class LifecycleSync {
             if result.merged != LifecycleEventLog.shared.events {
                 LifecycleEventLog.shared.restore(result.merged)
                 WidgetDataStore.shared.publish(subscriptions: SubscriptionStore.shared.subscriptions)
+                await ReminderScheduler.shared.reschedule(SubscriptionStore.shared.subscriptions)
             }
             if !result.toUpload.isEmpty {
                 let records = result.toUpload.map { LifecycleEventRecord(from: $0, userId: userId) }

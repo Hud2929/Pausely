@@ -52,6 +52,7 @@ enum Nearness {
 /// a clock, "Nov 28" plain.
 struct DayLabel: View {
     let upcoming: WidgetFeed.Upcoming
+    var now: Date = Date()
     var font: Font = .caption.weight(.semibold)
 
     @Environment(\.locale) private var locale
@@ -63,7 +64,7 @@ struct DayLabel: View {
             if let symbol = nearness.symbol {
                 Image(systemName: symbol).accessibilityHidden(true)
             }
-            Text(verbatim: DayText.text(daysAway: upcoming.daysAway, day: upcoming.day, locale: locale))
+            Text(verbatim: DayText.text(daysAway: upcoming.daysAway, day: upcoming.day, locale: locale, now: now))
         }
         .font(font)
         .foregroundStyle(renderingMode == .fullColor ? AnyShapeStyle(nearness.color) : AnyShapeStyle(.primary))
@@ -112,21 +113,28 @@ extension WidgetFeed {
     /// kinds of subscription, not for anyone's product.
     static func sample(on today: Date = Date()) -> WidgetFeed {
         let calendar = Calendar.billing
+        let locale = Locale.current
+        let code = locale.currency?.identifier ?? "USD"
+        func money(_ value: String, whole: Bool = false) -> String {
+            let amount = Decimal(string: value) ?? 0
+            return amount.formatted(.currency(code: code).precision(.fractionLength(whole ? 0 : 2)).locale(locale)) // money-guard: sample
+        }
         func days(_ offset: Int) -> [String] {
             [calendar.dayStamp(calendar.date(byAdding: .day, value: offset, to: today) ?? today)]
         }
         var feed = WidgetFeed()
         feed.hasSubscriptions = true
+        feed.hasChargingSubscriptions = true
         feed.charges = [
-            Charge(id: UUID(), name: String(localized: "Streaming"), amountText: "$15.49", days: days(1), startsWithTrialEnd: false),      // money-guard: sample
-            Charge(id: UUID(), name: String(localized: "Music"), amountText: "$10.99", days: days(3), startsWithTrialEnd: true),            // money-guard: sample
-            Charge(id: UUID(), name: String(localized: "Cloud storage"), amountText: "$2.99", days: days(12), startsWithTrialEnd: false),   // money-guard: sample
+            Charge(id: UUID(), name: String(localized: "Streaming"), amountText: money("15.49"), days: days(1), startsWithTrialEnd: false),
+            Charge(id: UUID(), name: String(localized: "Music"), amountText: money("10.99"), days: days(3), startsWithTrialEnd: true),
+            Charge(id: UUID(), name: String(localized: "Cloud storage"), amountText: money("2.99"), days: days(12), startsWithTrialEnd: false),
         ]
-        feed.monthlyText = "$29.47"   // money-guard: sample
-        feed.yearlyText = "$354"      // money-guard: sample
-        feed.savedSoFarText = "$92.94" // money-guard: sample
+        feed.monthlyText = money("29.47")
+        feed.yearlyText = money("354", whole: true)
+        feed.savedSoFarText = money("92.94")
         feed.savedSoFarIsZero = false
-        feed.onTrackText = "$239.88"  // money-guard: sample
+        feed.onTrackText = money("239.88")
         feed.cancelledCount = 2
         return feed
     }
@@ -148,5 +156,9 @@ enum WidgetLink {
 
     static var receipt: URL? {
         URL(string: "pausely://receipt")
+    }
+
+    static var pausePlan: URL? {
+        URL(string: "pausely://pause-plan")
     }
 }

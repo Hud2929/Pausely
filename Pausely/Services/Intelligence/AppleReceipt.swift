@@ -40,7 +40,18 @@ enum AppleReceipt {
     /// "This is not a receipt. The original receipt for this purchase has been sent to the Family Organizer."
     static func isFamilyNotice(_ text: String) -> Bool {
         let lower = text.lowercased()
-        return lower.contains("this is not a receipt") || lower.contains("sent to the family organizer")
+        return lower.contains("this is not a receipt")
+            || lower.contains("sent to the family organizer")
+            || lower.contains("dies ist kein beleg")
+            || lower.contains("familienorganisator")
+            || lower.contains("ceci n'est pas un reçu")
+            || lower.contains("responsable familial")
+            || lower.contains("este no es un recibo")
+            || lower.contains("organizador familiar")
+            || lower.contains("これは領収書ではありません")
+            || lower.contains("ファミリー管理者")
+            || lower.contains("هذا ليس إيصالاً")
+            || lower.contains("منظم العائلة")
     }
 
     private static let renewsWords = [
@@ -93,13 +104,16 @@ enum AppleReceipt {
     /// "Super Duolingo (Monthly)", "iCloud+ with 200 GB (1 Month)", "Pro (Annual)".
     static func frequency(inPlan plan: String) -> BillingFrequency? {
         let lower = plan.lowercased()
+            .replacingOccurrences(of: "（", with: "(")
+            .replacingOccurrences(of: "）", with: ")")
         guard let open = lower.lastIndex(of: "("), let close = lower.lastIndex(of: ")"), open < close else { return nil }
         let period = lower[lower.index(after: open)..<close]
-        if period.contains("week") { return .weekly }
-        if period.contains("3 month") || period.contains("quarter") { return .quarterly }
-        if period.contains("6 month") { return .semiannual }
-        if period.contains("month") || period.contains("mensuel") || period.contains("monat") || period.contains("mensual") { return .monthly }
-        if period.contains("year") || period.contains("annual") || period.contains("annuel") || period.contains("jahr") || period.contains("anual") { return .yearly }
+        if period.contains("2 week") || period.contains("2 semaine") || period.contains("2 woche") || period.contains("2 semana") || period.contains("2週間") || period.contains("أسبوعين") { return .biweekly }
+        if period.contains("week") || period.contains("semaine") || period.contains("woche") || period.contains("semana") || period.contains("週") || period.contains("أسبوع") { return .weekly }
+        if period.contains("3 month") || period.contains("quarter") || period.contains("3 mois") || period.contains("trimestr") || period.contains("3 monate") || period.contains("3 mese") || period.contains("3か月") || period.contains("3ヶ月") || period.contains("3 أشهر") { return .quarterly }
+        if period.contains("6 month") || period.contains("6 mois") || period.contains("semestr") || period.contains("6 monate") || period.contains("halbjähr") || period.contains("6 mese") || period.contains("6か月") || period.contains("6ヶ月") || period.contains("半年") || period.contains("6 أشهر") { return .semiannual }
+        if period.contains("month") || period.contains("mensuel") || period.contains("mois") || period.contains("monat") || period.contains("mensual") || period.contains("mes") || period.contains("mensile") || period.contains("か月") || period.contains("ヶ月") || period.contains("月額") || period.contains("شهر") { return .monthly }
+        if period.contains("year") || period.contains("annual") || period.contains("annuel") || period.range(of: #"\ban\b"#, options: .regularExpression) != nil || period.contains("année") || period.contains("jahr") || period.contains("anual") || period.contains("año") || period.contains("annuale") || period.contains("年") || period.contains("سنة") || period.contains("سنوي") { return .yearly }
         return nil
     }
 }

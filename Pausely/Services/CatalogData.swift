@@ -122,6 +122,7 @@ enum CatalogData {
         .init("Instacart+", .shopping, "https://www.instacart.com/"),
         .init("DashPass", .food, "https://www.doordash.com/account/subscription"),
         .init("Uber Eats Pass", .food, "https://www.ubereats.com/"),
+        .init("Uber One", .food, "https://www.uber.com/"),
         .init("Grubhub+", .food, "https://www.grubhub.com/"),
         .init("HelloFresh", .food, "https://www.hellofresh.com/"),
         .init("Blue Apron", .food, "https://www.blueapron.com/account/subscription"),

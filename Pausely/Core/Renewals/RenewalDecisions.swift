@@ -59,7 +59,8 @@ enum RenewalDecisions {
                         calendar: Calendar = .billing) -> Pending? {
         guard sub.notifyBeforeDays > 0, let charge = upcomingCharge(for: sub, now: now, calendar: calendar) else { return nil }
         let days = calendar.calendarDays(from: calendar.startOfDay(for: now), to: charge.date)
-        guard days >= 0, days <= max(sub.notifyBeforeDays, 1) else { return nil }
+        let window = charge.isTrialEnd ? max(sub.notifyBeforeDays, 2) : max(sub.notifyBeforeDays, 1)
+        guard days >= 0, days <= window else { return nil }
         guard !kept.contains(key(sub.id, charge.date, calendar)) else { return nil }
         return Pending(subscriptionId: sub.id, date: charge.date, isTrialEnd: charge.isTrialEnd)
     }

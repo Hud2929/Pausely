@@ -38,20 +38,34 @@ protocol MailboxProvider: AnyObject {
     /// How many whole messages may be read at once. One for IMAP, whose single connection answers in
     /// turn; more for the web APIs, which pace themselves.
     var parallelReads: Int { get }
-    func rawMessages(_ refs: [MessageRef]) async -> [MessageRef: Data]
+    func rawMessages(_ refs: [MessageRef]) async throws -> [MessageRef: Data]
 }
 
 extension MailboxProvider {
     var parallelReads: Int { 1 }
 
-    /// Several whole messages; any that couldn't be read are left out. One after another here; the
-    /// web APIs read theirs at once.
-    func rawMessages(_ refs: [MessageRef]) async -> [MessageRef: Data] {
+    /// Several whole messages; individual unreadable messages are skipped, while auth expiry, throttling,
+    /// cancellation, or a complete batch failure are propagated so the scan never finishes silently empty.
+    func rawMessages(_ refs: [MessageRef]) async throws -> [MessageRef: Data] {
         var out: [MessageRef: Data] = [:]
+        var lastError: Error?
         for ref in refs {
-            if Task.isCancelled { break }
-            if let raw = try? await rawMessage(ref) { out[ref] = raw }
+            try Task.checkCancellation()
+            do {
+                if let raw = try await rawMessage(ref) { out[ref] = raw }
+            } catch MailboxError.authExpired {
+                throw MailboxError.authExpired
+            } catch MailboxError.throttled(let retry) {
+                throw MailboxError.throttled(retryAfter: retry)
+            } catch MailboxError.cancelled {
+                throw MailboxError.cancelled
+            } catch is CancellationError {
+                throw CancellationError()
+            } catch {
+                lastError = error
+            }
         }
+        if out.isEmpty, !refs.isEmpty, let lastError { throw lastError }
         return out
     }
 }

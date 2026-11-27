@@ -2259,6 +2259,11 @@
   "result": "ok",
   "status": 200
  },
+ "https://www.amazon.com/gp/video/settings/channels": {
+  "checked": "2026-11-27",
+  "result": "walled",
+  "status": 503
+ },
  "https://www.amazon.com/kindleunlimited": {
   "checked": "2026-11-11",
   "result": "ok",

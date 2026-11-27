@@ -13,16 +13,29 @@ struct SubscriptionBrowserView: View {
     @ObservedObject private var store = SubscriptionStore.shared
     @ObservedObject private var currencyManager = CurrencyManager.shared
 
+    private enum ActiveSheet: Identifiable {
+        case tier(CatalogEntry)
+        case custom
+        case inbox
+        case screenshotImport
+        case paywall(CatalogEntry?, reopenTier: Bool)
+
+        var id: String {
+            switch self {
+            case .tier(let entry): return "tier-\(entry.id)"
+            case .custom: return "custom"
+            case .inbox: return "inbox"
+            case .screenshotImport: return "screenshotImport"
+            case .paywall(let entry, let reopen): return "paywall-\(entry?.id ?? "none")-\(reopen)"
+            }
+        }
+    }
+
     @State private var searchText = ""
     @State private var selectedCategory: SubscriptionCategory?
-    @State private var selectedEntry: CatalogEntry?
-    @State private var showingTierSheet = false
+    @State private var activeSheet: ActiveSheet?
+    @State private var pendingSheet: ActiveSheet?
     @Environment(\.dynamicTypeSize) private var typeSize
-    @State private var showingCustomAdd = false
-    @State private var showingPaywall = false
-    @State private var pendingTierAfterUnlock = false
-    @State private var showingInbox = false
-    @State private var showingScreenshotImport = false
 
     // Popular service names shown in the featured row (shown before any filter)
     private let popularNames: [String] = [
@@ -33,15 +46,21 @@ struct SubscriptionBrowserView: View {
 
     // MARK: - Computed
 
+    private var trimmedSearch: String {
+        searchText.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
     var filteredEntries: [CatalogEntry] {
         var entries = catalogService.catalog
         if let cat = selectedCategory {
             entries = entries.filter { $0.category == cat }
         }
-        if !searchText.isEmpty {
-            let query = searchText.lowercased()
+        let query = trimmedSearch
+        if !query.isEmpty {
+            let options: String.CompareOptions = [.caseInsensitive, .diacriticInsensitive, .widthInsensitive]
             entries = entries.filter {
-                $0.name.lowercased().contains(query) || $0.category.localizedName.lowercased().contains(query)
+                $0.name.range(of: query, options: options, locale: L10n.locale) != nil
+                    || $0.category.localizedName.range(of: query, options: options, locale: L10n.locale) != nil
             }
         }
         return entries
@@ -55,13 +74,13 @@ struct SubscriptionBrowserView: View {
 
     // Show featured row only when browsing all (no search, no category filter)
     private var showFeatured: Bool {
-        searchText.isEmpty && selectedCategory == nil
+        trimmedSearch.isEmpty && selectedCategory == nil
     }
 
     /// On-device screenshot import offered in every build (including App Store releases).
     private var screenshotImportRow: some View {
         VStack(spacing: 0) {
-            Button(action: { showingScreenshotImport = true }) {
+            Button(action: { activeSheet = .screenshotImport }) {
                 HStack(spacing: 12) {
                     if !typeSize.isAccessibilitySize {
                         Image(systemName: "photo.on.rectangle.angled")
@@ -97,7 +116,7 @@ struct SubscriptionBrowserView: View {
     /// The quicker way to fill the list, offered before the catalog.
     private var findInEmailRow: some View {
         VStack(spacing: 0) {
-            Button(action: { showingInbox = true }) {
+            Button(action: { activeSheet = .inbox }) {
                 HStack(spacing: 12) {
                     // At accessibility text sizes the words take the row; the pictures step aside.
                     if !typeSize.isAccessibilitySize {
@@ -132,7 +151,7 @@ struct SubscriptionBrowserView: View {
     }
 
     private var addYourOwnButton: some View {
-        Button { showingCustomAdd = true } label: {
+        Button { activeSheet = .custom } label: {
             Text("Add your own")
                 .font(.subheadline.weight(.semibold))
                 .foregroundStyle(Color.inkText)
@@ -213,32 +232,34 @@ struct SubscriptionBrowserView: View {
         // 636 box on a 13-inch screen (the rating of 2026-11-22).
         .presentationSizing(.page)
         .navigationBarHidden(true)
-        .sheet(isPresented: $showingTierSheet) {
-            if let entry = selectedEntry {
+        .sheet(item: $activeSheet, onDismiss: {
+            if let next = pendingSheet {
+                pendingSheet = nil
+                activeSheet = next
+            }
+        }) { sheet in
+            switch sheet {
+            case .tier(let entry):
                 CatalogAddSheet(entry: entry) { frequency, amount, billingDate, trialDate, extras in
                     addSubscription(entry: entry, billingFrequency: frequency, amount: amount,
                                     nextBillingDate: billingDate, trialEndDate: trialDate, extras: extras)
                 }
-            }
-        }
-        .sheet(isPresented: $showingCustomAdd) {
-            AddSubscriptionView()
-        }
-        // "Done" after adding closes the catalog too: its outcome says the new ones are on Home, and it
-        // landed on the catalog (the rating of 2026-11-23).
-        .sheet(isPresented: $showingInbox) { InboxImportView(onFinished: { dismiss() }) }
-        .sheet(isPresented: $showingScreenshotImport) { ScreenshotImportView(onFinished: { dismiss() }) }
-        .sheet(isPresented: $showingPaywall, onDismiss: {
-            if pendingTierAfterUnlock {
-                pendingTierAfterUnlock = false
-                if selectedEntry != nil { showingTierSheet = true }
-            }
-        }) {
-            StoreKitUpgradeView(context: PaywallContext(
-                trigger: .unlimitedSubscriptions,
-                serviceName: selectedEntry?.name
-            )) {
-                pendingTierAfterUnlock = true
+            case .custom:
+                AddSubscriptionView()
+            case .inbox:
+                // "Done" after adding closes the catalog too: its outcome says the new ones are on Home.
+                InboxImportView(onFinished: { dismiss() })
+            case .screenshotImport:
+                ScreenshotImportView(onFinished: { dismiss() })
+            case .paywall(let entry, let reopenTier):
+                StoreKitUpgradeView(context: PaywallContext(
+                    trigger: .unlimitedSubscriptions,
+                    serviceName: entry?.name
+                )) {
+                    if reopenTier, let entry {
+                        pendingSheet = .tier(entry)
+                    }
+                }
             }
         }
     }
@@ -316,16 +337,16 @@ struct SubscriptionBrowserView: View {
     private var categoryPills: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 8) {
-                pill(L10n.string("All"), isOn: selectedCategory == nil) { selectedCategory = nil }
+                pill(L10n.string("All"), id: "all", isOn: selectedCategory == nil) { selectedCategory = nil }
                 ForEach(Self.offeredCategories(in: catalogService.catalog), id: \.self) { category in
-                    pill(category.localizedName, isOn: selectedCategory == category) { selectedCategory = category }
+                    pill(category.localizedName, id: category.rawValue, isOn: selectedCategory == category) { selectedCategory = category }
                 }
             }
             .padding(.horizontal, Layout.margin)
         }
     }
 
-    private func pill(_ title: String, isOn: Bool, action: @escaping () -> Void) -> some View {
+    private func pill(_ title: String, id: String, isOn: Bool, action: @escaping () -> Void) -> some View {
         Button {
             Feel.selection()
             withAnimation(Motion.unlessReduced(Motion.touch)) { action() }
@@ -341,13 +362,13 @@ struct SubscriptionBrowserView: View {
         }
         .buttonStyle(.plain)
         .accessibilityAddTraits(isOn ? [.isSelected] : [])
-        .accessibilityIdentifier("categoryPill")
+        .accessibilityIdentifier("categoryPill_\(id)")
     }
 
     private var noResultsView: some View {
         VStack(alignment: .leading, spacing: 10) {
             // The same words as the list's own search when nothing matches.
-            Text(L10n.string("Nothing matches \"\(searchText)\"."))
+            Text(L10n.string("Nothing matches \"\(trimmedSearch)\"."))
                 .font(.question(.title3))
                 .foregroundStyle(Color.inkText)
                 .fixedSize(horizontal: false, vertical: true)
@@ -355,7 +376,17 @@ struct SubscriptionBrowserView: View {
                 .font(.subheadline)
                 .foregroundStyle(Color.inkTextMuted)
                 .fixedSize(horizontal: false, vertical: true)
-            Button { showingCustomAdd = true } label: { Text("Add your own") }
+            if selectedCategory != nil {
+                Button {
+                    Feel.selection()
+                    selectedCategory = nil
+                } label: {
+                    Text("Search all categories")
+                }
+                .buttonStyle(.ink(.quiet))
+                .padding(.top, 4)
+            }
+            Button { activeSheet = .custom } label: { Text("Add your own") }
                 .buttonStyle(.ink)
                 .padding(.top, 8)
         }
@@ -363,16 +394,15 @@ struct SubscriptionBrowserView: View {
     }
 
     private func isAlreadyAdded(_ entry: CatalogEntry) -> Bool {
-        store.subscriptions.contains { $0.name.caseInsensitiveCompare(entry.name) == .orderedSame }
+        store.subscriptions.charging.contains { $0.name.caseInsensitiveCompare(entry.name) == .orderedSame }
     }
 
     /// On the free plan's limit, remember the service tapped and open Pro; on unlock, open its plan sheet directly.
     private func open(_ entry: CatalogEntry) {
-        selectedEntry = entry
         if !PaymentManager.shared.hasRoom(in: store.subscriptions) {
-            showingPaywall = true
+            activeSheet = .paywall(entry, reopenTier: true)
         } else {
-            showingTierSheet = true
+            activeSheet = .tier(entry)
         }
     }
 
@@ -382,7 +412,7 @@ struct SubscriptionBrowserView: View {
             name: entry.name,
             category: entry.category.rawValue,
             amount: amount,
-            currency: currencyManager.selectedCurrency,
+            currency: extras.currency,
             billingFrequency: billingFrequency,
             nextBillingDate: nextBillingDate,
             notifyBeforeDays: extras.reminderDays,
@@ -396,14 +426,18 @@ struct SubscriptionBrowserView: View {
             do {
                 _ = try await store.addSubscription(subscription)
             } catch SubscriptionStore.SubscriptionLimitError.freeTierLimitReached {
-                // Free plan limit reached: keep it for when there's room, as an import does, instead of dropping it.
+                // Free plan limit reached: keep it for when there's room, and hand off cleanly to Pro
+                // without reopening the tier sheet (which would duplicate the waiting entry after unlock).
                 let line = TallyLine(name: entry.name, category: entry.category.rawValue, amount: amount,
-                                     currency: currencyManager.selectedCurrency, isConfirmed: true, frequency: billingFrequency,
+                                     currency: extras.currency, isConfirmed: true, frequency: billingFrequency,
                                      anchor: nextBillingDate, trialEndsAt: trialEndDate, paymentMethod: extras.paymentMethod,
                                      notes: extras.notes, notifyBeforeDays: extras.reminderDays)
                 await TallyImporter.add([line], into: store)
-                try? await Task.sleep(nanoseconds: 400_000_000)   // let the plan sheet close first
-                showingPaywall = true
+                if activeSheet != nil {
+                    pendingSheet = .paywall(entry, reopenTier: false)
+                } else {
+                    activeSheet = .paywall(entry, reopenTier: false)
+                }
             } catch {
                 PauselyLogger.error("Catalog add failed: \(String(describing: type(of: error)))", category: "subscriptions")
             }

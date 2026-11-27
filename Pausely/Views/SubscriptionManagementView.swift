@@ -20,6 +20,7 @@ struct SubscriptionManagementView: View {
     @ScaledMetric(relativeTo: .body) private var markColumn: CGFloat = 24
     @State private var showRemoveConfirm = false
     @State private var isRemoving = false
+    @State private var isRestarting = false
 
     private enum Route: String, Identifiable {
         case edit, paywall, cancel, priceHistory, usage, verdict, receipt, pausePlan
@@ -84,8 +85,9 @@ struct SubscriptionManagementView: View {
 
     private var hero: some View {
         VStack(alignment: .leading, spacing: 8) {
-            HStack(spacing: 12) {
+            MarkedWords(alignment: .center, spacing: 12) {
                 ServiceLogoView(name: current.name, category: current.category, size: 48)
+            } words: {
                 Text(current.name)
                     .font(.question(.title))
                     .foregroundStyle(Color.inkText)
@@ -98,7 +100,7 @@ struct SubscriptionManagementView: View {
                 .foregroundStyle(Color.inkText)
                 .padding(.top, 8)
 
-            if current.currency != currencyManager.selectedCurrency,
+            if MoneyFormat.normalizedCode(current.currency) != MoneyFormat.normalizedCode(currencyManager.selectedCurrency),
                let converted = currencyManager.convertToSelected(current.amount, from: current.currency) {
                 Text("About \(MoneyFormat.string(converted, currencyManager.selectedCurrency)) in your currency")
                     .font(.footnote)
@@ -107,12 +109,15 @@ struct SubscriptionManagementView: View {
 
             LineOrStack(spacing: 8, lineSpacing: 4) { statusChip; renewalText }
 
-            if current.nextBillingDate == nil, trialEnd == nil, current.status == .active || current.status == .trial {
+            if current.nextBillingDate == nil, trialEnd == nil, expiredTrialEnd == nil,
+               current.status == .active || current.status == .trial {
                 Button { route = .edit } label: {
-                    Text("Add its renewal date").underline()
+                    Text(current.status == .trial
+                         ? L10n.string("Add when the free trial ends")
+                         : L10n.string("Add its renewal date")).underline()
                         .font(.subheadline.weight(.semibold))
                         .foregroundStyle(Color.inkText)
-                        .frame(minHeight: Layout.tapTarget, alignment: .leading)
+                        .frame(maxWidth: .infinity, minHeight: Layout.tapTarget, alignment: .leading)
                         .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
@@ -155,12 +160,22 @@ struct SubscriptionManagementView: View {
         return end
     }
 
+    /// A past trial end day still on the row before lifecycle rollover has run.
+    private var expiredTrialEnd: Date? {
+        guard current.status == .trial, let end = current.trialEndsAt,
+              Calendar.billing.startOfDay(for: end) < Calendar.billing.startOfDay(for: Date()) else { return nil }
+        return end
+    }
+
     private var renewalLine: (text: String, tint: Color)? {
         if let end = trialEnd {
             let days = Calendar.billing.calendarDays(from: Date(), to: end)
             let dateText = L10n.day(end)
             if days <= 1 { return (L10n.string("Trial ends \(L10n.relativeDay(days))"), Color.due) }
             return (L10n.breakingAfterDots(L10n.string("Trial ends \(dateText)") + " · " + L10n.whole(L10n.relativeDay(days))), Color.inkTextMuted)
+        }
+        if let ended = expiredTrialEnd {
+            return (L10n.string("Trial ended \(L10n.day(ended))"), Color.due)
         }
         guard current.status == .active || current.status == .trial,
               let date = current.calculatedNextBillingDate, let days = current.daysUntilRenewal else { return nil }
@@ -192,17 +207,20 @@ struct SubscriptionManagementView: View {
             } else if let trialEnd {
                 fact(L10n.string("Trial ends"), day(trialEnd))
                 divider
+            } else if let expiredTrialEnd {
+                fact(L10n.string("Trial ended"), day(expiredTrialEnd))
+                divider
             } else {
                 fact(L10n.string("Next renewal"), current.calculatedNextBillingDate.map(day) ?? L10n.string("Not set"))
                 divider
             }
             fact(L10n.string("Category"), SubscriptionCategory.localizedLabel(for: current.category))
             divider
-            if let method = current.paymentMethod, !method.isEmpty {
+            if let method = current.paymentMethod?.trimmingCharacters(in: .whitespacesAndNewlines), !method.isEmpty {
                 fact(L10n.string("Billed to"), method)
                 divider
             }
-            if let notes = current.notes, !notes.isEmpty {
+            if let notes = current.notes?.trimmingCharacters(in: .whitespacesAndNewlines), !notes.isEmpty {
                 VStack(alignment: .leading, spacing: 4) {
                     Text("Notes")
                         .font(.subheadline)
@@ -221,13 +239,13 @@ struct SubscriptionManagementView: View {
                 fact(L10n.string("Per year"), MoneyFormat.string(current.annualCost, current.currency))
                 divider
             }
-            fact(L10n.string("Tracking since"), current.createdAt.formatted(.dateTime.month(.abbreviated).year().locale(L10n.locale)))
+            fact(L10n.string("Tracking since"), DayText.monthYear(current.createdAt, locale: L10n.locale))
         }
         .accessibilityElement(children: .contain)
     }
 
     private func day(_ date: Date) -> String {
-        date.formatted(.dateTime.month(.abbreviated).day().year().locale(L10n.locale))
+        DayText.fullDate(date, locale: L10n.locale)
     }
 
     private func fact(_ title: String, _ value: String) -> some View {
@@ -262,7 +280,7 @@ struct SubscriptionManagementView: View {
             }
 
         } else if current.status == .cancelled,
-                  let line = SavingsSummary.current().lines.last(where: { $0.subscriptionId == current.id }) {
+                  let line = SavingsSummary.current().lines.last(where: { $0.subscriptionId == current.id && $0.endedOn == nil }) {
             VStack(spacing: 0) {
                 toolRow(icon: "doc.text", state: .kept,
                         title: L10n.string("On your Savings Receipt"),
@@ -281,7 +299,7 @@ struct SubscriptionManagementView: View {
             toolRow(icon: "chart.line.uptrend.xyaxis", title: L10n.string("Price history"), subtitle: nil) { route = .priceHistory }
 
 
-            if PausePlanSchedule.isEligible(current) {
+            if PausePlanSchedule.isEligible(current), (pausePlanStore.contains(current.id) || current.status != .cancelled) {
                 divider
                 if pausePlanStore.contains(current.id) {
                     toolRow(icon: "arrow.triangle.2.circlepath", title: L10n.string("In your Pause Plan"), subtitle: nil) { route = .pausePlan }
@@ -368,11 +386,15 @@ struct SubscriptionManagementView: View {
                 // Signed up again, or cancelled here by mistake: it charges from today, on this day of
                 // the month. On the free plan it needs a place; without one, the upgrade page says so.
                 Button {
+                    guard !isRestarting else { return }
+                    isRestarting = true
                     Task {
+                        defer { isRestarting = false }
                         if await store.startAgain(id: current.id) { Feel.selection() } else { route = .paywall }
                     }
-                } label: { Text("I'm paying for this again") }
+                } label: { Text(isRestarting ? "Saving…" : "I'm paying for this again") }
                     .buttonStyle(.ink(.quiet))
+                    .disabled(isRestarting)
                     .accessibilityIdentifier("startAgainButton")
             }
 
@@ -513,7 +535,8 @@ private struct UsageSheet: View {
         .inkScreen()
         .preferredColorScheme(.dark)
         .sheet(isPresented: $showInput) {
-            UsageInputSheet(subscriptionName: subscription.name, currentMinutes: minutes) { newMinutes in
+            UsageInputSheet(subscriptionName: subscription.name, currentMinutes: minutes,
+                            hasLoggedUsage: UsageLog.shared.getUsage(for: subscription) != nil) { newMinutes in
                 screenTimeManager.setMonthlyUsage(minutes: newMinutes, for: subscription)
             }
         }

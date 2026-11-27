@@ -106,7 +106,8 @@ final class StoreListingTests: XCTestCase {
             .union(CatalogData.entries.filter { isAPage($0.cancellationURL) }.map { $0.name.lowercased() })
         XCTAssertLessThanOrEqual(try number(#"cancellation page of \d+\+ services"#, in: text), pages.count)
 
-        XCTAssertLessThanOrEqual(try number(#"\d+\+ currencies"#, in: text), CurrencyManager.shared.allCurrencies.count)
+        XCTAssertEqual(try number(#"\d+ currencies"#, in: text), CurrencyManager.shared.allCurrencies.count)
+        XCTAssertFalse(text.contains("130+ currencies"), "exact currency count (130), not 130+")
         XCTAssertEqual(try number(#"up to \d+ subscriptions for free"#, in: text), FreeTier.subscriptionLimit)
         XCTAssertEqual(SubscriptionEditDraft.reminderOptions.filter { $0 > 0 }, [1, 3, 7], "the listing says 1, 3 or 7 days before")
 

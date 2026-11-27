@@ -85,12 +85,13 @@ extension ScreenshotParser {
         let ns = line.text as NSString
         let trimSet = CharacterSet.whitespacesAndNewlines.union(CharacterSet(charactersIn: "-–—−·•|:"))
 
+        var prefixDate: Date?
         // 1. Standard LTR layout: Name (optionally preceded by a bank date) before the earliest price.
         if price.earliestRange.location > 1 {
             var rawPrefix = ns.substring(to: price.earliestRange.location).trimmingCharacters(in: trimSet)
             // Strip trailing promo connector ("Netflix  Was $22.99 Now $15.49" -> "Netflix").
             rawPrefix = rawPrefix.replacingOccurrences(
-                of: #"(?<=\S)\s+(?:was|now|from|only|just|starting\s+at)$"#,
+                of: #"(?<=\S)\s+(?:was|now|from|only|just|starting\s+at|ab|nur|jetzt|war|statt|vorher|dès|seulement|maintenant|avant|desde|solo|ahora|antes)$"#,
                 with: "",
                 options: [.regularExpression, .caseInsensitive]
             ).trimmingCharacters(in: trimSet)
@@ -104,23 +105,28 @@ extension ScreenshotParser {
                         return RowName(name: cleaned.name, date: stripped.date, paymentMethod: cleaned.paymentMethod)
                     }
                 }
+            } else if let d = extractDateInfo(in: rawPrefix, now: now, calendar: calendar).date {
+                // 3-column RTL layout ("14 ديسمبر  49.99 ر.س.  Netflix"): prefix is purely a date, name follows price.
+                prefixDate = d
             }
         }
 
-        // 2. RTL / price-first layout (e.g. Arabic screenshot: "49.99 ر.س./شهر  Netflix").
+        // 2. RTL / price-first layout (e.g. Arabic screenshot: "49.99 ر.س./شهر  Netflix" or "14 ديسمبر  49.99 ر.س.  Netflix").
         let afterLoc = price.latestRange.location + price.latestRange.length
-        if price.earliestRange.location <= 2, afterLoc < ns.length {
+        if (price.earliestRange.location <= 2 || prefixDate != nil), afterLoc < ns.length {
             var tail = ns.substring(from: afterLoc)
             if let m = trailingFrequencyPrefix?.firstMatch(in: tail, range: NSRange(location: 0, length: (tail as NSString).length)) {
                 tail = (tail as NSString).substring(from: m.range.location + m.range.length)
             }
             tail = tail.trimmingCharacters(in: trimSet)
-            if let cleaned = cleanCandidateServiceName(tail) {
+            let strippedTail = stripLeadingDate(from: tail, now: now, calendar: calendar)
+            let rtlCandidate = strippedTail.remainder.trimmingCharacters(in: trimSet)
+            if let cleaned = cleanCandidateServiceName(rtlCandidate) {
                 let lower = cleaned.name.lowercased()
                 if !startsWithDateOrBillingKeyword(lower), !isChromeNoise(cleaned.name, lower: lower), !isRowLabel(lower) {
                     let resolved = resolveService(cleaned.name, catalog: catalog)
                     if resolved.isKnown || isPlausibleTitle(cleaned.name) {
-                        return RowName(name: cleaned.name, date: nil, paymentMethod: cleaned.paymentMethod)
+                        return RowName(name: cleaned.name, date: strippedTail.date ?? prefixDate, paymentMethod: cleaned.paymentMethod)
                     }
                 }
             }
@@ -206,12 +212,18 @@ extension ScreenshotParser {
                                nextLine: VisualLine?,
                                defaultCurrency: String,
                                inSubscriptionList: Bool,
+                               cardAlreadyHasPrice: Bool = false,
                                now: Date,
                                calendar: Calendar,
                                catalog: MerchantCatalog) -> Bool {
         if let cleaned = cleanCandidateServiceName(text) {
             let resolved = resolveService(cleaned.name, catalog: catalog)
             if resolved.isKnown, !ServiceName.same(resolved.name, serviceName) { return false }
+        }
+        // If the open card already has a price and the next line carries a new price, this line starts a new card.
+        if cardAlreadyHasPrice, let next = nextLine,
+           extractPriceAndFrequency(in: next.text, defaultCurrency: defaultCurrency).price != nil {
+            return false
         }
         let lower = text.lowercased()
         let planIndicators = [
@@ -222,7 +234,7 @@ extension ScreenshotParser {
         ]
         if planIndicators.contains(where: { lower.contains($0) }) { return true }
         if ServiceName.same(text, serviceName) { return true }
-        if inSubscriptionList, let next = nextLine {
+        if !cardAlreadyHasPrice, inSubscriptionList, let next = nextLine {
             let nextLower = next.text.lowercased()
             let nextHasPrice = extractPriceAndFrequency(in: next.text, defaultCurrency: defaultCurrency).price != nil
             let nextHasDate = extractDateInfo(in: next.text, now: now, calendar: calendar).hasKeyword

@@ -38,7 +38,9 @@ struct GapShareSlip: View {
                 Wordmark()
                 let guessMonthly = BillingFrequency.monthly.pricedShort(guessText)
                 let actualMonthly = BillingFrequency.monthly.pricedShort(monthlyText)
-                Text(L10n.string("Guessed \(guessMonthly). Actually \(actualMonthly)."))
+                Text(isApproximate
+                     ? L10n.string("Guessed \(guessMonthly). About \(actualMonthly).")
+                     : L10n.string("Guessed \(guessMonthly). Actually \(actualMonthly)."))
                     .font(.question(.title3, weight: .bold))
                     .foregroundStyle(Color.paperInk)
                     .fixedSize(horizontal: false, vertical: true)
@@ -79,6 +81,7 @@ struct GapShareSlip: View {
         .frame(width: 360)
         .padding(24)
         .background(Color.ink)
+        .environment(\.dynamicTypeSize, .large)
         .inTheAppsLanguage()
         let renderer = ImageRenderer(content: card)
         renderer.scale = 3
@@ -92,6 +95,9 @@ struct GapShareSlip: View {
 struct CancelledShareSlip: View {
     let onTrackText: String
     var totalOnTrackText: String? = nil
+    var isTrial: Bool = false
+
+    @Environment(\.layoutDirection) private var layoutDirection
 
     var body: some View {
         PaperSlip(tornTop: true, tornBottom: true) {
@@ -100,12 +106,14 @@ struct CancelledShareSlip: View {
                 Text(L10n.string("Cancelled"))
                     .font(.proof(.title3, weight: .bold))
                     .textCase(.uppercase)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.5)
                     .foregroundStyle(Color.paperInk)
                     .padding(.horizontal, 12)
                     .padding(.vertical, 6)
                     .overlay(RoundedRectangle(cornerRadius: Layout.markRadius, style: .continuous)
                         .stroke(Color.paperInk, lineWidth: 2))
-                    .rotationEffect(.degrees(-4))
+                    .rotationEffect(.degrees(layoutDirection == .rightToLeft ? 4 : -4))
                 Perforation()
                 ProofLine(label: L10n.string("On track over 12 months"), value: onTrackText, emphasised: true)
                     .foregroundStyle(Color.paperKept)
@@ -113,7 +121,9 @@ struct CancelledShareSlip: View {
                     ProofLine(label: L10n.string("Total Savings Receipt"), value: totalOnTrackText)
                         .foregroundStyle(Color.paperMuted)
                 }
-                Text("1 subscription cancelled before its next renewal.")
+                Text(isTrial
+                     ? L10n.string("1 free trial cancelled before it charged.")
+                     : L10n.string("1 subscription cancelled before its next renewal."))
                     .font(.proof(.footnote))
                     .foregroundStyle(Color.paperMuted)
                     .fixedSize(horizontal: false, vertical: true)
@@ -123,11 +133,12 @@ struct CancelledShareSlip: View {
     }
 
     @MainActor
-    static func image(onTrackText: String, totalOnTrackText: String? = nil) -> Image? {
-        let card = CancelledShareSlip(onTrackText: onTrackText, totalOnTrackText: totalOnTrackText)
+    static func image(onTrackText: String, totalOnTrackText: String? = nil, isTrial: Bool = false) -> Image? {
+        let card = CancelledShareSlip(onTrackText: onTrackText, totalOnTrackText: totalOnTrackText, isTrial: isTrial)
             .frame(width: 360)
             .padding(24)
             .background(Color.ink)
+            .environment(\.dynamicTypeSize, .large)
             .inTheAppsLanguage()
         let renderer = ImageRenderer(content: card)
         renderer.scale = 3
@@ -142,16 +153,23 @@ struct ShareCancelledButton: View {
     var identifier: String = "shareCancelledSavingsButton"
 
     @ObservedObject private var eventLog = LifecycleEventLog.shared
+    @ObservedObject private var currencyManager = CurrencyManager.shared
+    @ObservedObject private var store = SubscriptionStore.shared
     @State private var image: Image?
 
-    private var shareTotals: (line: String, cumulative: String?)? {
+    private var shareTotals: (line: String, cumulative: String?, isTrial: Bool)? {
         let summary = SavingsSummary.current()
         guard let line = summary.lines.last(where: {
-            $0.subscriptionId == subscriptionId && !$0.avoidedCharges.isEmpty
+            $0.subscriptionId == subscriptionId && $0.endedOn == nil && !$0.avoidedCharges.isEmpty
         }) else { return nil }
         let lineText = MoneyFormat.string(line.onTrack, line.currency)
-        let cumulative = summary.lines.count > 1 ? summary.total(summary.onTrack) : nil
-        return (lineText, cumulative)
+        let cumulative = (summary.lines.count > 1 && summary.excludedUnconvertibleCount == 0 && summary.onTrack > 0) ? summary.onTrackText : nil
+        let isTrial: Bool = {
+            guard let sub = store.subscriptions.first(where: { $0.id == subscriptionId }),
+                  let end = sub.trialEndsAt else { return false }
+            return Calendar.billing.startOfDay(for: end) >= Calendar.billing.startOfDay(for: line.cancelledOn)
+        }()
+        return (lineText, cumulative, isTrial)
     }
 
     var body: some View {
@@ -166,8 +184,10 @@ struct ShareCancelledButton: View {
                 .accessibilityIdentifier(identifier)
             }
         }
-        .task(id: "\(subscriptionId.uuidString)|\(eventLog.events.count)") {
-            image = shareTotals.flatMap { CancelledShareSlip.image(onTrackText: $0.line, totalOnTrackText: $0.cumulative) }
+        .task(id: "\(subscriptionId.uuidString)|\(eventLog.events.count)|\(currencyManager.selectedCurrency)|\(currencyManager.ratesDate.timeIntervalSince1970)|\(L10n.locale.identifier)") {
+            image = shareTotals.flatMap {
+                CancelledShareSlip.image(onTrackText: $0.line, totalOnTrackText: $0.cumulative, isTrial: $0.isTrial)
+            }
         }
     }
 }

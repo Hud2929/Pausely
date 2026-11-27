@@ -68,11 +68,20 @@ enum TallyCatalog {
         MoneyFormat.normalizedCode(currency) == "USD" ? services : services.filter { !$0.usOnly }
     }
 
-    /// The price for a service by name (any case), for the plan sheet's suggestion.
+    /// The price for a service by name (any case, plus known rebrand aliases), for the plan sheet's suggestion.
     static func price(forServiceNamed name: String, payingIn currency: String) -> Decimal? {
-        let key = name.trimmingCharacters(in: .whitespaces).lowercased()
+        let raw = name.trimmingCharacters(in: .whitespaces).lowercased()
+        let key = aliases[raw] ?? raw
         return services.first { $0.name.lowercased() == key }?.prices[MoneyFormat.normalizedCode(currency)]
     }
+
+    private static let aliases: [String: String] = [
+        "apple tv+": "apple tv",
+        "apple tv plus": "apple tv",
+        "max": "hbo max",
+        "uberone": "uber one",
+        "uber eats pass": "uber one",
+    ]
 
     private static func priced(_ name: String, _ category: SubscriptionCategory, usd: String? = nil, cad: String? = nil,
                                gbp: String? = nil, eur: String? = nil, aud: String? = nil,
@@ -206,6 +215,7 @@ struct Tally: Codable, Equatable {
     mutating func toggle(_ service: TallyService, amount: Decimal? = nil, confirmed: Bool = false) {
         if let index = lines.firstIndex(where: { $0.name == service.name }) {
             lines.remove(at: index)
+            preferredNames.remove(service.name)
             return
         }
         guard let price = amount ?? Tally.typicalAmount(service, payingIn: currency), price >= 0 else { return }
@@ -436,16 +446,26 @@ enum TallyImporter {
             var updated = existing
             var filledDate = false
             var changedPrice = false
-            let samePeriod = existing.billingFrequency == (line.frequency ?? .monthly)
+            let lineFrequency = line.frequency ?? existing.billingFrequency
+            let samePeriod = existing.billingFrequency == lineFrequency
             if existing.nextBillingDate == nil, let anchor = line.anchor, samePeriod {
                 updated.nextBillingDate = anchor
                 filledDate = true
             }
-            if updatePriceChanges, samePeriod,
-               MoneyFormat.normalizedCode(existing.currency) == MoneyFormat.normalizedCode(line.currency),
-               line.amount > 0, abs(existing.amount - line.amount) >= Decimal(string: "0.01")! {
-                updated.amount = line.amount
-                changedPrice = true
+            if updatePriceChanges, line.amount > 0 {
+                let existingCurrency = MoneyFormat.normalizedCode(existing.currency)
+                let newCurrency = MoneyFormat.normalizedCode(line.currency)
+                let amountChanged = AmountText.rounded(existing.amount, currency: existing.currency)
+                    != AmountText.rounded(line.amount, currency: line.currency)
+                if amountChanged || existingCurrency != newCurrency || !samePeriod {
+                    updated.amount = line.amount
+                    updated.currency = line.currency
+                    updated.billingFrequency = lineFrequency
+                    if let anchor = line.anchor, !samePeriod {
+                        updated.nextBillingDate = anchor
+                    }
+                    changedPrice = true
+                }
             }
             if filledDate || changedPrice {
                 await store.updateSubscription(updated)
@@ -500,13 +520,15 @@ extension TallyImporter {
     static func applyChoice(selectedNames: Set<String>, into store: SubscriptionStore,
                             payments: PaymentManager = .shared,
                             defaults: UserDefaults = .standard) async {
-        let wanted = Set(selectedNames.map { $0.lowercased() })
+        let isSelected: (String) -> Bool = { name in
+            selectedNames.contains { ServiceName.same($0, name) }
+        }
         let active = store.subscriptions.charging
         let waiting = waitingLines(defaults: defaults)
 
         var newWaiting: [TallyLine] = []
         // Demote active subscriptions the user chose to swap out, preserving their id and fields.
-        for sub in active where !wanted.contains(sub.name.lowercased()) {
+        for sub in active where !isSelected(sub.name) {
             newWaiting.append(TallyLine(
                 name: sub.name,
                 category: sub.category ?? SubscriptionCategory.other.rawValue,
@@ -527,7 +549,7 @@ extension TallyImporter {
         // Split waiting items into chosen vs still waiting.
         var toPromote: [TallyLine] = []
         for line in waiting {
-            if wanted.contains(line.name.lowercased()) {
+            if isSelected(line.name) {
                 toPromote.append(line)
             } else {
                 newWaiting.append(line)
@@ -541,8 +563,9 @@ extension TallyImporter {
         // Merge any items that couldn't fit with the newly deselected ones.
         let combined = waitingLines(defaults: defaults) + newWaiting
         var deduped: [TallyLine] = []
-        var seen = Set(store.subscriptions.charging.map { $0.name.lowercased() })
-        for line in combined where seen.insert(line.name.lowercased()).inserted {
+        var seenNames = store.subscriptions.charging.map(\.name)
+        for line in combined where !seenNames.contains(where: { ServiceName.same($0, line.name) }) {
+            seenNames.append(line.name)
             deduped.append(line)
         }
         saveWaiting(deduped, defaults: defaults)

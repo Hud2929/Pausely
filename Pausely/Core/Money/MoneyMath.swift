@@ -45,9 +45,13 @@ extension Collection where Element == Subscription {
     /// True when adding these up in `currency` means converting at least one of them at an exchange
     /// rate. A total like that is an estimate, and every place that shows one marks it "≈"
     /// (`MoneyFormat.total`).
-    func isConverted(to currency: String = CurrencyManager.shared.selectedCurrency) -> Bool {
+    func isConverted(to currency: String = CurrencyManager.shared.selectedCurrency,
+                     rates: CurrencyRates = CurrencyManager.shared.rates) -> Bool {
         let display = MoneyFormat.normalizedCode(currency)
-        return contains { MoneyFormat.normalizedCode($0.currency) != display }
+        return contains {
+            MoneyFormat.normalizedCode($0.currency) != display
+                && rates.convert(1, from: $0.currency, to: currency) != nil
+        }
     }
 }
 

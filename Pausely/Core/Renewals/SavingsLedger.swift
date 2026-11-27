@@ -40,7 +40,7 @@ enum SavingsLedger {
         var lines: [Line] = []
         for (_, history) in bySubscription {
             var open: LifecycleEvent?
-            for event in history.sorted(by: { $0.date < $1.date }) {
+            for event in history.sorted(by: Self.chronologicalOrder) {
                 switch event.kind {
                 case .cancelled where open == nil:
                     open = event
@@ -49,7 +49,7 @@ enum SavingsLedger {
                         // On again before any charge it avoided came due: nothing was kept, so there is no
                         // line ("$0.00 … Started again" stayed on the receipt, the rating of 2026-11-23).
                         let closed = line(for: cancel, endedOn: event.date, now: now, calendar: calendar)
-                        if !closed.avoidedCharges.isEmpty { lines.append(closed) }
+                        if !closed.avoidedCharges.isEmpty && closed.amountPerCharge > 0 { lines.append(closed) }
                         open = nil
                     }
                 default:
@@ -60,7 +60,7 @@ enum SavingsLedger {
             // rather than "0 of 0" and "Kept $0.00" (the rating of 2026-11-23).
             if let cancel = open {
                 let current = line(for: cancel, endedOn: nil, now: now, calendar: calendar)
-                if !current.avoidedCharges.isEmpty { lines.append(current) }
+                if !current.avoidedCharges.isEmpty && current.amountPerCharge > 0 { lines.append(current) }
             }
         }
         return lines.sorted { ($0.cancelledOn, $0.id.uuidString) < ($1.cancelledOn, $1.id.uuidString) }
@@ -90,11 +90,27 @@ enum SavingsLedger {
         )
     }
 
+    /// Deterministic order when two events share the exact same timestamp: `.cancelled` precedes
+    /// `.reactivated` so a same-second cancel+restart closes cleanly rather than staying open.
+    private static func chronologicalOrder(_ lhs: LifecycleEvent, _ rhs: LifecycleEvent) -> Bool {
+        if lhs.date != rhs.date { return lhs.date < rhs.date }
+        let rank: (LifecycleEvent.Kind) -> Int = { kind in
+            switch kind {
+            case .cancelled: return 0
+            case .reactivated: return 1
+            default: return 2
+            }
+        }
+        let lRank = rank(lhs.kind), rRank = rank(rhs.kind)
+        if lRank != rRank { return lRank < rRank }
+        return lhs.id.uuidString < rhs.id.uuidString
+    }
+
     /// Subscriptions cancelled with no renewal day to count from, and still cancelled: they have no line, and the
     /// receipt names them instead of saying it starts with a first cancellation (the rating of 2026-11-23).
     static func uncounted(from events: [LifecycleEvent], excluding: Set<UUID> = []) -> [String] {
         Dictionary(grouping: events.filter { !excluding.contains($0.subscriptionId) }, by: \.subscriptionId).values.compactMap { history in
-            guard let last = history.filter({ $0.kind == .cancelled || $0.kind == .reactivated }).max(by: { $0.date < $1.date }),
+            guard let last = history.filter({ $0.kind == .cancelled || $0.kind == .reactivated }).max(by: Self.chronologicalOrder),
                   last.kind == .cancelled, last.anchorDate == nil, last.renewalDate == nil,
                   last.subscriptionName.caseInsensitiveCompare(PaymentManager.ownName) != .orderedSame else { return nil }
             return last.subscriptionName

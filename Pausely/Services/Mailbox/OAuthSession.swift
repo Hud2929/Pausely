@@ -101,11 +101,16 @@ enum OAuthSession {
 
     // MARK: - Token storage
 
-    static func store(_ tokens: Tokens, for accountID: String) {
+    @discardableResult
+    static func store(_ tokens: Tokens, for accountID: String) -> Bool {
+        var saved = false
         if let data = try? JSONEncoder().encode(tokens), let text = String(data: data, encoding: .utf8) {
-            MailboxAccountStore.setSecret(text, .accessToken, for: accountID)
+            saved = MailboxAccountStore.setSecret(text, .accessToken, for: accountID)
         }
-        if let refresh = tokens.refreshToken { MailboxAccountStore.setSecret(refresh, .refreshToken, for: accountID) }
+        if let refresh = tokens.refreshToken {
+            saved = MailboxAccountStore.setSecret(refresh, .refreshToken, for: accountID) && saved
+        }
+        return saved
     }
 
     static func load(for accountID: String) -> Tokens? {
@@ -170,32 +175,55 @@ enum OAuthSession {
 
     @MainActor
     private static func present(url: URL, callbackScheme: String) async throws -> URL {
-        try await withCheckedThrowingContinuation { continuation in
-            let anchor = PresentationAnchor()
-            let session = ASWebAuthenticationSession(url: url, callbackURLScheme: callbackScheme) { callback, error in
-                _ = anchor  // keep the anchor alive until the session ends
-                if let error {
-                    let cancelled = (error as NSError).code == ASWebAuthenticationSessionError.canceledLogin.rawValue
-                    continuation.resume(throwing: cancelled ? MailboxError.cancelled : MailboxError.authFailed(error.localizedDescription))
-                } else if let callback {
-                    continuation.resume(returning: callback)
-                } else {
-                    continuation.resume(throwing: MailboxError.authFailed(L10n.string("No response from the sign-in page.")))
+        let holder = SessionHolder()
+        return try await withTaskCancellationHandler {
+            try await withCheckedThrowingContinuation { continuation in
+                let once = ResumeOnce()
+                let anchor = PresentationAnchor()
+                let session = ASWebAuthenticationSession(url: url, callbackURLScheme: callbackScheme) { callback, error in
+                    holder.clear()
+                    _ = anchor
+                    guard once.claim() else { return }
+                    if let error {
+                        let cancelled = (error as NSError).code == ASWebAuthenticationSessionError.canceledLogin.rawValue
+                        continuation.resume(throwing: cancelled ? MailboxError.cancelled : MailboxError.authFailed(error.localizedDescription))
+                    } else if let callback {
+                        continuation.resume(returning: callback)
+                    } else {
+                        continuation.resume(throwing: MailboxError.authFailed(L10n.string("No response from the sign-in page.")))
+                    }
+                }
+                holder.session = session
+                session.presentationContextProvider = anchor
+                session.prefersEphemeralWebBrowserSession = false
+                if !session.start() {
+                    holder.clear()
+                    if once.claim() {
+                        continuation.resume(throwing: MailboxError.authFailed(L10n.string("Couldn't open the sign-in page.")))
+                    }
                 }
             }
-            session.presentationContextProvider = anchor
-            session.prefersEphemeralWebBrowserSession = false
-            if !session.start() {
-                continuation.resume(throwing: MailboxError.authFailed(L10n.string("Couldn't open the sign-in page.")))
-            }
+        } onCancel: {
+            Task { @MainActor in holder.cancel() }
         }
+    }
+
+    @MainActor
+    private final class SessionHolder {
+        var session: ASWebAuthenticationSession?
+        func cancel() { session?.cancel(); session = nil }
+        func clear() { session = nil }
     }
 
     private final class PresentationAnchor: NSObject, ASWebAuthenticationPresentationContextProviding {
         func presentationAnchor(for session: ASWebAuthenticationSession) -> ASPresentationAnchor {
-            let scene = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }
-                .first { $0.activationState == .foregroundActive }
-            return scene?.windows.first { $0.isKeyWindow } ?? ASPresentationAnchor()
+            let scenes = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }
+            let active = scenes.first { $0.activationState == .foregroundActive }
+                ?? scenes.first { $0.activationState == .foregroundInactive }
+                ?? scenes.first
+            return active?.windows.first { $0.isKeyWindow }
+                ?? active?.windows.first
+                ?? ASPresentationAnchor()
         }
     }
 }

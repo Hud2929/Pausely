@@ -15,6 +15,8 @@ struct SubscriptionSyncMerge {
     var backfill: [Subscription] = []
     /// Local-only guest rows matched by `ServiceName.same` to an existing server subscription on first sync.
     var supersededLocalIDs: [UUID] = []
+    /// Mapping from superseded local guest subscription IDs to their matching server subscription IDs.
+    var remappedLocalIDs: [UUID: UUID] = [:]
 
     /// - Parameters:
     ///   - server: the signed-in person's rows, newest first.
@@ -42,6 +44,7 @@ struct SubscriptionSyncMerge {
                 if firstSyncForUser,
                    let match = liveServer.first(where: { ServiceName.same($0.name, item.name) && matchedGuestByServerID[$0.id] == nil }) {
                     result.supersededLocalIDs.append(item.id)
+                    result.remappedLocalIDs[item.id] = match.id
                     matchedGuestByServerID[match.id] = item
                     continue
                 }

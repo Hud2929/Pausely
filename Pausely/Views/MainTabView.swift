@@ -54,21 +54,21 @@ struct MainTabView: View {
         .tint(Color.inkText)
         .notice($subscriptionStore.lastErrorMessage)
         .onReceive(NotificationCenter.default.publisher(for: .switchToProfileTab)) { _ in
-            withAnimation { selectedTab = 3 }
+            withAnimation(Motion.unlessReduced(Motion.touch)) { selectedTab = 3 }
         }
         .onReceive(NotificationCenter.default.publisher(for: .switchToAnalysisTab)) { _ in
-            withAnimation { selectedTab = 2 }
+            withAnimation(Motion.unlessReduced(Motion.touch)) { selectedTab = 2 }
         }
-        // A tap on a widget, a Spotlight result or a link asked for one subscription. It may have come
-        // before this screen existed (a tap that started the app), so the request is read on arrival too.
-        .onChange(of: verdictCenter.subscriptionToShow, initial: true) { _, request in
-            guard let request else { return }
-            verdictCenter.subscriptionToShow = nil
-            guard let subscription = subscriptionStore.subscriptions.first(where: { $0.id == request.subscriptionId }) else { return }
-            withAnimation {
-                selectedTab = 1
-                deepLinkedSubscription = subscription
-            }
+        .onReceive(NotificationCenter.default.publisher(for: .switchToSubscriptionsTab)) { _ in
+            withAnimation(Motion.unlessReduced(Motion.touch)) { selectedTab = 1 }
+        }
+        // A tap on a widget, a Spotlight result or a link asked for one subscription. Keep it pending
+        // until the list finishes loading/fetching instead of dropping cold-launch requests.
+        .onChange(of: verdictCenter.subscriptionToShow, initial: true) { _, _ in
+            resolvePendingSubscriptionToShow()
+        }
+        .onChange(of: subscriptionStore.subscriptions) { _, _ in
+            resolvePendingSubscriptionToShow()
         }
         .task(id: authManager.currentUser?.id) {
             // Unit tests host the app process without driving its screens; never let the live tab
@@ -82,23 +82,27 @@ struct MainTabView: View {
             await subscriptionStore.fetchSubscriptions()
             await LifecycleSync.shared.sync()
             await PausePlanSync.shared.sync()
+            resolvePendingSubscriptionToShow(dropIfMissing: true)
             // The slip made before the account existed joins the list once it has loaded.
             let hadPendingTally = PendingTally.load() != nil
             await TallyImporter.importPending(into: subscriptionStore)
             // If Pro was started during RevealStep while the store was hidden, add Pausely's own
             // trial line now so its Day-5 reminder is scheduled immediately on Home.
             await PaymentManager.shared.autoAddPauselyProIfNeeded()
-            // Present the quick 3-question curation + personalized Day 1–7 trial plan once right after
-            // onboarding finishes (including users who tapped "None of these", never during UI tests/screenshots).
+            // Present the quick 3-question curation (plus Day 1–7 trial plan for Free users) once right
+            // after onboarding finishes — including users who upgraded on RevealStep so they still set
+            // their focus & reminder lead time.
             let shouldPresentPlan = hadPendingTally || pendingFirstRunPlan
             if shouldPresentPlan {
                 pendingFirstRunPlan = false
             }
-            if shouldPresentPlan, !hasSeenFirstRunPaywall, !paymentManager.isPremium,
+            if shouldPresentPlan, !hasSeenFirstRunPaywall,
                !LaunchFlag.uiTesting.isSet, !LaunchFlag.demoMode.isSet, !LaunchFlag.screenshots.isSet {
-                await StoreKitManager.shared.loadProducts()
+                if !paymentManager.isPremium {
+                    await StoreKitManager.shared.loadProducts()
+                }
                 try? await Task.sleep(for: .milliseconds(350))
-                if !Task.isCancelled, !paymentManager.isPremium {
+                if !Task.isCancelled {
                     hasSeenFirstRunPaywall = true
                     showingFirstRunPaywall = true
                 }
@@ -121,11 +125,25 @@ struct MainTabView: View {
         }
         .whatsNewSheet()
     }
+
+    private func resolvePendingSubscriptionToShow(dropIfMissing: Bool = false) {
+        guard let request = verdictCenter.subscriptionToShow else { return }
+        if let subscription = subscriptionStore.subscriptions.first(where: { $0.id == request.subscriptionId }) {
+            verdictCenter.subscriptionToShow = nil
+            withAnimation(Motion.unlessReduced(Motion.touch)) {
+                selectedTab = 1
+                deepLinkedSubscription = subscription
+            }
+        } else if dropIfMissing {
+            verdictCenter.subscriptionToShow = nil
+        }
+    }
 }
 
 extension Notification.Name {
     static let switchToProfileTab = Notification.Name("switchToProfileTab")
     static let switchToAnalysisTab = Notification.Name("switchToAnalysisTab")
+    static let switchToSubscriptionsTab = Notification.Name("switchToSubscriptionsTab")
     static let openSignUpDoor = Notification.Name("openSignUpDoor")
     static let openSignInSheet = Notification.Name("openSignInSheet")
 }

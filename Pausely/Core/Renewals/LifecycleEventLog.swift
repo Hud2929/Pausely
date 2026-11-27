@@ -119,6 +119,24 @@ final class LifecycleEventLog: ObservableObject {
         events = saved
     }
 
+    /// Rewrites local guest subscription IDs to their matched cloud IDs on first-sync dedup.
+    func remapSubscriptionIDs(_ map: [UUID: UUID]) {
+        guard !map.isEmpty else { return }
+        var changed = false
+        events = events.map { event in
+            guard let target = map[event.subscriptionId] else { return event }
+            changed = true
+            return LifecycleEvent(
+                id: event.id, kind: event.kind, subscriptionId: target,
+                subscriptionName: event.subscriptionName, date: event.date,
+                amount: event.amount, currency: event.currency, frequency: event.frequency,
+                previousAmount: event.previousAmount, renewalDate: event.renewalDate,
+                anchorDate: event.anchorDate
+            )
+        }
+        if changed { save() }
+    }
+
     /// Wipes the log (used when the user deletes their account or data).
     func removeAll() {
         restore([])

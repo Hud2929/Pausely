@@ -12,6 +12,7 @@ struct InboxOutcome: View {
     var waiting: [TallyLine] = TallyImporter.waitingLines()
     let onDone: () -> Void
     let onSeePro: () -> Void
+    @ObservedObject private var currencyManager = CurrencyManager.shared
 
     var body: some View {
         VStack(alignment: .leading, spacing: 20) {
@@ -73,8 +74,8 @@ struct InboxOutcome: View {
 
     /// What was added comes to, what waits for room, and the list with them, in the display currency.
     private var slip: some View {
-        let currency = CurrencyManager.shared.selectedCurrency
-        let rates = CurrencyManager.shared.rates
+        let currency = currencyManager.selectedCurrency
+        let rates = currencyManager.rates
         let charging = list.charging
         let added = charging.filter { sub in outcome.added.contains { ServiceName.same($0, sub.name) } }
         let waitingMonthly = MoneyMath.total(waiting, in: currency, rates: rates, amount: { $0.yearlyCost / 12 }, currencyOf: \.currency)

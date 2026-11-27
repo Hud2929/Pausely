@@ -161,7 +161,7 @@ struct SignUpView: View {
 
                     VStack(alignment: .leading, spacing: 16) {
                         LabelledField(label: "Email") {
-                            InkTextField(placeholder: "", text: $email, keyboardType: .emailAddress, autocapitalization: .never)
+                            InkTextField(placeholder: "", text: $email, keyboardType: .emailAddress, autocapitalization: .never, leftToRight: true)
                                 .textContentType(.username)
                                 .autocorrectionDisabled()
                                 .focused($focus, equals: .email)
@@ -171,7 +171,7 @@ struct SignUpView: View {
                                 .accessibilityIdentifier("emailTextField")
                         }
                         LabelledField(label: "Password") {
-                            InkTextField(placeholder: "", text: $password, isSecure: true)
+                            InkTextField(placeholder: "", text: $password, isSecure: true, leftToRight: true)
                                 .textContentType(.newPassword)
                                 .focused($focus, equals: .password)
                                 .submitLabel(.go)
@@ -196,22 +196,39 @@ struct SignUpView: View {
                         OrDivider()
 
                         AppleButton(kind: .signUp, identifier: "appleSignUpButton", onResult: finishApple)
+                            .disabled(isLoading)
                     }
 
-                    Text("By creating an account you agree to the [Terms of Service](pausely-legal:terms) and the [Privacy Policy](pausely-legal:privacy).")
-                        .font(.footnote)
-                        .foregroundStyle(Color.inkTextFaint)
-                        .tint(Color.inkTextMuted)
-                        .fixedSize(horizontal: false, vertical: true)
-                        .environment(\.openURL, OpenURLAction { url in
-                            legal = url.absoluteString.hasSuffix("privacy") ? .privacy : .terms
-                            return .handled
-                        })
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text("By creating an account you agree to our Terms of Service and Privacy Policy.")
+                            .font(.footnote)
+                            .foregroundStyle(Color.inkTextFaint)
+                            .fixedSize(horizontal: false, vertical: true)
+                        LineOrStack(spacing: 16, lineSpacing: 4) {
+                            Button { legal = .terms } label: {
+                                Text("Terms of Service")
+                                    .underline()
+                                    .font(.footnote.weight(.medium))
+                                    .foregroundStyle(Color.inkTextMuted)
+                                    .tapArea(.leading)
+                            }
+                            .buttonStyle(.plain)
+                            Button { legal = .privacy } label: {
+                                Text("Privacy Policy")
+                                    .underline()
+                                    .font(.footnote.weight(.medium))
+                                    .foregroundStyle(Color.inkTextMuted)
+                                    .tapArea(.leading)
+                            }
+                            .buttonStyle(.plain)
+                        }
+                    }
                 }
                 .padding(.horizontal, Layout.margin)
                 .padding(.top, 16)
                 .padding(.bottom, 24)
             }
+            .readableScroll()
             .scrollDismissesKeyboard(.interactively)
             .background(Color.ink.ignoresSafeArea())
             .navigationBarTitleDisplayMode(.inline)
@@ -314,7 +331,7 @@ struct SignInView: View {
 
                     VStack(alignment: .leading, spacing: 16) {
                         LabelledField(label: "Email") {
-                            InkTextField(placeholder: "", text: $email, keyboardType: .emailAddress, autocapitalization: .never)
+                            InkTextField(placeholder: "", text: $email, keyboardType: .emailAddress, autocapitalization: .never, leftToRight: true)
                                 .textContentType(.username)
                                 .autocorrectionDisabled()
                                 .focused($focus, equals: .email)
@@ -324,7 +341,7 @@ struct SignInView: View {
                                 .accessibilityIdentifier("signInEmailTextField")
                         }
                         LabelledField(label: "Password") {
-                            InkTextField(placeholder: "", text: $password, isSecure: true)
+                            InkTextField(placeholder: "", text: $password, isSecure: true, leftToRight: true)
                                 .textContentType(.password)
                                 .focused($focus, equals: .password)
                                 .submitLabel(.go)
@@ -356,12 +373,14 @@ struct SignInView: View {
                         OrDivider()
 
                         AppleButton(kind: .signIn, identifier: "appleSignInButton", onResult: finishApple)
+                            .disabled(isLoading)
                     }
                 }
                 .padding(.horizontal, Layout.margin)
                 .padding(.top, 16)
                 .padding(.bottom, 24)
             }
+            .readableScroll()
             .scrollDismissesKeyboard(.interactively)
             .background(Color.ink.ignoresSafeArea())
             .navigationBarTitleDisplayMode(.inline)

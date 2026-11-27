@@ -133,8 +133,8 @@ enum ShortcutAnswers {
                      subscription.status.displayName]
         if subscription.renewsAutomatically {
             if let charge = RenewalDecisions.upcomingCharge(for: subscription, now: now, calendar: calendar) {
-                let when = DayText.text(daysAway: calendar.calendarDays(from: now, to: charge.date), day: charge.date, locale: locale)
-                parts.append(L10n.string("Renews \(when)"))
+                let when = DayText.text(daysAway: calendar.calendarDays(from: now, to: charge.date), day: charge.date, locale: locale, now: now)
+                parts.append(charge.isTrialEnd ? L10n.string("Trial ends \(when)") : L10n.string("Renews \(when)"))
             } else {
                 parts.append(L10n.string("No renewal date"))
             }
@@ -144,7 +144,8 @@ enum ShortcutAnswers {
 
     /// The subscription a Shortcut adds: a name, and a price that is a price. No renewal date is made
     /// up: Home asks "When does it renew?".
-    static func newSubscription(name: String, monthlyCost: Double, currency: String) throws -> Subscription {
+    static func newSubscription(name: String, monthlyCost: Double, currency: String,
+                                notifyBeforeDays: Int = OnboardingProfile.load().validReminderDays) throws -> Subscription {
         let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { throw ShortcutProblem.noName }
         guard monthlyCost.isFinite, monthlyCost > 0 else { throw ShortcutProblem.notAPrice }
@@ -152,7 +153,8 @@ enum ShortcutAnswers {
         guard amount > 0 else { throw ShortcutProblem.notAPrice }
         guard amount <= AmountText.ceiling(for: currency) else { throw ShortcutProblem.tooLarge }
         return Subscription(name: trimmed, category: SubscriptionCategory.other.rawValue, amount: amount,
-                            currency: currency, billingFrequency: .monthly, nextBillingDate: nil, status: .active)
+                            currency: currency, billingFrequency: .monthly, nextBillingDate: nil,
+                            notifyBeforeDays: notifyBeforeDays, status: .active)
     }
 
     static func added(_ subscription: Subscription, locale: Locale = L10n.locale) -> String {

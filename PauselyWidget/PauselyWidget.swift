@@ -99,7 +99,7 @@ struct NothingYet: View {
 
     private var message: LocalizedStringKey {
         guard let feed = entry.feed else { return "Open Pausely" }
-        if !feed.hasSubscriptions { return "Add what you pay for in Pausely" }
+        if !feed.hasChargingSubscriptions { return "Add what you pay for in Pausely" }
         return "Add renewal dates in Pausely to see what's next"
     }
 }
@@ -111,7 +111,7 @@ struct SmallCharge: View {
 
     var body: some View {
         if let next = entry.upcoming.first {
-            NextCharge(next: next)
+            NextCharge(next: next, now: entry.date)
         } else {
             VStack(alignment: .leading, spacing: 6) {
                 Text("Next charge").font(.caption.weight(.semibold)).ink(.muted)
@@ -124,6 +124,7 @@ struct SmallCharge: View {
 /// One charge: what it is, what it costs (the one big thing), and when.
 struct NextCharge: View {
     let next: WidgetFeed.Upcoming
+    var now: Date = Date()
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -146,7 +147,7 @@ struct NextCharge: View {
                 .privacySensitive()
                 .widgetAccentable()
             Spacer(minLength: 6)
-            DayLabel(upcoming: next)
+            DayLabel(upcoming: next, now: now)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         .accessibilityElement(children: .combine)
@@ -161,14 +162,21 @@ struct MediumCharges: View {
     var body: some View {
         let upcoming = entry.upcoming
         if let next = upcoming.first {
+            let rest = Array(upcoming.dropFirst())
             HStack(alignment: .top, spacing: 14) {
-                NextCharge(next: next)
-                if upcoming.count > 1 {
+                NextCharge(next: next, now: entry.date)
+                if !rest.isEmpty {
                     Rectangle().fill(Color.widgetLine).frame(width: 1)
                     VStack(alignment: .leading, spacing: 0) {
-                        ForEach(Array(upcoming.dropFirst().prefix(3).enumerated()), id: \.element.id) { index, item in
-                            if index > 0 { Rectangle().fill(Color.widgetLine).frame(height: 1) }
-                            ChargeRow(item: item)
+                        ViewThatFits(in: .vertical) {
+                            ForEach([3, 2, 1], id: \.self) { count in
+                                VStack(alignment: .leading, spacing: 0) {
+                                    ForEach(Array(rest.prefix(count).enumerated()), id: \.element.id) { index, item in
+                                        if index > 0 { Rectangle().fill(Color.widgetLine).frame(height: 1) }
+                                        ChargeRow(item: item, now: entry.date)
+                                    }
+                                }
+                            }
                         }
                         Spacer(minLength: 0)
                     }
@@ -184,6 +192,7 @@ struct MediumCharges: View {
 /// A later charge on one line pair: its name and day, its amount.
 struct ChargeRow: View {
     let item: WidgetFeed.Upcoming
+    var now: Date = Date()
 
     var body: some View {
         Link(destination: WidgetLink.destination(for: item) ?? URL(string: "pausely://")!) {
@@ -194,7 +203,7 @@ struct ChargeRow: View {
                         .ink()
                         .lineLimit(1)
                         .privacySensitive()
-                    DayLabel(upcoming: item, font: .caption2.weight(.medium))
+                    DayLabel(upcoming: item, now: now, font: .caption2.weight(.medium))
                 }
                 Spacer(minLength: 4)
                 Text(verbatim: item.charge.amountText)
@@ -247,7 +256,7 @@ struct LargeCharges: View {
         VStack(alignment: .leading, spacing: 0) {
             ForEach(Array(items.enumerated()), id: \.element.id) { index, item in
                 if index > 0 { Rectangle().fill(Color.widgetLine).frame(height: 1) }
-                ChargeRow(item: item)
+                ChargeRow(item: item, now: entry.date)
             }
         }
     }
@@ -263,10 +272,12 @@ struct CircularCharge: View {
         ZStack {
             AccessoryWidgetBackground()
             if let next = entry.upcoming.first {
+                let monthStyle: Date.FormatStyle.Symbol.Month = (entry.locale.language.languageCode?.identifier == "ar" || entry.locale.calendar.identifier != .gregorian) ? .wide : .abbreviated
                 VStack(spacing: -2) {
-                    Text(verbatim: next.day.formatted(.dateTime.month(.abbreviated).locale(entry.locale)))
+                    Text(verbatim: next.day.formatted(.dateTime.month(monthStyle).locale(entry.locale)))
                         .font(.caption2.weight(.semibold))
                         .textCase(.uppercase)
+                        .lineLimit(1)
                     Text(verbatim: next.day.formatted(.dateTime.day().locale(entry.locale)))
                         .font(.title2.weight(.semibold))
                         .widgetAccentable()
@@ -274,9 +285,11 @@ struct CircularCharge: View {
                 .minimumScaleFactor(0.6)
                 .privacySensitive()
                 .accessibilityElement(children: .ignore)
-                .accessibilityLabel(Text(verbatim: "\(next.charge.name), \(DayText.text(daysAway: next.daysAway, day: next.day, locale: entry.locale))"))
+                .accessibilityLabel(Text(verbatim: "\(next.charge.name), \(DayText.text(daysAway: next.daysAway, day: next.day, locale: entry.locale, now: entry.date))"))
             } else {
-                Image(systemName: "calendar").font(.title3).accessibilityHidden(true)
+                Image(systemName: "calendar")
+                    .font(.title3)
+                    .accessibilityLabel(Text("No upcoming charges"))
             }
         }
     }
@@ -297,7 +310,7 @@ struct RectangularCharge: View {
                     .font(.subheadline.monospacedDigit())
                     .lineLimit(1)
                     .privacySensitive()
-                DayLabel(upcoming: next, font: .caption.weight(.medium))
+                DayLabel(upcoming: next, now: entry.date, font: .caption.weight(.medium))
             }
             .frame(maxWidth: .infinity, alignment: .leading)
             .accessibilityElement(children: .combine)
@@ -312,7 +325,7 @@ struct InlineCharge: View {
 
     var body: some View {
         if let next = entry.upcoming.first {
-            Text(verbatim: "\(next.charge.name) · \(DayText.text(daysAway: next.daysAway, day: next.day, locale: entry.locale))")
+            Text(verbatim: "\(next.charge.name) · \(DayText.text(daysAway: next.daysAway, day: next.day, locale: entry.locale, now: entry.date))")
                 .privacySensitive()
         } else {
             Text("Pausely")

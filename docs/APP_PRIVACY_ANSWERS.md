@@ -1,6 +1,6 @@
 # App Store Connect: "App Privacy" answers for Pausely
 
-Written 2026-11-17 from the code (what the app sends to the server), not from marketing text. These
+Written 2026-11-17 (updated 2026-11-26) from the code (what the app sends to the server), not from marketing text. These
 are the answers for App Store Connect → the app → App Privacy. They say what
 `Pausely/PrivacyInfo.xcprivacy` declares and what the policy at https://pausely.pro/privacy.html
 says; `PrivacyManifestTests` fails when this table and the manifest list different types.
@@ -16,12 +16,14 @@ domains.
 | Contact Info → **Email Address** | The address the account is made with and signed in by | App Functionality |
 | Identifiers → **User ID** | The account's identifier | App Functionality |
 | Financial Info → **Other Financial Info** | What each subscription costs, its currency, how often it charges and its next renewal or trial end | App Functionality |
-| User Content → **Other User Content** | Each subscription's name, category, status and how many days before a renewal to remind | App Functionality |
+| User Content → **Other User Content** | Each subscription's name, category, status, optional notes or payment method, reminder lead time, synced decision history (Savings Receipt), synced Pause Plan schedule, and optional anonymous cancellation-difficulty ratings | App Functionality |
 | Other Data → **Other Data Types** | That the person confirmed they are old enough, and when (the date of birth is not stored), with the policy and app version in use | App Functionality |
 
 **Where each is sent, in the code:** the account is made by Supabase sign-in (`AuthManager`); the
-list is the `subscriptions` table (`Subscription.CodingKeys`, sent by `Sync/SyncQueue`); the age
-confirmation is five fields on the `profiles` row (`AgeConsentManager`).
+list is the `subscriptions` table (`Subscription.CodingKeys`, sent by `Sync/SyncQueue`); decision
+history and Pause Plan sync to `lifecycle_events` and `pause_plans` (`LifecycleSync` and `PausePlanSync`, signed-in accounts
+only — never in local guest mode); optional difficulty scores go to `cancel_difficulty_ratings`
+(`CancelDifficultyService`); the age confirmation is five fields on the `profiles` row (`AgeConsentManager`).
 
 ## Not collected
 
@@ -29,7 +31,6 @@ confirmation is five fields on the `profiles` row (`AgeConsentManager`).
   (`AccountMemory`) and never sent.
 - **How long a subscription was used.** The hours are typed in by the person and stay on the iPhone
   (`UsageLog`). Pausely does not read Screen Time.
-- **History, the Savings Receipt and the Pause Plan.** Stored locally under iOS hardware data protection, and synced to your Supabase account when signed in so reinstalling or switching devices preserves them (covered by **Other User Content** above; kept on-device only in optional guest mode).
 - Location, contacts, photos, audio, health, browsing or search history, device or advertising
   identifiers, purchase history (payments are Apple's), diagnostics, crash data, performance data.
 

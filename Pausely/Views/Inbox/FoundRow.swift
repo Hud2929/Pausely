@@ -203,7 +203,7 @@ struct FoundRow: View {
 
             // On the row, not inside its "why": a listed price or a missing day the receipts can fix was found
             // only by opening "why" (the rating of 2026-11-23).
-            if let onUseReceipts, let label = Self.useReceiptsLabel(listed, for: found) {
+            if !found.isCancelled, let onUseReceipts, let label = Self.useReceiptsLabel(listed, for: found) {
                 Button(action: onUseReceipts) {
                     Text(verbatim: label)
                         .font(.subheadline.weight(.semibold))
@@ -401,7 +401,7 @@ struct FoundRow: View {
                         // the day took three lines and the amount lost its last digit to a
                         // fourth ("$34.9" above "9", seen 2026-11-17).
                         LineOrStack(spacing: 8, lineSpacing: 0, spread: true, alignment: .firstTextBaseline) {
-                            Text(charge.date, format: .dateTime.month(.abbreviated).day().year())
+                            Text(verbatim: DayText.fullDate(charge.date, locale: L10n.locale))
                             Text(verbatim: InboxImportView.money(charge.amount, charge.currency))
                         }
                         .font(.proof(.footnote))

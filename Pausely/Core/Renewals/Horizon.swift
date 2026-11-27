@@ -52,10 +52,21 @@ enum Horizon {
 
     /// What leaves through day `dayOffset`, in `currency`. Charges that can't be converted are left
     /// out rather than added at the wrong value.
-    /// Whether that total includes a charge in another currency (it is then shown as "≈").
-    static func isConverted(_ charges: [Charge], through dayOffset: Int, to currency: String) -> Bool {
+    /// Whether that total includes a converted charge in another currency (it is then shown as "≈").
+    static func isConverted(_ charges: [Charge], through dayOffset: Int, to currency: String,
+                            rates: CurrencyRates = .fallback) -> Bool {
         let display = MoneyFormat.normalizedCode(currency)
-        return charges.contains { $0.dayOffset <= dayOffset && MoneyFormat.normalizedCode($0.currency) != display }
+        return charges.contains {
+            $0.dayOffset <= dayOffset
+                && MoneyFormat.normalizedCode($0.currency) != display
+                && rates.convert($0.amount, from: $0.currency, to: currency) != nil
+        }
+    }
+
+    /// Number of charges through `dayOffset` omitted from `total` because their currency has no rate.
+    static func unconvertibleCount(_ charges: [Charge], through dayOffset: Int, to currency: String,
+                                   rates: CurrencyRates) -> Int {
+        charges.filter { $0.dayOffset <= dayOffset && rates.convert($0.amount, from: $0.currency, to: currency) == nil }.count
     }
 
     static func total(of charges: [Charge], through dayOffset: Int, in currency: String, rates: CurrencyRates) -> Decimal {

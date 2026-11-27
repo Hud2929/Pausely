@@ -25,7 +25,13 @@ final class IMAPMailboxProvider: MailboxProvider {
         }
         try await client.connect()
         var refusal: Error?
-        for name in Self.loginNames(for: account) {
+        let names = Self.loginNames(for: account)
+        for (index, name) in names.enumerated() {
+            if index > 0 {
+                // Some servers drop the socket after a refused LOGIN; open a fresh TLS session before trying the fallback name.
+                await client.cancel()
+                try await client.connect()
+            }
             do {
                 try await client.login(user: name, password: password)
                 refusal = nil
@@ -58,12 +64,14 @@ final class IMAPMailboxProvider: MailboxProvider {
         func add(_ name: String) { if !result.contains(name) { result.append(name) } }
         add(selectable.first { $0.name.uppercased() == "INBOX" }?.name ?? "INBOX")
         if let archive = selectable.first(where: { $0.flags.contains("\\ARCHIVE") })
-            ?? selectable.first(where: { ["archive", "archives"].contains($0.name.lowercased()) }) {
+            ?? selectable.first(where: { ["archive", "archives", "archiv", "archivo", "アーカイブ", "الأرشيف"].contains($0.name.lowercased()) }) {
             add(archive.name)
         }
+        let receiptKeywords = ["receipt", "purchase", "bills", "subscriptions", "reçus", "recus", "facture",
+                               "beleg", "rechnung", "recibo", "領収", "請求", "فواتير", "إيصال"]
         for folder in selectable {
             let name = folder.name.lowercased()
-            if name.contains("receipt") || name.contains("purchase") || name.contains("bills") || name.contains("subscriptions") {
+            if receiptKeywords.contains(where: { name.contains($0) }) {
                 add(folder.name)
             }
         }
@@ -75,7 +83,7 @@ final class IMAPMailboxProvider: MailboxProvider {
     func candidates(plan: InboxSearchPlan, cursor: String?) async throws -> (refs: [MessageRef], cursor: String?) {
         let previous = SyncCursor.decode(cursor)
         var next: [String: SyncCursor.Entry] = [:]
-        var refs: [MessageRef] = []
+        var perFolder: [(folder: String, uids: [UInt32])] = []
 
         for folder in folders {
             try Task.checkCancellation()
@@ -103,7 +111,20 @@ final class IMAPMailboxProvider: MailboxProvider {
             } else {
                 next[folder] = SyncCursor.Entry(validity: validity, lastUID: newest)
             }
-            refs += uids.sorted(by: >).prefix(plan.maxCandidates).map { MessageRef(id: String($0), folder: folder) }
+            if !uids.isEmpty { perFolder.append((folder, uids.sorted(by: >))) }
+        }
+        // Distribute `plan.maxCandidates` fairly across folders so a large INBOX never starves Archive/Receipts.
+        var refs: [MessageRef] = []
+        var taken = Array(repeating: 0, count: perFolder.count)
+        while refs.count < plan.maxCandidates {
+            var progressed = false
+            for idx in perFolder.indices where taken[idx] < perFolder[idx].uids.count {
+                refs.append(MessageRef(id: String(perFolder[idx].uids[taken[idx]]), folder: perFolder[idx].folder))
+                taken[idx] += 1
+                progressed = true
+                if refs.count >= plan.maxCandidates { break }
+            }
+            if !progressed { break }
         }
         return (refs, SyncCursor.encode(next))
     }

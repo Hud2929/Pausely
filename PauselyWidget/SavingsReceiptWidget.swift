@@ -10,7 +10,8 @@ struct SavingsReceiptWidget: Widget {
 
     var body: some WidgetConfiguration {
         StaticConfiguration(kind: kind, provider: ChargesProvider(hasNothingToShow: { feed, today in
-            feed.savedSoFarText.isEmpty && feed.onTrackText.isEmpty && feed.activePauseTurn(on: today) == nil
+            let s = feed.savings(on: today)
+            return s.savedSoFarText.isEmpty && s.onTrackText.isEmpty && feed.activePauseTurn(on: today) == nil
         })) { entry in
             SavingsWidgetView(entry: entry)
         }
@@ -25,12 +26,16 @@ struct SavingsWidgetView: View {
     @Environment(\.widgetFamily) private var family
     @Environment(\.widgetRenderingMode) private var renderingMode
 
-    private var hasSavings: Bool {
-        guard let feed = entry.feed else { return false }
-        return !feed.onTrackText.isEmpty || !feed.savedSoFarText.isEmpty
+    private var currentSavings: (savedSoFarText: String, savedSoFarIsZero: Bool, onTrackText: String)? {
+        entry.feed?.savings(on: entry.date)
     }
 
-    private var activePauseTurn: (name: String, endText: String, nextName: String)? {
+    private var hasSavings: Bool {
+        guard let savings = currentSavings else { return false }
+        return !savings.onTrackText.isEmpty || !savings.savedSoFarText.isEmpty
+    }
+
+    private var activePauseTurn: (name: String, endText: String, endStamp: String, nextName: String)? {
         entry.feed?.activePauseTurn(on: entry.date)
     }
 
@@ -39,8 +44,8 @@ struct SavingsWidgetView: View {
     }
 
     /// Leads with 12-month trajectory on Day 0 (before the first avoided charge passes) instead of "$0.00".
-    private func leadsWithOnTrack(_ feed: WidgetFeed) -> Bool {
-        (feed.savedSoFarText.isEmpty || feed.savedSoFarIsZero) && !feed.onTrackText.isEmpty
+    private func leadsWithOnTrack(_ savings: (savedSoFarText: String, savedSoFarIsZero: Bool, onTrackText: String)) -> Bool {
+        (savings.savedSoFarText.isEmpty || savings.savedSoFarIsZero) && !savings.onTrackText.isEmpty
     }
 
     var body: some View {
@@ -56,13 +61,13 @@ struct SavingsWidgetView: View {
         }
         .environment(\.locale, entry.locale)
         .environment(\.layoutDirection, entry.locale.language.characterDirection == .rightToLeft ? .rightToLeft : .leftToRight)
-        .widgetURL(WidgetLink.receipt)
+        .widgetURL(!hasSavings && activePauseTurn != nil ? WidgetLink.pausePlan : WidgetLink.receipt)
         .inkGround()
     }
 
     @ViewBuilder private var small: some View {
-        if let feed = entry.feed, hasSavings {
-            savingsColumn(feed, showFooter: true)
+        if let feed = entry.feed, let savings = currentSavings, hasSavings {
+            savingsColumn(savings, cancelledCount: feed.cancelledCount, showFooter: true)
         } else if let turn = activePauseTurn {
             pauseTurnColumn(turn)
         } else {
@@ -71,14 +76,16 @@ struct SavingsWidgetView: View {
     }
 
     @ViewBuilder private var medium: some View {
-        if let feed = entry.feed, hasSavings {
+        if let feed = entry.feed, let savings = currentSavings, hasSavings {
             let showRightPause = activePauseTurn != nil
-            let leadOnTrack = leadsWithOnTrack(feed)
+            let leadOnTrack = leadsWithOnTrack(savings)
             HStack(alignment: .top, spacing: 14) {
-                savingsColumn(feed, showFooter: showRightPause)
+                savingsColumn(savings, cancelledCount: feed.cancelledCount, showFooter: showRightPause)
                 Rectangle().fill(Color.widgetLine).frame(width: 1)
                 if let turn = activePauseTurn {
-                    pauseTurnColumn(turn)
+                    Link(destination: WidgetLink.pausePlan ?? URL(string: "pausely://pause-plan")!) {
+                        pauseTurnColumn(turn)
+                    }
                 } else if leadOnTrack {
                     cancelledCountColumn(feed.cancelledCount)
                 } else {
@@ -87,7 +94,7 @@ struct SavingsWidgetView: View {
                             .font(.caption.weight(.semibold))
                             .ink(.muted)
                             .lineLimit(2)
-                        Text(verbatim: feed.onTrackText)
+                        Text(verbatim: savings.onTrackText)
                             .font(.system(.title3, design: .serif).weight(.semibold))
                             .ink()
                             .lineLimit(1)
@@ -107,19 +114,19 @@ struct SavingsWidgetView: View {
     }
 
     @ViewBuilder private var rectangular: some View {
-        if let feed = entry.feed, hasSavings {
-            let leadOnTrack = leadsWithOnTrack(feed)
+        if let savings = currentSavings, hasSavings {
+            let leadOnTrack = leadsWithOnTrack(savings)
             VStack(alignment: .leading, spacing: 2) {
                 Text(leadOnTrack ? "On track over 12 months" : "Savings Receipt")
                     .font(.caption.weight(.semibold))
                     .lineLimit(1)
-                Text(verbatim: leadOnTrack ? feed.onTrackText : feed.savedSoFarText)
+                Text(verbatim: leadOnTrack ? savings.onTrackText : savings.savedSoFarText)
                     .font(.headline.monospacedDigit())
                     .lineLimit(1)
                     .privacySensitive()
                     .widgetAccentable()
-                if !leadOnTrack, !feed.onTrackText.isEmpty {
-                    Text("On track: \(feed.onTrackText)")
+                if !leadOnTrack, !savings.onTrackText.isEmpty {
+                    Text("On track: \(savings.onTrackText)")
                         .font(.caption2.weight(.medium))
                         .lineLimit(1)
                         .privacySensitive()
@@ -137,10 +144,12 @@ struct SavingsWidgetView: View {
                     .lineLimit(1)
                     .privacySensitive()
                     .widgetAccentable()
-                if !turn.endText.isEmpty {
-                    Text("On until \(turn.endText)")
+                let endText = pauseEndText(for: turn)
+                if !endText.isEmpty {
+                    Text("On until \(endText)")
                         .font(.caption2.weight(.medium))
                         .lineLimit(1)
+                        .privacySensitive()
                 }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -152,8 +161,9 @@ struct SavingsWidgetView: View {
         }
     }
 
-    private func savingsColumn(_ feed: WidgetFeed, showFooter: Bool) -> some View {
-        let leadOnTrack = leadsWithOnTrack(feed)
+    private func savingsColumn(_ savings: (savedSoFarText: String, savedSoFarIsZero: Bool, onTrackText: String),
+                               cancelledCount: Int, showFooter: Bool) -> some View {
+        let leadOnTrack = leadsWithOnTrack(savings)
         return VStack(alignment: .leading, spacing: 0) {
             Text(leadOnTrack ? "On track over 12 months" : "Kept so far")
                 .font(.caption.weight(.semibold))
@@ -161,7 +171,7 @@ struct SavingsWidgetView: View {
                 .lineLimit(2)
                 .minimumScaleFactor(0.8)
             Spacer(minLength: 6)
-            Text(verbatim: leadOnTrack ? feed.onTrackText : feed.savedSoFarText)
+            Text(verbatim: leadOnTrack ? savings.onTrackText : savings.savedSoFarText)
                 .font(.system(.title2, design: .serif).weight(.semibold))
                 .foregroundStyle(keptStyle)
                 .lineLimit(1)
@@ -169,15 +179,15 @@ struct SavingsWidgetView: View {
                 .privacySensitive()
                 .widgetAccentable()
             Spacer(minLength: 6)
-            if !leadOnTrack, showFooter, !feed.onTrackText.isEmpty {
-                Text("On track: \(feed.onTrackText)")
+            if !leadOnTrack, showFooter, !savings.onTrackText.isEmpty {
+                Text("On track: \(savings.onTrackText)")
                     .font(.caption.weight(.medium))
                     .ink(.muted)
                     .lineLimit(1)
                     .minimumScaleFactor(0.8)
                     .privacySensitive()
-            } else if leadOnTrack, showFooter, feed.cancelledCount > 0 {
-                let cancelledText = feed.cancelledCount.formatted(.number.locale(entry.locale))
+            } else if leadOnTrack, showFooter, cancelledCount > 0 {
+                let cancelledText = cancelledCount.formatted(.number.locale(entry.locale))
                 Text("Cancelled: \(cancelledText)")
                     .font(.caption.weight(.medium))
                     .ink(.muted)
@@ -189,8 +199,16 @@ struct SavingsWidgetView: View {
         .accessibilityElement(children: .combine)
     }
 
-    private func pauseTurnColumn(_ turn: (name: String, endText: String, nextName: String)) -> some View {
-        VStack(alignment: .leading, spacing: 6) {
+    private func pauseEndText(for turn: (name: String, endText: String, endStamp: String, nextName: String)) -> String {
+        if !turn.endStamp.isEmpty, let endDay = Calendar.billing.noon(onDayStamped: turn.endStamp) {
+            return DayText.date(endDay, locale: entry.locale, now: entry.date)
+        }
+        return turn.endText
+    }
+
+    private func pauseTurnColumn(_ turn: (name: String, endText: String, endStamp: String, nextName: String)) -> some View {
+        let endText = pauseEndText(for: turn)
+        return VStack(alignment: .leading, spacing: 6) {
             Text("Pause Plan")
                 .font(.caption.weight(.semibold))
                 .ink(.muted)
@@ -200,12 +218,13 @@ struct SavingsWidgetView: View {
                 .lineLimit(1)
                 .privacySensitive()
                 .widgetAccentable()
-            if !turn.endText.isEmpty {
-                Text("On until \(turn.endText)")
+            if !endText.isEmpty {
+                Text("On until \(endText)")
                     .font(.caption.weight(.medium))
                     .ink(.muted)
                     .lineLimit(1)
                     .minimumScaleFactor(0.8)
+                    .privacySensitive()
             }
             if !turn.nextName.isEmpty {
                 Text("Next: \(turn.nextName)")

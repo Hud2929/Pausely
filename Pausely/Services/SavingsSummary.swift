@@ -20,15 +20,41 @@ struct SavingsSummary {
     let pauselyYearlyCost: Decimal?
     /// The currency Pausely is paid for in, when that is known.
     var pauselyCurrency: String? = nil
+    /// Lines whose currency could not be converted into `currency`, left out of the totals.
+    var excludedUnconvertibleCount: Int = 0
+    /// True when the customer is on paid Pro, but neither their list nor StoreKit has a price yet.
+    var isPaidProWithoutKnownPrice: Bool = false
+    /// Explicit conversion flags computed against the live rates table; nil falls back to line codes.
+    var convertedSavedOverride: Bool? = nil
+    var convertedOnTrackOverride: Bool? = nil
 
     var isEmpty: Bool { lines.isEmpty }
 
-    /// True when a cancellation in another currency was converted into the two totals. That makes
-    /// them estimates, and they are marked "≈" wherever they are shown, like every other total in
-    /// the app (`MoneyFormat.total`). Each such line is already marked on the receipt.
-    var totalsAreConverted: Bool {
+    /// True when a converted foreign-currency line contributed to "Saved so far".
+    var savedIsConverted: Bool {
+        if let override = convertedSavedOverride { return override }
+        guard savedSoFar > 0 else { return false }
         let display = MoneyFormat.normalizedCode(currency)
-        return lines.contains { MoneyFormat.normalizedCode($0.currency) != display }
+        let hasPositiveLine = lines.contains { $0.savedSoFar > 0 }
+        return lines.contains {
+            MoneyFormat.normalizedCode($0.currency) != display && (!hasPositiveLine || $0.savedSoFar > 0)
+        }
+    }
+
+    /// True when a converted foreign-currency line contributed to "On track this year".
+    var onTrackIsConverted: Bool {
+        if let override = convertedOnTrackOverride { return override }
+        guard onTrack > 0 else { return false }
+        let display = MoneyFormat.normalizedCode(currency)
+        let hasPositiveLine = lines.contains { $0.onTrack > 0 }
+        return lines.contains {
+            MoneyFormat.normalizedCode($0.currency) != display && (!hasPositiveLine || $0.onTrack > 0)
+        }
+    }
+
+    /// True when a cancellation in another currency was converted into either total.
+    var totalsAreConverted: Bool {
+        savedIsConverted || onTrackIsConverted
     }
 
     /// True when Pausely is paid for in another currency than the one the receipt is shown in.
@@ -39,7 +65,17 @@ struct SavingsSummary {
 
     /// One of the two totals as text ("$527.64", or "≈$527.64" when a line was converted).
     func total(_ amount: Decimal) -> String {
-        MoneyFormat.total(amount, currency, converted: totalsAreConverted)
+        MoneyFormat.total(amount, currency, converted: amount > 0 && totalsAreConverted)
+    }
+
+    /// "Saved so far" formatted with "≈" only when a converted line actually contributed to it.
+    var savedSoFarText: String {
+        MoneyFormat.total(savedSoFar, currency, converted: savedSoFar > 0 && savedIsConverted)
+    }
+
+    /// "On track this year" formatted with "≈" only when a converted line contributed to it.
+    var onTrackText: String {
+        MoneyFormat.total(onTrack, currency, converted: onTrack > 0 && onTrackIsConverted)
     }
 
     /// What Pausely costs a year as text, marked when it was converted.
@@ -53,8 +89,10 @@ struct SavingsSummary {
         return onTrack / cost
     }
 
-    /// The Pausely Promise: true once Pausely's savings cover what it costs.
+    /// The Pausely Promise: true once Pausely's savings cover what it costs (never falsely true
+    /// when the customer is on paid Pro whose price isn't loaded yet).
     var paysForItself: Bool {
+        if isPaidProWithoutKnownPrice { return false }
         guard let cost = pauselyYearlyCost else { return true }
         return onTrack >= cost
     }
@@ -65,7 +103,8 @@ struct SavingsSummary {
     /// Marked "≈" when it was converted; left in its own currency only if it can't be converted.
     func formatted(_ amount: Decimal, from lineCurrency: String,
                    rates: CurrencyRates = CurrencyManager.shared.rates) -> String {
-        if lineCurrency == currency { return formatted(amount) }
+        if amount == 0 { return formatted(0) }
+        if MoneyFormat.normalizedCode(lineCurrency) == MoneyFormat.normalizedCode(currency) { return formatted(amount) }
         guard let converted = rates.convert(amount, from: lineCurrency, to: currency) else {
             return MoneyFormat.string(amount, lineCurrency)
         }
@@ -76,22 +115,51 @@ struct SavingsSummary {
     static func current(now: Date = Date()) -> SavingsSummary {
         let store = SubscriptionStore.shared
         let currencies = CurrencyManager.shared
+        let display = MoneyFormat.normalizedCode(currencies.selectedCurrency)
         let pausely = store.subscriptions.first { $0.isPausely && ($0.status == .active || $0.status == .trial) }
         let excluded = Set(store.subscriptions.filter(\.isPausely).map(\.id))
         let lines = SavingsLedger.lines(from: LifecycleEventLog.shared.events, now: now, excluding: excluded)
-            .filter { $0.name.caseInsensitiveCompare("Pausely Pro") != .orderedSame }
+            .filter { $0.name.caseInsensitiveCompare(PaymentManager.ownName) != .orderedSame }
         let totals = SavingsLedger.totals(lines)
-        func converted(_ byCurrency: [String: Decimal]) -> Decimal {
-            // An amount with no rate is left out of the total; its own line still shows it in its currency.
-            byCurrency.compactMap { currencies.convertToSelected($0.value, from: $0.key) }.reduce(0, +)
+        func converted(_ byCurrency: [String: Decimal]) -> (total: Decimal, hasConverted: Bool) {
+            var sum: Decimal = 0
+            var hadForeign = false
+            for (code, amount) in byCurrency {
+                guard let value = currencies.convertToSelected(amount, from: code) else { continue }
+                sum += value
+                if amount > 0 && MoneyFormat.normalizedCode(code) != display { hadForeign = true }
+            }
+            return (sum, hadForeign)
         }
+        let savedResult = converted(totals.savedSoFar)
+        let onTrackResult = converted(totals.onTrack)
+        let excludedUnconvertible = lines.filter { currencies.convertToSelected($0.onTrack, from: $0.currency) == nil }.count
+
+        var yearlyCost: Decimal? = pausely.flatMap { currencies.convertToSelected($0.annualCost, from: $0.currency) }
+        var paidCurrency: String? = pausely?.currency
+        let isPaidSubscriber = PaymentManager.shared.isPremium && (pausely != nil || PaymentManager.shared.hasStoreKitEntitlement)
+        if yearlyCost == nil, isPaidSubscriber {
+            let storeKit = StoreKitManager.shared
+            if let product = storeKit.product(for: PaymentManager.shared.currentTier) ?? storeKit.product(for: .proAnnual) {
+                let code = product.priceFormatStyle.currencyCode
+                let annual = product.id == StoreKitManager.ProductID.monthly.rawValue ? product.price * 12 : product.price
+                yearlyCost = currencies.convertToSelected(annual, from: code)
+                paidCurrency = code
+            }
+        }
+        let unknownProPrice = isPaidSubscriber && yearlyCost == nil
+
         return SavingsSummary(
             lines: lines,
             currency: currencies.selectedCurrency,
-            savedSoFar: converted(totals.savedSoFar),
-            onTrack: converted(totals.onTrack),
-            pauselyYearlyCost: pausely.flatMap { currencies.convertToSelected($0.annualCost, from: $0.currency) },
-            pauselyCurrency: pausely?.currency
+            savedSoFar: savedResult.total,
+            onTrack: onTrackResult.total,
+            pauselyYearlyCost: yearlyCost,
+            pauselyCurrency: paidCurrency,
+            excludedUnconvertibleCount: excludedUnconvertible,
+            isPaidProWithoutKnownPrice: unknownProPrice,
+            convertedSavedOverride: savedResult.hasConverted,
+            convertedOnTrackOverride: onTrackResult.hasConverted
         )
     }
 }

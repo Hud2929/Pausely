@@ -53,7 +53,11 @@ struct SubscriptionEditDraft: Equatable {
             : L10n.string("Enter a valid amount")
     }
 
-    var isValid: Bool { nameError == nil && amountError == nil }
+    var trialEndError: String? {
+        isTrial && trialEndsAt == nil ? L10n.string("Add when the free trial ends") : nil
+    }
+
+    var isValid: Bool { nameError == nil && amountError == nil && trialEndError == nil }
 
     // MARK: Change tracking
 
@@ -108,14 +112,15 @@ struct SubscriptionEditDraft: Equatable {
         updated.amount = amount
         updated.currency = currency
         updated.billingFrequency = frequency
-        // The stored date is the renewal anchor. Keep it unless the user picked a different day, so a
-        // subscription that renews on the 31st keeps doing so (see RenewalSchedule).
-        if !sameDay(nextBillingDate, original.calculatedNextBillingDate) {
+        // The stored date is the renewal anchor. Keep it unless the user picked a different day or
+        // changed the billing cycle (so switching monthly → yearly anchors on the visible next charge
+        // instead of an old past monthly anchor).
+        if !sameDay(nextBillingDate, original.calculatedNextBillingDate)
+            || (frequency != original.billingFrequency && nextBillingDate != nil) {
             updated.nextBillingDate = nextBillingDate.map { Calendar.billing.noon(of: $0) }
         }
         if isTrial {
-            let end = trialEndsAt ?? updated.nextBillingDate
-            updated.trialEndsAt = end.map { Calendar.billing.noon(of: $0) }
+            updated.trialEndsAt = trialEndsAt.map { Calendar.billing.noon(of: $0) }
             updated.nextBillingDate = nil
             if updated.status != .cancelled { updated.status = .trial }
         } else {

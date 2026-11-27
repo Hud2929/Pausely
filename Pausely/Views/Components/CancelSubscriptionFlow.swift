@@ -11,10 +11,12 @@ struct CancelSubscriptionFlow: View {
 
     @Environment(\.dismiss) private var dismiss
     @Environment(\.dynamicTypeSize) private var typeSize
+    @ObservedObject private var store = SubscriptionStore.shared
     @ObservedObject private var paymentManager = PaymentManager.shared
     @ObservedObject private var difficulty = CancelDifficultyService.shared
     @ObservedObject private var authManager = AuthManager.shared
-    @State private var isShowingSafari = false
+    @ObservedObject private var currencyManager = CurrencyManager.shared
+    @State private var safariLink: SafariLink?
     @State private var didOpenPage = false
     @State private var isSaving = false
     @State private var cancelled = false
@@ -31,15 +33,27 @@ struct CancelSubscriptionFlow: View {
         let draft: CancelConcierge.Draft
     }
 
-    private var help: CancelHelp { CancelHelp.find(for: subscription) }
+    private struct SafariLink: Identifiable {
+        let id = UUID()
+        let url: URL
+    }
+
+    private var current: Subscription {
+        store.subscriptions.first(where: { $0.id == subscription.id }) ?? subscription
+    }
+
+    private var help: CancelHelp { CancelHelp.find(for: current) }
     private var conciergeUnlocked: Bool { paymentManager.isUnlocked(.cancelConcierge) }
+    private var isStoreBilled: Bool {
+        help.kind == .appleSubscription || help.kind == .googlePlay || help.kind == .amazonChannel
+    }
 
     /// Apple's own steps for a subscription it bills, as published on 29 September 2026
     /// (support.apple.com/118428). The same for every Apple subscription, so they can be checked.
     private var appleSteps: [String] {
         [L10n.string("Open Settings and tap your name."),
          L10n.string("Tap Subscriptions."),
-         L10n.string("Tap \(subscription.name)."),
+         L10n.string("Tap \(current.name)."),
          L10n.string("Tap Cancel Subscription. You may need to scroll down to find it.")]
     }
 
@@ -54,24 +68,26 @@ struct CancelSubscriptionFlow: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .inkScreen()
         .preferredColorScheme(.dark)
-        .sheet(isPresented: $isShowingSafari, onDismiss: { didOpenPage = true }) {
-            if let url = help.link { SafariView(url: url).ignoresSafeArea() }
+        .sheet(item: $safariLink, onDismiss: { didOpenPage = true }) { item in
+            SafariView(url: item.url).ignoresSafeArea()
         }
         .sheet(isPresented: $showingReceipt) { SavingsReceiptView() }
         .sheet(isPresented: $askingNextCharge) {
-            NextChargeQuestion(name: subscription.name, day: $nextCharge,
+            NextChargeQuestion(name: current.name, isTrial: current.status == .trial, day: $nextCharge,
                                onSave: { askingNextCharge = false; Task { await markCancelled(nextCharge: nextCharge) } },
-                               onUnknown: { askingNextCharge = false; Task { await markCancelled() } })
+                               onUnknown: { askingNextCharge = false; Task { await markCancelled() } },
+                               onCancel: { askingNextCharge = false })
                 .presentationDetents([.large])
         }
         .sheet(item: $previewDraft) { item in
             EmailDraftSheet(draft: item.draft, locked: !conciergeUnlocked,
                             paywallContext: PaywallContext(
                                 trigger: .cancelConcierge,
-                                serviceName: subscription.name,
-                                serviceChargeAmount: subscription.amount,
-                                serviceChargeCurrency: subscription.currency
-                            ))
+                                serviceName: current.name,
+                                serviceChargeAmount: current.amount,
+                                serviceChargeCurrency: current.currency
+                            ),
+                            onUsed: { didOpenPage = true })
         }
         .task { await difficulty.loadIfNeeded() }
     }
@@ -87,14 +103,23 @@ struct CancelSubscriptionFlow: View {
                 PaperSlip(tornTop: true, tornBottom: true) {
                     VStack(alignment: .leading, spacing: 14) {
                         MarkedWords(alignment: .center) {
-                            ServiceLogoView(name: subscription.name, category: subscription.category, size: 36)
+                            ServiceLogoView(name: current.name, category: current.category, size: 36)
                         } words: {
-                            Text(L10n.string("That's \(MoneyFormat.string(subscription.annualCost, subscription.currency)) a year"))
-                                .font(.subheadline.weight(.medium))
-                                .foregroundStyle(Color.paperMuted)
-                                .fixedSize(horizontal: false, vertical: true)
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(L10n.string("That's \(MoneyFormat.string(current.annualCost, current.currency)) a year"))
+                                    .font(.subheadline.weight(.medium))
+                                    .foregroundStyle(Color.paperMuted)
+                                    .fixedSize(horizontal: false, vertical: true)
+                                if MoneyFormat.normalizedCode(current.currency) != MoneyFormat.normalizedCode(currencyManager.selectedCurrency),
+                                   let converted = currencyManager.convertToSelected(current.annualCost, from: current.currency) {
+                                    Text("About \(MoneyFormat.string(converted, currencyManager.selectedCurrency)) in your currency")
+                                        .font(.footnote)
+                                        .foregroundStyle(Color.paperMuted)
+                                        .fixedSize(horizontal: false, vertical: true)
+                                }
+                            }
                         }
-                        Text("Cancel \(subscription.name)")
+                        Text("Cancel \(current.name)")
                             .font(.question(.title))
                             .fixedSize(horizontal: false, vertical: true)
                             .accessibilityAddTraits(.isHeader)
@@ -117,16 +142,26 @@ struct CancelSubscriptionFlow: View {
                                 .font(.footnote)
                                 .foregroundStyle(Color.paperMuted)
                                 .fixedSize(horizontal: false, vertical: true)
+                        case .googlePlay:
+                            Perforation()
+                            Text("You cancel in Google Play: sign in, then open Payments & subscriptions.")
+                                .font(.footnote)
+                                .fixedSize(horizontal: false, vertical: true)
+                        case .amazonChannel:
+                            Perforation()
+                            Text("You cancel in Amazon Prime Video: sign in, then open Channels & Subscriptions.")
+                                .font(.footnote)
+                                .fixedSize(horizontal: false, vertical: true)
                         case .cancellationPage, .website:
                             Perforation()
-                            Text(L10n.string("You cancel on \(subscription.name)'s own site: sign in, then look under account or billing."))
+                            Text(L10n.string("You cancel on \(current.name)'s own site: sign in, then look under account or billing."))
                                 .font(.footnote)
                                 .fixedSize(horizontal: false, vertical: true)
                         case .search:
                             EmptyView()
                         }
 
-                        if let score = difficulty.score(for: subscription.name),
+                        if let score = difficulty.score(for: current.name),
                            let summary = CancelDifficultyService.summaryLine(for: score) {
                             Perforation()
                             Text(verbatim: summary)
@@ -138,7 +173,9 @@ struct CancelSubscriptionFlow: View {
                 }
                 .padding(.top, 4)
 
-                conciergeSection.padding(.top, 20)
+                if help.kind != .googlePlay && help.kind != .amazonChannel {
+                    conciergeSection.padding(.top, 20)
+                }
 
                 Text("Pausely keeps it in your list as cancelled and adds the charges you avoid to your Savings Receipt.")
                     .font(.footnote)
@@ -156,8 +193,8 @@ struct CancelSubscriptionFlow: View {
                     if help.kind == .appleSubscription, let link = help.link {
                         openURL(link)
                         didOpenPage = true
-                    } else {
-                        isShowingSafari = true
+                    } else if let link = help.link {
+                        safariLink = SafariLink(url: link)
                     }
                 } label: { Text(openLabel) }
                     .buttonStyle(.ink(didOpenPage ? .quiet : .main))
@@ -165,7 +202,13 @@ struct CancelSubscriptionFlow: View {
 
                 // Once the person is back from the service's page, this becomes the main action.
                 Button {
-                    if RenewalDecisions.upcomingCharge(for: subscription, now: Date()) == nil {
+                    if current.status == .cancelled {
+                        if showsOutcome {
+                            withAnimation(Motion.unlessReduced(Motion.arrive)) { cancelled = true }
+                        } else {
+                            dismiss()
+                        }
+                    } else if current.renewsAutomatically && RenewalDecisions.upcomingCharge(for: current, now: Date()) == nil {
                         askingNextCharge = true
                     } else {
                         Task { await markCancelled() }
@@ -186,6 +229,8 @@ struct CancelSubscriptionFlow: View {
     private var openLabel: String {
         switch help.kind {
         case .appleSubscription: return L10n.string("Open your subscriptions")
+        case .googlePlay: return L10n.string("Open Google Play subscriptions")
+        case .amazonChannel: return L10n.string("Open Amazon Channels")
         case .cancellationPage: return L10n.string("Open cancellation page")
         case .website: return L10n.string("Open website")
         case .search: return L10n.string("Search how to cancel")
@@ -194,13 +239,13 @@ struct CancelSubscriptionFlow: View {
 
     private var conciergeSection: some View {
         VStack(alignment: .leading, spacing: 0) {
-            Text(help.kind == .appleSubscription ? L10n.string("Refund help") : L10n.string("Email and refund help"))
+            Text(isStoreBilled ? L10n.string("Refund help") : L10n.string("Email and refund help"))
                 .font(.headline)
                 .foregroundStyle(Color.inkText)
                 .padding(.bottom, 6)
                 .accessibilityAddTraits(.isHeader)
 
-            if help.kind != .appleSubscription {
+            if !isStoreBilled {
                 conciergeRow(
                     icon: "envelope",
                     title: L10n.string("Draft cancellation email"),
@@ -208,7 +253,7 @@ struct CancelSubscriptionFlow: View {
                     isPro: !conciergeUnlocked,
                     id: "draftCancelEmailButton"
                 ) {
-                    openEmailDraft(CancelConcierge.cancellationDraft(for: subscription, accountEmail: authManager.currentUser?.email))
+                    openEmailDraft(CancelConcierge.cancellationDraft(for: current, accountEmail: authManager.currentUser?.email))
                 }
 
                 Hairline()
@@ -224,7 +269,7 @@ struct CancelSubscriptionFlow: View {
                 ) {
                     if let url = CancelConcierge.appleRefundURL { openURL(url) }
                 }
-            } else {
+            } else if !isStoreBilled {
                 conciergeRow(
                     icon: "arrow.uturn.backward",
                     title: L10n.string("Draft refund email"),
@@ -232,7 +277,7 @@ struct CancelSubscriptionFlow: View {
                     isPro: !conciergeUnlocked,
                     id: "requestRefundButton"
                 ) {
-                    openEmailDraft(CancelConcierge.refundDraft(for: subscription, accountEmail: authManager.currentUser?.email))
+                    openEmailDraft(CancelConcierge.refundDraft(for: current, accountEmail: authManager.currentUser?.email))
                 }
             }
         }
@@ -286,16 +331,16 @@ struct CancelSubscriptionFlow: View {
     private var outcome: some View {
         OutcomeScreen {
             VStack(alignment: .leading, spacing: 20) {
-                CancelledSlip(subscription: subscription)
-                if !authManager.isGuest {
-                    CancelDifficultyPrompt(serviceName: subscription.name)
+                CancelledSlip(subscription: current)
+                if !current.isPausely, difficulty.canRate(serviceName: current.name) {
+                    CancelDifficultyPrompt(serviceName: current.name)
                 }
             }
         } actions: {
             VStack(spacing: 10) {
                 Button { showingReceipt = true } label: { Text("See your Savings Receipt") }
                     .buttonStyle(.ink)
-                ShareCancelledButton(subscriptionId: subscription.id, identifier: "cancelShareSavingsButton")
+                ShareCancelledButton(subscriptionId: current.id, identifier: "cancelShareSavingsButton")
                 Button { dismiss() } label: { Text("Done") }
                     .buttonStyle(.ink(.quiet))
                     .accessibilityIdentifier("cancelDoneButton")
@@ -304,11 +349,17 @@ struct CancelSubscriptionFlow: View {
     }
 
     private func markCancelled(nextCharge: Date? = nil) async {
+        guard !isSaving else { return }
         isSaving = true
         defer { isSaving = false }
-        let store = SubscriptionStore.shared
         if let nextCharge, var dated = store.subscriptions.first(where: { $0.id == subscription.id }) {
-            dated.nextBillingDate = nextCharge
+            let noon = Calendar.billing.noon(of: nextCharge)
+            if dated.status == .trial {
+                dated.trialEndsAt = noon
+                dated.nextBillingDate = nil
+            } else {
+                dated.nextBillingDate = noon
+            }
             await store.updateSubscription(dated)
         }
         await store.updateSubscriptionStatus(id: subscription.id, status: .cancelled)
@@ -324,6 +375,8 @@ struct CancelSubscriptionFlow: View {
 struct CancelDifficultyPrompt: View {
     let serviceName: String
     @State private var submittedRating: Int?
+    @State private var isSubmitting = false
+    @State private var submitFailed = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
@@ -345,9 +398,19 @@ struct CancelDifficultyPrompt: View {
                 LineOrStack(spacing: 8, lineSpacing: 8) {
                     ForEach(1...5, id: \.self) { level in
                         Button {
+                            guard !isSubmitting else { return }
                             Feel.selection()
-                            submittedRating = level
-                            Task { await CancelDifficultyService.shared.submit(serviceName: serviceName, difficulty: level) }
+                            isSubmitting = true
+                            submitFailed = false
+                            Task {
+                                let ok = await CancelDifficultyService.shared.submit(serviceName: serviceName, difficulty: level)
+                                isSubmitting = false
+                                if ok {
+                                    submittedRating = level
+                                } else {
+                                    submitFailed = true
+                                }
+                            }
                         } label: {
                             Text(verbatim: L10n.number(level))
                                 .font(.proof(.body, weight: .semibold))
@@ -356,9 +419,16 @@ struct CancelDifficultyPrompt: View {
                                 .overlay(RoundedRectangle(cornerRadius: Layout.tileRadius, style: .continuous).stroke(Color.outline, lineWidth: 1))
                         }
                         .buttonStyle(.plain)
+                        .disabled(isSubmitting)
                         .accessibilityLabel(L10n.string("Difficulty \(level) of 5"))
                         .accessibilityIdentifier("difficultyRating_\(level)")
                     }
+                }
+                if submitFailed {
+                    Text("Couldn't save your rating right now. Try again.")
+                        .font(.footnote)
+                        .foregroundStyle(Color.due)
+                        .fixedSize(horizontal: false, vertical: true)
                 }
             }
         }
@@ -369,14 +439,30 @@ struct CancelDifficultyPrompt: View {
 /// "When would it have charged next?", asked once on cancelling a subscription that has no renewal day.
 private struct NextChargeQuestion: View {
     let name: String
+    var isTrial: Bool = false
     @Binding var day: Date
     let onSave: () -> Void
     let onUnknown: () -> Void
+    let onCancel: () -> Void
+
+    private var pickerRange: ClosedRange<Date> {
+        let start = isTrial
+            ? Calendar.billing.startOfDay(for: Date())
+            : (Calendar.billing.date(byAdding: .month, value: -1, to: Date()) ?? Date())
+        let end = Calendar.billing.date(byAdding: .year, value: 1, to: Date()) ?? Date()
+        return start...end
+    }
 
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
-                Text("When would \(name) have charged next?")
+                HStack {
+                    LeaveButton("Cancel") { onCancel() }
+                    Spacer()
+                }
+                Text(isTrial
+                     ? L10n.string("When would \(name)'s free trial have ended?")
+                     : L10n.string("When would \(name) have charged next?"))
                     .font(.question(.title2))
                     .foregroundStyle(Color.inkText)
                     .fixedSize(horizontal: false, vertical: true)
@@ -385,8 +471,8 @@ private struct NextChargeQuestion: View {
                     .font(.subheadline)
                     .foregroundStyle(Color.inkTextMuted)
                     .fixedSize(horizontal: false, vertical: true)
-                DatePicker("Next charge", selection: $day,
-                           in: Calendar.billing.date(byAdding: .month, value: -1, to: Date())!...Calendar.billing.date(byAdding: .year, value: 1, to: Date())!,
+                DatePicker(isTrial ? L10n.string("Trial ends") : L10n.string("Next charge"), selection: $day,
+                           in: pickerRange,
                            displayedComponents: .date)
                     .datePickerStyle(.graphical)
                     .environment(\.locale, L10n.locale)
@@ -403,5 +489,6 @@ private struct NextChargeQuestion: View {
         }
         .readableScroll()
         .inkScreen()
+        .preferredColorScheme(.dark)
     }
 }

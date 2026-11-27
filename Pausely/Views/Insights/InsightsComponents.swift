@@ -56,7 +56,17 @@ struct OverlapDetailSheet: View {
                         .foregroundStyle(Color.inkTextMuted)
                         .fixedSize(horizontal: false, vertical: true)
                         .padding(.top, 8)
-                        .padding(.bottom, 20)
+                        .padding(.bottom, group.unconvertibleCount > 0 ? 6 : 20)
+
+                    if group.unconvertibleCount > 0 {
+                        Text(group.unconvertibleCount == 1
+                             ? L10n.string("1 subscription is in a currency without an exchange rate and isn't in this total.")
+                             : L10n.string("\(group.unconvertibleCount) subscriptions are in currencies without an exchange rate and aren't in this total."))
+                            .font(.footnote)
+                            .foregroundStyle(Color.inkTextMuted)
+                            .fixedSize(horizontal: false, vertical: true)
+                            .padding(.bottom, 20)
+                    }
 
                     ForEach(Array(group.subscriptions.enumerated()), id: \.element.id) { index, sub in
                         if index > 0 { Hairline() }

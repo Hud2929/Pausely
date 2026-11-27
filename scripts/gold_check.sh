@@ -47,7 +47,8 @@ report "Swift files over 700 lines" "$(for f in $(find Pausely PauselyWidget Sha
 # --- Website (the folder, the publish branch and the next-site branch say the same)
 report "website pages that differ between copies" "$(bash scripts/site_check.sh 2>/dev/null)"
 
-# --- Repository
+# --- Repository & secrets
+report "secrets in Info.plist" "$(grep -nE 'psa_live_|sk_live_|sb_secret_|service_role|BEGIN (RSA |EC |OPENSSH )?PRIVATE KEY|eyJ[A-Za-z0-9_-]{20,}' Configuration/Info.plist 2>/dev/null)"
 ROOT_KEEP='^(\.gitignore|README\.md|CLAUDE\.md|AGENTS\.md|ENGINEERING_RULES\.md|GOLD_STANDARD\.md|REDESIGN_PLAN\.md|REVOLUTION_PLAN\.md|INBOX_PLAN\.md|SUPABASE_EMAIL_TEMPLATES\.md|appstore_products\.json|CNAME)$'
 report "stray files at the repository root" "$(git ls-files | grep -v / | grep -vE "$ROOT_KEEP")"
 

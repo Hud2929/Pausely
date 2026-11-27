@@ -155,6 +155,12 @@ extension Date {
         let formatter = ISO8601DateFormatter()
         return formatter.string(from: self)
     }
+
+    var iso8601FractionalString: String {
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        return formatter.string(from: self)
+    }
 }
 
 extension String {

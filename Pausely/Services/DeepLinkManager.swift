@@ -14,6 +14,7 @@ enum DeepLinkRoute {
     case subscriptionManage(id: UUID)
     case subscriptionVerdict(id: UUID)
     case savingsReceipt
+    case pausePlan
     case unknown
 }
 
@@ -22,6 +23,7 @@ final class DeepLinkManager {
     static let shared = DeepLinkManager()
 
     private var authDeepLinkTask: Task<Void, Never>?
+    private var lastAuthURL: (url: URL, at: Date)?
 
     private init() {}
 
@@ -52,6 +54,8 @@ final class DeepLinkManager {
             return .unknown
         case "receipt":
             return .savingsReceipt
+        case "pause-plan":
+            return .pausePlan
         default:
             return .unknown
         }
@@ -61,13 +65,12 @@ final class DeepLinkManager {
         let route = handle(url)
 
         switch route {
-        case .authConfirm:
-            authDeepLinkTask?.cancel()
-            authDeepLinkTask = Task {
-                _ = await AuthManager.shared.handleDeepLink(url)
+        case .authConfirm, .authResetPassword:
+            let now = Date()
+            if let last = lastAuthURL, last.url == url, now.timeIntervalSince(last.at) < 2 {
+                return
             }
-
-        case .authResetPassword:
+            lastAuthURL = (url, now)
             authDeepLinkTask?.cancel()
             authDeepLinkTask = Task {
                 _ = await AuthManager.shared.handleDeepLink(url)
@@ -81,6 +84,9 @@ final class DeepLinkManager {
 
         case .savingsReceipt:
             VerdictCenter.shared.openSavingsReceipt()
+
+        case .pausePlan:
+            VerdictCenter.shared.openPausePlan()
 
         case .unknown:
             os_log("A link the app has no screen for was opened (scheme %{public}@)", log: .default, type: .info, url.scheme ?? "none")

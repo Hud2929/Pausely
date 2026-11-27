@@ -35,6 +35,7 @@ enum OverlapDetector {
         let monthlyTotal: Decimal
         let annualTotal: Decimal
         let isConverted: Bool
+        var unconvertibleCount: Int = 0
 
         var id: String { cluster.id }
     }
@@ -71,12 +72,13 @@ enum OverlapDetector {
 
     private static let newsNames: [String] = [
         "new york times", "nytimes", "washington post", "wall street journal", "wsj", "the economist",
-        "the atlantic", "new yorker", "the guardian", "bloomberg", "substack", "medium", "apple news", "wired"
+        "the atlantic", "new yorker", "the guardian", "bloomberg", "substack", "apple news", "wired"
     ]
+    private static let exactNewsNames: Set<String> = ["medium", "medium membership"]
 
     private static let securityNames: [String] = [
         "1password", "bitwarden", "dashlane", "lastpass", "nordvpn", "expressvpn",
-        "surfshark", "proton vpn", "mullvad", "norton", "malwarebytes", "mcafee"
+        "surfshark", "proton vpn", "protonvpn", "mullvad", "norton", "malwarebytes", "mcafee"
     ]
 
     /// Classifies an active subscription into an overlap cluster, or nil if it doesn't belong to one.
@@ -96,12 +98,15 @@ enum OverlapDetector {
         if matches(musicNames) { return .musicStreaming }
         if matches(aiNames, exact: exactAINames) { return .aiAssistants }
         if matches(cloudNames, exact: exactCloudNames) { return .cloudStorage }
-        if matches(videoNames, exact: exactVideoNames) || PausePlanSchedule.isEligible(subscription) { return .videoStreaming }
+        if matches(videoNames, exact: exactVideoNames) || PausePlanSchedule.isStreamingService(named: subscription.name) { return .videoStreaming }
         if matches(securityNames) { return .securityVPN }
-        if matches(newsNames) { return .newsReading }
+        if matches(newsNames, exact: exactNewsNames) { return .newsReading }
         if matches(fitnessNames) { return .fitness }
 
         switch SubscriptionCategory.matching(subscription.category) {
+        case .music: return .musicStreaming
+        case .aiTools: return .aiAssistants
+        case .cloudStorage: return .cloudStorage
         case .healthFitness, .gym: return .fitness
         case .news: return .newsReading
         case .security: return .securityVPN
@@ -120,6 +125,7 @@ enum OverlapDetector {
             buckets[kind, default: []].append(sub)
         }
 
+        let display = MoneyFormat.normalizedCode(currency)
         return buckets.compactMap { cluster, members -> Group? in
             guard members.count >= 2 else { return nil }
             let ordered = members.sorted { lhs, rhs in
@@ -130,12 +136,18 @@ enum OverlapDetector {
             }
             let monthly = ordered.monthlyTotal(in: currency, rates: rates)
             let yearly = ordered.annualTotal(in: currency, rates: rates)
+            let isConverted = ordered.contains {
+                MoneyFormat.normalizedCode($0.currency) != display
+                    && rates.convert($0.monthlyCost, from: $0.currency, to: currency) != nil
+            }
+            let unconvertible = ordered.filter { rates.convert($0.monthlyCost, from: $0.currency, to: currency) == nil }.count
             return Group(
                 cluster: cluster,
                 subscriptions: ordered,
                 monthlyTotal: monthly,
                 annualTotal: yearly,
-                isConverted: ordered.isConverted(to: currency)
+                isConverted: isConverted,
+                unconvertibleCount: unconvertible
             )
         }
         .sorted {

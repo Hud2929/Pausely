@@ -219,14 +219,18 @@ struct StoreKitUpgradeView: View {
                                                   locale: L10n.locale, wholeUnits: true)
                 return L10n.string("Your heaviest month is \(month) (\(formatted)). See all 12 months ahead.")
             }
-            return L10n.string("See every renewal spike across the next 12 months.")
+            if !context.fromFirstRunReveal {
+                return L10n.string("See every renewal spike across the next 12 months.")
+            }
         case .batchScreenshotImport:
             return L10n.string("Import up to \(ScreenshotImportReadyView.proBatch) screenshots at once.")
         case .cancelConcierge:
             if let name = context.serviceName, !name.isEmpty {
                 return L10n.string("Send a ready-to-go email for \(name).")
             }
-            return L10n.string("Draft cancellation and refund emails in seconds.")
+            if !context.fromFirstRunReveal {
+                return L10n.string("Draft cancellation and refund emails in seconds.")
+            }
         case .unlimitedSubscriptions, .none:
             break
         }
@@ -250,13 +254,28 @@ struct StoreKitUpgradeView: View {
                                           locale: L10n.locale, wholeUnits: true)
             return L10n.string("Your Savings Receipt is already on track to keep \(saved).")
         }
-        if context.fromFirstRunReveal, let savings = eligiblePauseSavings {
-            let formatted = MoneyFormat.total(savings.amount, savings.currency, converted: savings.isConverted,
-                                              locale: L10n.locale, wholeUnits: true)
-            return L10n.string("Keep about \(formatted) a year by rotating your streaming.")
+        if context.fromFirstRunReveal {
+            switch profile.goal {
+            case .rotateStreaming:
+                if let savings = eligiblePauseSavings {
+                    let formatted = MoneyFormat.total(savings.amount, savings.currency, converted: savings.isConverted,
+                                                      locale: L10n.locale, wholeUnits: true)
+                    return L10n.string("Keep about \(formatted) a year by rotating your streaming.")
+                }
+                return L10n.string("Rotate streaming with Pause Plan.")
+            case .catchTrials:
+                return L10n.string("Catch every free trial before it charges.")
+            case .watchAnnualAndHikes:
+                return L10n.string("See every annual bill and price hike 12 months ahead.")
+            case .cutUnused:
+                return L10n.string("Spot unused subscriptions and cancel them in seconds.")
+            }
         }
-        guard !activeSubscriptions.isEmpty else { return L10n.string("Pausely Pro tracks every subscription you have.") }
-        let yearly = MoneyFormat.total(activeSubscriptions.annualTotal(), currencyManager.selectedCurrency,
+        let yearlyAmount = activeSubscriptions.annualTotal(in: currencyManager.selectedCurrency, rates: currencyManager.rates)
+        guard !activeSubscriptions.isEmpty, yearlyAmount > 0 else {
+            return L10n.string("Pausely Pro tracks every subscription you have.")
+        }
+        let yearly = MoneyFormat.total(yearlyAmount, currencyManager.selectedCurrency,
                                        converted: activeSubscriptions.isConverted(to: currencyManager.selectedCurrency),
                                        locale: L10n.locale, wholeUnits: true)
         return L10n.string("Your subscriptions cost about \(yearly) a year.")
@@ -465,6 +484,7 @@ struct StoreKitUpgradeView: View {
     // MARK: - Pausely on its own slip
 
     private var trialReminderState: OnboardingProfile.TrialReminderState {
+        guard ReminderScheduler.preferences.trials else { return .offOrHidden }
         if notifications.isAuthorized && notifications.delivery == .shown { return .ready }
         if notifications.status == .notDetermined { return .notAsked }
         return .offOrHidden
@@ -473,8 +493,9 @@ struct StoreKitUpgradeView: View {
     /// Pausely's own personalized Day 1 / Day 3 / Day 5 / Day 7 trial plan printed on Paper Slip,
     /// followed by transparent `ProFeature` disclosure and the Pausely Promise.
     private var slip: some View {
-        let yearlySpendText: String? = activeSubscriptions.isEmpty ? nil : MoneyFormat.total(
-            activeSubscriptions.annualTotal(), currencyManager.selectedCurrency,
+        let yearlyTotal = activeSubscriptions.annualTotal(in: currencyManager.selectedCurrency, rates: currencyManager.rates)
+        let yearlySpendText: String? = (activeSubscriptions.isEmpty || yearlyTotal <= 0) ? nil : MoneyFormat.total(
+            yearlyTotal, currencyManager.selectedCurrency,
             converted: activeSubscriptions.isConverted(to: currencyManager.selectedCurrency),
             locale: L10n.locale, wholeUnits: true
         )

@@ -11,6 +11,8 @@ class SubscriptionStore: ObservableObject {
     @Published var totalAnnualSpend: Decimal = 0
     /// Some of what is being paid for is charged in another currency, so the totals are estimates ("≈").
     @Published private(set) var totalIsConverted = false
+    /// Active subscriptions whose currency lacked an exchange rate and were excluded from the totals.
+    @Published private(set) var unconvertibleCount = 0
     @Published var isLoading = false
     /// The last fetch failed while nothing was on this iPhone (see `ListState.couldNotLoad`).
     @Published private(set) var lastFetchFailed = false
@@ -37,13 +39,22 @@ class SubscriptionStore: ObservableObject {
         { [weak self] id in self?.subscriptions.first { $0.id == id } }
     }
 
-    /// Retries first-sync reconciliation when connectivity returns if the initial post-sign-in fetch failed.
+    /// Retries first-sync reconciliation, history/plan syncs, exchange rates, and pending age consent
+    /// automatically when connectivity returns.
     private var recoverFirstSyncOnNetwork: () async -> Void {
         { [weak self] in
             guard let self, Self.cloudSyncEnabled else { return }
             let auth = AuthManager.shared
-            guard auth.isSignedIntoCloud, Self.isFirstSync(for: auth.currentUser?.id) else { return }
-            await self.fetchSubscriptions(force: true)
+            await CurrencyManager.shared.refreshRatesWhenDue()
+            guard auth.isSignedIntoCloud else { return }
+            if let uid = auth.currentUser?.id {
+                await AgeConsentManager.shared.syncPendingConsent(userId: uid)
+            }
+            if Self.isFirstSync(for: auth.currentUser?.id) {
+                await self.fetchSubscriptions(force: true)
+            }
+            await LifecycleSync.shared.sync()
+            await PausePlanSync.shared.sync()
         }
     }
 
@@ -51,8 +62,6 @@ class SubscriptionStore: ObservableObject {
 
     private init() {
         #if DEBUG
-        // A demo list saved by an earlier demo launch is shown offline in another demo launch, and
-        // thrown away by an ordinary one, before anything can load it as the person's own.
         switch Self.savedDemoList(isDemo: UserDefaults.standard.bool(forKey: Self.savedListIsDemoKey),
                                   isDemoLaunch: LaunchFlag.isDemoLaunch) {
         case .none: break
@@ -62,7 +71,10 @@ class SubscriptionStore: ObservableObject {
             UserDefaults.standard.removeObject(forKey: Self.savedListIsDemoKey)
         }
         #endif
-        loadFromCache()
+        // Start hidden whenever nobody is signed in so cached data never leaks to widgets/reminders on cold launch.
+        let runningTests = ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
+        isHidden = !runningTests && !AuthManager.shared.isAuthenticated && !LaunchFlag.isDemoLaunch
+        if !isHidden { loadFromCache() }
         sync.currentCopy = copyForSync
         sync.onNetworkRestored = recoverFirstSyncOnNetwork
         #if DEBUG
@@ -258,8 +270,13 @@ class SubscriptionStore: ObservableObject {
         lastFetchFailed = false
         defaults.set(userId, forKey: Self.syncedUserKey)
 
-        // Drop superseded guest creates BEFORE queuing surviving uploads & backfills and draining.
+        // Drop superseded guest creates and remap local Pause Plan, history, and usage IDs BEFORE syncing.
         for id in merge.supersededLocalIDs { sync.dropPendingCreate(id) }
+        if !merge.remappedLocalIDs.isEmpty {
+            PausePlanStore.shared.remapSubscriptionIDs(merge.remappedLocalIDs)
+            LifecycleEventLog.shared.remapSubscriptionIDs(merge.remappedLocalIDs)
+            UsageLog.shared.remapSubscriptionIDs(merge.remappedLocalIDs)
+        }
         for sub in merge.upload { sync.noteAdded(sub.id) }
         for sub in merge.backfill { sync.noteChanged(sub.id) }
         let listed = Set(subscriptions.map(\.id))
@@ -291,6 +308,7 @@ class SubscriptionStore: ObservableObject {
 
     /// Marks all local subscriptions for upload when a guest upgrades to a cloud account.
     func queueLocalSubscriptionsForUpload() {
+        if subscriptions.isEmpty { loadFromCache() }
         for subscription in subscriptions where sync.intent(for: subscription.id) == nil {
             sync.noteAdded(subscription.id)
         }
@@ -365,11 +383,11 @@ class SubscriptionStore: ObservableObject {
         subscriptions[index] = subscription
         listChanged()
         sync.noteChanged(subscription.id)
-        // What it costs is the amount, its currency and how often it is charged: a change to any of
-        // them goes in the history (`PriceHistory` reads it from there).
-        if subscription.amount != before.amount || subscription.currency != before.currency
-            || subscription.billingFrequency != before.billingFrequency {
-            LifecycleEventLog.shared.record(.priceChanged, for: subscription, previousAmount: before.amount)
+        let sameCurrency = MoneyFormat.normalizedCode(subscription.currency) == MoneyFormat.normalizedCode(before.currency)
+        let samePeriod = subscription.billingFrequency == before.billingFrequency
+        if subscription.amount != before.amount || !sameCurrency || !samePeriod {
+            LifecycleEventLog.shared.record(.priceChanged, for: subscription,
+                                            previousAmount: (sameCurrency && samePeriod) ? before.amount : nil)
         }
         await ReminderScheduler.shared.reschedule(subscriptions)
         await send(subscription.id)
@@ -426,7 +444,7 @@ class SubscriptionStore: ObservableObject {
         listChanged()
         for id in updatedIDs { sync.noteChanged(id) }
         await ReminderScheduler.shared.reschedule(subscriptions)
-        for id in updatedIDs { await send(id) }
+        if !AuthManager.shared.isGuest { await sync.drain() }
     }
 
     /// Removes every subscription from this device (account deletion, or a different person signing in).
@@ -450,38 +468,48 @@ class SubscriptionStore: ObservableObject {
     /// - Returns: false when the free plan has no place left for it (the caller shows the upgrade page).
     @discardableResult
     func startAgain(id: UUID, on date: Date = Date(), calendar: Calendar = .billing) async -> Bool {
-        guard var updated = subscriptions.first(where: { $0.id == id }), !updated.renewsAutomatically else { return true }
+        guard let index = subscriptions.firstIndex(where: { $0.id == id }) else { return true }
+        var updated = subscriptions[index]
+        guard !updated.renewsAutomatically else { return true }
         guard PaymentManager.shared.hasRoom(in: subscriptions) else { return false }
-        // Cancelled by mistake: back on before any charge it avoided came due. It keeps the day it renewed on
-        // (or none), instead of restarting today with a day it never had (the rating of 2026-11-23).
+
+        var markKeptOn: Date?
         if let cancel = LifecycleEventLog.shared.events.last(where: { $0.subscriptionId == id && $0.kind == .cancelled }),
            Self.isUndo(of: cancel, on: date, calendar: calendar) {
             let stillInTrial = updated.trialEndsAt.map { calendar.startOfDay(for: $0) >= calendar.startOfDay(for: date) } ?? false
             updated.nextBillingDate = stillInTrial ? cancel.anchorDate : (cancel.anchorDate ?? cancel.renewalDate)
-            await updateSubscription(updated)
-            await updateSubscriptionStatus(id: id, status: stillInTrial ? .trial : .active)
-            return true
+            updated.status = stillInTrial ? .trial : .active
+        } else {
+            let restart = PausePlanSchedule.restartAnchor(startedOn: date, frequency: updated.billingFrequency, calendar: calendar)
+            updated.nextBillingDate = restart.anchor
+            updated.trialEndsAt = nil
+            updated.status = .active
+            if restart.isStartDay { markKeptOn = restart.anchor }
         }
-        let restart = PausePlanSchedule.restartAnchor(startedOn: date, frequency: updated.billingFrequency, calendar: calendar)
-        updated.nextBillingDate = restart.anchor
-        await updateSubscription(updated)
-        await updateSubscriptionStatus(id: id, status: .active)
-        if restart.isStartDay {
-            // Today's charge is the one just paid: nothing to decide and nothing to be reminded of.
-            LifecycleEventLog.shared.record(.kept, for: updated, date: date, renewalDate: restart.anchor)
-            await ReminderScheduler.shared.reschedule(subscriptions)
+        updated = Self.withDaysAtNoon(updated, calendar: calendar)
+        subscriptions[index] = updated
+        LifecycleEventLog.shared.record(.reactivated, for: updated, date: date)
+        if let keptDay = markKeptOn {
+            LifecycleEventLog.shared.record(.kept, for: updated, date: date, renewalDate: keptDay)
         }
+        listChanged()
+        sync.noteChanged(id)
+        await ReminderScheduler.shared.reschedule(subscriptions)
+        await send(id)
         return true
     }
 
-    /// Whether starting again on `date` takes back the cancellation: no charge it would have avoided has
-    /// come due since (or it had no renewal day to count from, and it is the same day).
+    /// Whether starting again on `date` takes back the cancellation: no charge it would have avoided
+    /// fell strictly before `date` (matching `SavingsLedger.line` exactly on renewal-day reactivation).
     nonisolated static func isUndo(of cancel: LifecycleEvent, on date: Date, calendar: Calendar = .billing) -> Bool {
         guard let anchor = cancel.anchorDate ?? cancel.renewalDate else {
             return calendar.isDate(cancel.date, inSameDayAs: date)
         }
+        let reactivatedDay = calendar.startOfDay(for: date)
+        guard let dayBefore = calendar.date(byAdding: .day, value: -1, to: reactivatedDay) else { return true }
+        if dayBefore < calendar.startOfDay(for: cancel.date) { return true }
         let due = RenewalSchedule.renewals(anchor: anchor, frequency: cancel.frequency, after: cancel.date,
-                                           through: date, calendar: calendar)
+                                           through: dayBefore, calendar: calendar)
         return due.isEmpty
     }
 
@@ -598,89 +626,43 @@ class SubscriptionStore: ObservableObject {
     }
 
     static func makeDemoSubscriptions() -> [Subscription] {
-        let calendar = Calendar.billing
+        let cal = Calendar.billing
         let now = Date()
+        func d(_ offset: Int) -> Date? { cal.date(byAdding: .day, value: offset, to: now) }
         return [
-            Subscription(
-                id: UUID(),
-                name: "Netflix",
-                category: "Entertainment",
-                amount: 15.99,
-                billingFrequency: .monthly,
-                nextBillingDate: calendar.date(byAdding: .day, value: 5, to: now),
-                status: .active
-            ),
-            Subscription(
-                id: UUID(),
-                name: "Spotify",
-                category: "Music",
-                amount: 10.99,
-                billingFrequency: .monthly,
-                nextBillingDate: calendar.date(byAdding: .day, value: 12, to: now),
-                status: .active
-            ),
-            Subscription(
-                id: UUID(),
-                name: "ChatGPT Plus",
-                category: "AI & Creativity",
-                amount: 20.00,
-                billingFrequency: .monthly,
-                nextBillingDate: calendar.date(byAdding: .day, value: 18, to: now),
-                status: .active
-            ),
-            Subscription(
-                id: UUID(),
-                name: "Apple One",
-                category: "Productivity",
-                amount: 32.95,
-                billingFrequency: .monthly,
-                nextBillingDate: calendar.date(byAdding: .day, value: 2, to: now),
-                status: .active
-            ),
-            Subscription(
-                id: UUID(),
-                name: "YouTube Premium",
-                category: "Entertainment",
-                amount: 13.99,
-                billingFrequency: .monthly,
-                nextBillingDate: calendar.date(byAdding: .day, value: 24, to: now),
-                status: .active
-            ),
-            Subscription(
-                id: UUID(),
-                name: "Notion",
-                category: "Productivity",
-                amount: 10.00,
-                billingFrequency: .monthly,
-                nextBillingDate: calendar.date(byAdding: .day, value: 8, to: now),
-                status: .active
-            ),
-            Subscription(
-                id: UUID(),
-                name: "Peloton",
-                category: "Health & Fitness",
-                amount: 44.00,
-                billingFrequency: .monthly,
-                nextBillingDate: calendar.date(byAdding: .day, value: 15, to: now),
-                status: .active
-            )
+            Subscription(name: "Netflix", category: "Entertainment", amount: 15.99, billingFrequency: .monthly, nextBillingDate: d(5), status: .active),
+            Subscription(name: "Spotify", category: "Music", amount: 10.99, billingFrequency: .monthly, nextBillingDate: d(12), status: .active),
+            Subscription(name: "ChatGPT Plus", category: "AI & Creativity", amount: 20.00, billingFrequency: .monthly, nextBillingDate: d(18), status: .active),
+            Subscription(name: "Apple One", category: "Productivity", amount: 32.95, billingFrequency: .monthly, nextBillingDate: d(2), status: .active),
+            Subscription(name: "YouTube Premium", category: "Entertainment", amount: 13.99, billingFrequency: .monthly, nextBillingDate: d(24), status: .active),
+            Subscription(name: "Notion", category: "Productivity", amount: 10.00, billingFrequency: .monthly, nextBillingDate: d(8), status: .active),
+            Subscription(name: "Peloton", category: "Health & Fitness", amount: 44.00, billingFrequency: .monthly, nextBillingDate: d(15), status: .active),
         ]
     }
     #endif
 
-    
-    // MARK: - Batch Operations for Scale
-    
-    
     // MARK: - Totals
 
-    /// Monthly and yearly totals of active subscriptions in the display currency. Every
-    /// subscription is converted from its own currency first (see MoneyMath); cheap enough to redo
-    /// on every change, so there's no cache to go stale.
+    /// Monthly and yearly totals of active subscriptions in the display currency. Unknown currencies
+    /// are excluded and counted in `unconvertibleCount`; `totalIsConverted` is true only when a
+    /// foreign subscription actually converted.
     private func calculateTotals(in currency: String = CurrencyManager.shared.selectedCurrency) {
         let charging = subscriptions.charging
-        let monthly = charging.monthlyTotal(in: currency, rates: CurrencyManager.shared.rates)
-        totalIsConverted = charging.isConverted(to: currency)
+        let rates = CurrencyManager.shared.rates
+        let display = MoneyFormat.normalizedCode(currency)
+        var monthly: Decimal = 0
+        var converted = false
+        var excluded = 0
+        for sub in charging {
+            if let value = rates.convert(sub.monthlyCost, from: sub.currency, to: currency) {
+                monthly += value
+                if MoneyFormat.normalizedCode(sub.currency) != display { converted = true }
+            } else {
+                excluded += 1
+            }
+        }
+        totalIsConverted = converted
+        unconvertibleCount = excluded
         totalMonthlySpend = monthly
         totalAnnualSpend = monthly * 12
     }

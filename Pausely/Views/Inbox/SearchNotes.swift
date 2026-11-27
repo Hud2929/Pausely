@@ -415,9 +415,10 @@ struct FoundInsights: View {
                     .accessibilityAddTraits(.isHeader)
                 ForEach(Array(insights.enumerated()), id: \.element.id) { index, insight in
                     if index > 0 { Hairline() }
-                    HStack(alignment: .firstTextBaseline, spacing: 12) {
+                    MarkedWords(alignment: .top, spacing: 12) {
                         StateMark(state: Self.state(for: insight.kind), symbol: Self.symbol(for: insight.kind))
                             .accessibilityHidden(true)
+                    } words: {
                         VStack(alignment: .leading, spacing: 2) {
                             Text(insight.title)
                                 .font(.body.weight(.semibold))

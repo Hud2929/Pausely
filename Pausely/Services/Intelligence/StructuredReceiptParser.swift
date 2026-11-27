@@ -67,21 +67,24 @@ enum StructuredReceiptParser {
 
     // MARK: Walking the graph
 
-    private static func collect(from node: Any, into findings: inout [Result]) {
+    private static let maxDepth = 16
+
+    private static func collect(from node: Any, into findings: inout [Result], depth: Int = 0) {
+        guard depth <= maxDepth else { return }
         if let array = node as? [Any] {
-            for item in array { collect(from: item, into: &findings) }
+            for item in array { collect(from: item, into: &findings, depth: depth + 1) }
             return
         }
         guard let object = node as? [String: Any] else { return }
 
-        if let graph = object["@graph"] { collect(from: graph, into: &findings) }
+        if let graph = object["@graph"] { collect(from: graph, into: &findings, depth: depth + 1) }
 
         let types = typeNames(object["@type"])
         if let result = interpret(object: object, types: types) { findings.append(result) }
 
         // Nested objects can carry the invoice/order too (e.g. a Message wrapping an Order).
         for key in ["about", "mainEntity", "object", "result", "orderedItem", "partOfOrder"] {
-            if let nested = object[key] { collect(from: nested, into: &findings) }
+            if let nested = object[key] { collect(from: nested, into: &findings, depth: depth + 1) }
         }
     }
 
@@ -143,14 +146,20 @@ enum StructuredReceiptParser {
     }
 
     private static func decimalPair(_ object: [String: Any]) -> (amount: Decimal?, currency: String?) {
+        let currency = (object["priceCurrency"] as? String ?? object["currency"] as? String)?
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .uppercased()
         let rawPrice = object["price"] ?? object["totalPrice"] ?? object["value"]
         var amount: Decimal?
-        if let number = rawPrice as? NSNumber { amount = number.decimalValue }
-        else if let string = rawPrice as? String {
-            amount = Decimal(string: string.replacingOccurrences(of: ",", with: "").trimmingCharacters(in: CharacterSet(charactersIn: "$€£ ")))
+        if let number = rawPrice as? NSNumber {
+            amount = number.decimalValue
+        } else if let string = rawPrice as? String {
+            let normalized = ReceiptTextAnalyzer.normalizingDigits(string)
+                .trimmingCharacters(in: CharacterSet.whitespacesAndNewlines.union(CharacterSet(charactersIn: "$€£¥₹₩")))
+            amount = ReceiptTextAnalyzer.parseAmount(normalized, currency: currency)?.value
         }
-        if let value = amount, value <= 0 || value >= 10_000 { amount = nil }
-        let currency = (object["priceCurrency"] as? String ?? object["currency"] as? String)?.uppercased()
+        let maxCap: Decimal = currency.map(ReceiptTextAnalyzer.wholeUnitCurrencies.contains) == true ? 2_000_000 : 10_000
+        if let value = amount, value <= 0 || value >= maxCap { amount = nil }
         return (amount, currency)
     }
 
@@ -165,13 +174,13 @@ enum StructuredReceiptParser {
     /// Looks for a recurring unit price (schema.org UnitPriceSpecification) inside an Order's offers.
     private static func recurringCadence(in order: [String: Any]) -> BillingFrequency? {
         var specs: [[String: Any]] = []
-        func gatherSpecs(from raw: Any?) {
-            guard let raw else { return }
-            if let array = raw as? [Any] { array.forEach { gatherSpecs(from: $0) }; return }
+        func gatherSpecs(from raw: Any?, depth: Int = 0) {
+            guard let raw, depth <= maxDepth else { return }
+            if let array = raw as? [Any] { array.forEach { gatherSpecs(from: $0, depth: depth + 1) }; return }
             guard let object = raw as? [String: Any] else { return }
-            if let spec = object["priceSpecification"] { gatherSpecs(from: spec) }
+            if let spec = object["priceSpecification"] { gatherSpecs(from: spec, depth: depth + 1) }
             if object["unitCode"] != nil || object["billingDuration"] != nil || object["billingIncrement"] != nil { specs.append(object) }
-            if let offer = object["acceptedOffer"] { gatherSpecs(from: offer) }
+            if let offer = object["acceptedOffer"] { gatherSpecs(from: offer, depth: depth + 1) }
         }
         gatherSpecs(from: order["acceptedOffer"])
         gatherSpecs(from: order["priceSpecification"])

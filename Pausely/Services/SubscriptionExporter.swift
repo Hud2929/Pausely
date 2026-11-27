@@ -37,7 +37,7 @@ final class SubscriptionExporter {
         case .pdf:
             return exportPDF(subscriptions: filtered)
         case .json:
-            return exportJSON(subscriptions: filtered)
+            return exportJSON(subscriptions: filtered, includeCancelled: options.includeCancelled)
         }
     }
 
@@ -74,7 +74,9 @@ final class SubscriptionExporter {
     }
 
     private func exportCSV(subscriptions: [Subscription]) -> URL? {
-        writeToFile(content: Self.csv(for: subscriptions), extension: "csv")
+        // UTF-8 BOM lets Excel open Arabic, Japanese and accented currencies without mojibake.
+        let data = Data([0xEF, 0xBB, 0xBF]) + Data(Self.csv(for: subscriptions).utf8)
+        return writeDataToFile(data: data, extension: "csv")
     }
 
     /// One text cell of the spreadsheet file.
@@ -117,9 +119,13 @@ final class SubscriptionExporter {
         return try encoder.encode(FullExport(subscriptions: subscriptions, history: history, pausePlan: pausePlan))
     }
 
-    private func exportJSON(subscriptions: [Subscription]) -> URL? {
+    private func exportJSON(subscriptions: [Subscription], includeCancelled: Bool) -> URL? {
         do {
-            let data = try Self.json(for: subscriptions, history: LifecycleEventLog.shared.events,
+            let exportedIDs = Set(subscriptions.map(\.id))
+            let history = includeCancelled
+                ? LifecycleEventLog.shared.events
+                : LifecycleEventLog.shared.events.filter { exportedIDs.contains($0.subscriptionId) }
+            let data = try Self.json(for: subscriptions, history: history,
                                      pausePlan: PausePlanStore.shared.plan)
             return writeDataToFile(data: data, extension: "json")
         } catch {
@@ -174,6 +180,7 @@ final class SubscriptionExporter {
 
         let paragraph = NSMutableParagraphStyle()
         paragraph.alignment = rightToLeft ? .right : .left
+        paragraph.baseWritingDirection = rightToLeft ? .rightToLeft : .leftToRight
         paragraph.lineBreakMode = .byTruncatingTail
         func style(_ size: CGFloat, _ weight: UIFont.Weight, _ color: UIColor = .black) -> [NSAttributedString.Key: Any] {
             [.font: UIFont.systemFont(ofSize: size, weight: weight), .foregroundColor: color, .paragraphStyle: paragraph]
@@ -184,7 +191,7 @@ final class SubscriptionExporter {
         }
 
         // Five columns across the page; in a right-to-left language the first is on the right.
-        let widths: [CGFloat] = [176, 110, 96, 90, 60]
+        let widths: [CGFloat] = [156, 98, 90, 102, 86]
         var edges: [CGFloat] = []
         var x = margin
         for columnWidth in widths { edges.append(x); x += columnWidth }
@@ -242,10 +249,6 @@ final class SubscriptionExporter {
         for url in urls where url.lastPathComponent.hasPrefix("pausely_export_") {
             try? FileManager.default.removeItem(at: url)
         }
-    }
-
-    private func writeToFile(content: String, extension ext: String) -> URL? {
-        writeDataToFile(data: Data(content.utf8), extension: ext)
     }
 
     private func writeDataToFile(data: Data, extension ext: String) -> URL? {

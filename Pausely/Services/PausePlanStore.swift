@@ -163,6 +163,25 @@ final class PausePlanStore: ObservableObject {
         await commit(snapshot, now: now)
     }
 
+    /// Rewrites local guest subscription IDs to matched cloud IDs on first-sync dedup.
+    func remapSubscriptionIDs(_ map: [UUID: UUID]) {
+        guard !map.isEmpty, var current = plan else { return }
+        var seen: Set<UUID> = []
+        let mapped = current.subscriptionIds.compactMap { id -> UUID? in
+            let next = map[id] ?? id
+            return seen.insert(next).inserted ? next : nil
+        }
+        guard mapped != current.subscriptionIds, mapped.count >= 2 else { return }
+        current.subscriptionIds = mapped
+        plan = current
+        if var state = syncState {
+            state.plan = current
+            state.pendingSync = true
+            syncState = state
+        }
+        save()
+    }
+
     private func commit(_ updated: PausePlan, now: Date) async {
         let stamp = Self.wholeSecond(now)
         let state = SyncState(plan: updated, updatedAt: stamp, endedAt: nil, pendingSync: true)

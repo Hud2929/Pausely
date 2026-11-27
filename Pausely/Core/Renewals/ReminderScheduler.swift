@@ -143,7 +143,7 @@ final class ReminderScheduler {
     static func content(for reminder: ReminderPlanner.Reminder, subscription sub: Subscription) -> UNMutableNotificationContent {
         let content = UNMutableNotificationContent()
         let amount = sub.displayAmount
-        let day = DayText.date(reminder.eventDate, locale: L10n.locale)
+        let day = DayText.date(reminder.eventDate, locale: L10n.locale, now: reminder.fireDate)
         switch reminder.kind {
         case .renewalHeadsUp:
             content.title = L10n.string("\(sub.name) renews \(L10n.relativeDay(reminder.daysBefore))")
@@ -163,10 +163,14 @@ final class ReminderScheduler {
         case .planCancel:
             if reminder.daysBefore > 1 {
                 content.title = L10n.string("Pause Plan: cancel \(sub.name) before \(day)")
-                content.body = L10n.string("It renews \(L10n.relativeDay(reminder.daysBefore)) for \(amount). Cancel at least 24 hours ahead and it comes back on its turn.")
+                content.body = sub.status == .trial
+                    ? L10n.string("Its free trial ends \(L10n.relativeDay(reminder.daysBefore)) and charges \(amount). Cancel at least 24 hours ahead and it comes back on its turn.")
+                    : L10n.string("It renews \(L10n.relativeDay(reminder.daysBefore)) for \(amount). Cancel at least 24 hours ahead and it comes back on its turn.")
             } else {
                 content.title = L10n.string("Pause Plan: cancel \(sub.name) today")
-                content.body = L10n.string("It renews tomorrow for \(amount). Cancel today and it comes back on its turn.")
+                content.body = sub.status == .trial
+                    ? L10n.string("Its free trial ends tomorrow and charges \(amount). Cancel today and it comes back on its turn.")
+                    : L10n.string("It renews tomorrow for \(amount). Cancel today and it comes back on its turn.")
             }
         case .planStart:
             content.title = L10n.string("Pause Plan: \(sub.name) is on")

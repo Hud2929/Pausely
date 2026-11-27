@@ -11,11 +11,15 @@ import UniformTypeIdentifiers
 struct ExportDataView: View {
     @ObservedObject private var store = SubscriptionStore.shared
 
+    private struct ExportFile: Identifiable {
+        let id = UUID()
+        let url: URL
+    }
+
     @State private var selectedFormat: ExportFormat = .csv
     @State private var includeCancelled = false
     @State private var isExporting = false
-    @State private var exportURL: URL?
-    @State private var showingShareSheet = false
+    @State private var exportedFile: ExportFile?
     @State private var exportError: String?
 
     var filteredCount: Int {
@@ -35,9 +39,9 @@ struct ExportDataView: View {
 
             SettingsSection(title: "Include") {
                 SettingsRow(title: L10n.string("Cancelled subscriptions")) {
-                    Toggle("", isOn: $includeCancelled).labelsHidden().tint(Color.inkTextMuted)
-                        .accessibilityLabel(Text("Cancelled subscriptions"))
+                    Toggle(isOn: $includeCancelled) { EmptyView() }.labelsHidden().tint(Color.inkTextMuted)
                 }
+                .accessibilityElement(children: .combine)
             }
 
             VStack(alignment: .leading, spacing: 12) {
@@ -64,8 +68,8 @@ struct ExportDataView: View {
                 .accessibilityIdentifier("exportButton")
             }
         }
-        .sheet(isPresented: $showingShareSheet) {
-            if let url = exportURL { ShareSheet(items: [url]) }
+        .sheet(item: $exportedFile) { file in
+            ShareSheet(items: [file.url])
         }
     }
 
@@ -92,8 +96,7 @@ struct ExportDataView: View {
             let url = SubscriptionExporter.shared.export(subscriptions: store.subscriptions, options: options)
             isExporting = false
             if let url {
-                exportURL = url
-                showingShareSheet = true
+                exportedFile = ExportFile(url: url)
             } else {
                 exportError = L10n.string("The file couldn't be made. Try again.")
             }

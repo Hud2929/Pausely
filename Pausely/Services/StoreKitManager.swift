@@ -59,7 +59,7 @@ final class StoreKitManager: ObservableObject {
         /// renewal is off. Nil when the App Store gave no date.
         func statusLine(locale: Locale = L10n.locale) -> String? {
             guard let renews else { return nil }
-            let day = renews.formatted(.dateTime.month(.abbreviated).day().year().locale(locale))
+            let day = DayText.fullDate(renews, locale: locale)
             if willRenew == false { return L10n.string("Ends \(day)") }
             return isTrial ? L10n.string("Free trial ends \(day)") : L10n.string("Renews \(day)")
         }

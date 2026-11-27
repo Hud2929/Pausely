@@ -28,7 +28,11 @@ enum PriceHistory {
     static func points(for subscriptionId: UUID, events: [LifecycleEvent]) -> [Point] {
         let recorded = events
             .filter { $0.subscriptionId == subscriptionId && ($0.kind == .added || $0.kind == .priceChanged) }
-            .sorted { $0.date < $1.date }
+            .sorted { lhs, rhs in
+                if lhs.date != rhs.date { return lhs.date < rhs.date }
+                if lhs.kind != rhs.kind { return lhs.kind == .added }
+                return lhs.id.uuidString < rhs.id.uuidString
+            }
         var points: [Point] = []
         for event in recorded {
             // A history that starts with a change (it was added before events were kept): the price

@@ -2,7 +2,7 @@
 //  CancellationFlowView.swift
 //  Pausely
 //
-//  4-Step Cancellation Concierge
+//  In-app Safari sheet and cancellation/refund email draft preview.
 //
 
 import SwiftUI
@@ -60,6 +60,7 @@ struct EmailDraftSheet: View {
     let draft: CancelConcierge.Draft
     var locked: Bool = false
     var paywallContext: PaywallContext = PaywallContext(trigger: .cancelConcierge)
+    var onUsed: (() -> Void)? = nil
     @Environment(\.dismiss) private var dismiss
     @Environment(\.openURL) private var openURL
     @Environment(\.dynamicTypeSize) private var typeSize
@@ -138,11 +139,21 @@ struct EmailDraftSheet: View {
                                 .foregroundStyle(Color.paperInk)
                                 .fixedSize(horizontal: false, vertical: true)
                                 .textSelection(.enabled)
+                            Perforation()
+                            Text("Add the service's support address in the To field before sending.")
+                                .font(.footnote)
+                                .foregroundStyle(Color.paperMuted)
+                                .fixedSize(horizontal: false, vertical: true)
                         }
                     }
                 }
                 .padding(.top, 16)
-
+            }
+            .padding(.horizontal, Layout.margin)
+            .padding(.top, 8)
+            .padding(.bottom, 16)
+        } actions: {
+            VStack(spacing: 10) {
                 if copied {
                     HStack(spacing: 8) {
                         Image(systemName: "checkmark.circle.fill")
@@ -154,15 +165,9 @@ struct EmailDraftSheet: View {
                             .foregroundStyle(Color.kept)
                             .fixedSize(horizontal: false, vertical: true)
                     }
-                    .padding(.top, 12)
+                    .frame(maxWidth: .infinity, alignment: .leading)
                     .accessibilityElement(children: .combine)
                 }
-            }
-            .padding(.horizontal, Layout.margin)
-            .padding(.top, 8)
-            .padding(.bottom, 16)
-        } actions: {
-            VStack(spacing: 10) {
                 if isLocked {
                     Button {
                         Feel.selection()
@@ -175,6 +180,7 @@ struct EmailDraftSheet: View {
                 } else {
                     Button {
                         Feel.selection()
+                        onUsed?()
                         if MFMailComposeViewController.canSendMail() {
                             showingMailCompose = true
                         } else if let mailto = CancelConcierge.mailtoURL(for: draft) {
@@ -227,6 +233,7 @@ struct EmailDraftSheet: View {
             Text("Share")
                 .frame(maxWidth: .infinity)
         }
+        .simultaneousGesture(TapGesture().onEnded { onUsed?() })
         .buttonStyle(.ink(.quiet))
         .accessibilityIdentifier("shareEmailDraftButton")
     }
@@ -235,6 +242,8 @@ struct EmailDraftSheet: View {
         UIPasteboard.general.string = fullText
         Feel.landed()
         copied = true
+        onUsed?()
+        UIAccessibility.post(notification: .announcement, argument: L10n.string("Copied email to clipboard."))
     }
 }
 

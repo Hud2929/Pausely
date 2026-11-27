@@ -12,6 +12,7 @@ struct InboxImportView: View {
     @ObservedObject private var scanner = InboxScanner.shared
     @ObservedObject private var store = SubscriptionStore.shared
     @ObservedObject private var payments = PaymentManager.shared
+    @ObservedObject private var currencyManager = CurrencyManager.shared
     @Environment(\.dismiss) private var dismiss
     @Environment(\.dynamicTypeSize) private var typeSize
     @State private var selected: Set<String> = []
@@ -21,6 +22,8 @@ struct InboxImportView: View {
     @State private var outcome: TallyImporter.Outcome?
     @State private var imapPreset: IMAPPreset?
     @State private var imapAddress = ""
+    @State private var pendingIMAP: (preset: IMAPPreset?, address: String)?
+    @State private var pendingOAuth: MailboxKind?
     @State private var showingIMAP = false
     @State private var showingProviders = false
     @State private var showingPaywall = false
@@ -120,11 +123,29 @@ struct InboxImportView: View {
                     // On iPad a form sheet squeezed the steps and fields into a small box (B1).
                     .presentationSizing(.page)
             }
-            .sheet(isPresented: $showingProviders) {
-                ProviderSheet(onChoose: { showingProviders = false }, onAppPassword: openIMAP, onCancel: { showingProviders = false })
+            .sheet(isPresented: $showingProviders, onDismiss: {
+                if let pending = pendingIMAP {
+                    pendingIMAP = nil
+                    imapPreset = pending.preset; imapAddress = pending.address; showingIMAP = true
+                } else if let oauth = pendingOAuth {
+                    pendingOAuth = nil
+                    Task { if oauth == .gmail { await scanner.connectGmail() } else { await scanner.connectMicrosoft() } }
+                }
+            }) {
+                ProviderSheet(onChoose: { showingProviders = false }, onAppPassword: openIMAP,
+                              onOAuth: { pendingOAuth = $0; showingProviders = false },
+                              onCancel: { showingProviders = false })
             }
             .sheet(isPresented: $showingPaywall) {
-                StoreKitUpgradeView(trigger: .unlimitedSubscriptions)
+                StoreKitUpgradeView(context: Self.paywallContext(
+                    waiting: TallyImporter.waitingLines(),
+                    existingChargingCount: store.subscriptions.charging.count,
+                    displayCurrency: currencyManager.selectedCurrency
+                )) {
+                    if let current = outcome {
+                        outcome = ScreenshotImportSupport.promotedOutcome(current)
+                    }
+                }
             }
             .sheet(item: $addingByHand) { AddSubscriptionView(startName: $0.name) }
         }
@@ -197,10 +218,14 @@ struct InboxImportView: View {
     }
 
     private func openIMAP(_ preset: IMAPPreset?) {
-        imapPreset = preset
-        imapAddress = ""
-        showingProviders = false
-        showingIMAP = true
+        if showingProviders {
+            pendingIMAP = (preset, "")
+            showingProviders = false
+        } else {
+            imapPreset = preset
+            imapAddress = ""
+            showingIMAP = true
+        }
     }
 
     // MARK: - Connected, nothing to show
@@ -314,21 +339,22 @@ struct InboxImportView: View {
         let cancelled = scanner.foundSubscriptions.filter(\.isCancelled)
 
         return VStack(spacing: 28) {
-            // A search that couldn't read an inbox says so above what is shown: it returned to "We found 20"
-            // with the failure only in the inbox's row, 3,900 points down (the reach rating of 2026-11-23).
-            if let failed = scanner.accounts.first(where: { scanner.accountErrors[$0.id] != nil }),
-               let problem = scanner.accountErrors[failed.id] {
-                VStack(alignment: .leading, spacing: 4) {
-                    ProblemLine(message: L10n.string("\(failed.address) couldn't be searched: \(problem) What's below is from earlier searches."),
-                                identifier: "searchFailedNote")
-                    Button { reconnect(failed) } label: {
-                        Text("Reconnect")
-                            .font(.subheadline.weight(.semibold))
-                            .foregroundStyle(Color.inkText)
-                            .tapArea(.leading)
+            let failedAccounts = scanner.accounts.filter { scanner.accountErrors[$0.id] != nil }
+            if !failedAccounts.isEmpty {
+                VStack(alignment: .leading, spacing: 10) {
+                    ForEach(failedAccounts) { failed in
+                        if let problem = scanner.accountErrors[failed.id] {
+                            VStack(alignment: .leading, spacing: 4) {
+                                ProblemLine(message: L10n.string("\(failed.address) couldn't be searched: \(problem) What's below is from earlier searches."),
+                                            identifier: "searchFailedNote")
+                                Button { reconnect(failed) } label: {
+                                    Text("Reconnect").font(.subheadline.weight(.semibold)).foregroundStyle(Color.inkText).tapArea(.leading)
+                                }
+                                .buttonStyle(.plain)
+                                .accessibilityLabel(Text(verbatim: L10n.string("Reconnect \(failed.address)")))
+                            }
+                        }
                     }
-                    .buttonStyle(.plain)
-                    .accessibilityLabel(Text(verbatim: L10n.string("Reconnect \(failed.address)")))
                 }
             }
             summary(count: live.count)
@@ -385,9 +411,9 @@ struct InboxImportView: View {
         selected = Set(live.filter { $0.proven.tier == .confirmed && !isOnList($0) && !isWaiting($0) }.map(\.id))
     }
 
-    /// Already in the person's list, by the importer's own rule (the same name, any case).
+    /// Already charging on the person's list, by the importer's own rule (cancelled entries never block re-adding).
     private func isOnList(_ found: FoundSubscription) -> Bool {
-        store.subscriptions.contains { ServiceName.same($0.name, found.name) }
+        store.subscriptions.charging.contains { ServiceName.same($0.name, found.name) }
     }
 
     private var insights: some View {
@@ -396,12 +422,12 @@ struct InboxImportView: View {
 
     /// What the search found: the total first, then how it was worked out.
     private func summary(count: Int) -> some View {
-        let currency = CurrencyManager.shared.selectedCurrency
+        let currency = currencyManager.selectedCurrency
         // The total follows the ticks and says so: it counted rows nobody ticked and changed after adding
         // (the ratings of 2026-11-22). With nothing ticked it is everything found that isn't listed yet.
         let picked = chosen
         let base = picked.isEmpty ? live.filter { !isOnList($0) } : picked
-        let (monthly, converted) = Self.slipTotal(base, in: currency, rates: CurrencyManager.shared.rates)
+        let (monthly, converted) = Self.slipTotal(base, in: currency, rates: currencyManager.rates)
         let ignored = scanner.stats.purchasesIgnored
         let stats = scanner.stats
 
@@ -430,6 +456,7 @@ struct InboxImportView: View {
                 VStack(alignment: .leading, spacing: 10) {
                     // Says what it sums: "For everything found" stood over only the rows not yet listed (2026-11-22).
                     Text(verbatim: !picked.isEmpty ? L10n.string("For the \(picked.count) you've ticked")
+                                   : base.isEmpty ? L10n.string("Everything found is already on your list")
                                    : base.count < live.count ? L10n.string("For the \(base.count) not on your list yet")
                                    : L10n.string("For everything found"))
                         .font(.proof(.caption))
@@ -509,7 +536,7 @@ struct InboxImportView: View {
                         isOnList: isOnList(found) || isWaiting(found),
                         isWaiting: isWaiting(found),
                         keptForLater: keptForLater(found),
-                        listed: store.subscriptions.first { ServiceName.same($0.name, found.name) },
+                        listed: store.subscriptions.charging.first { ServiceName.same($0.name, found.name) },
                         onUseReceipts: { Task { await useReceipts(found) } },
                         isSelected: selected.contains(found.id),
                         isExpanded: expanded.contains(found.id),
@@ -544,9 +571,9 @@ struct InboxImportView: View {
         payments.isUnlocked(.unlimitedSubscriptions) ? nil : FreeTier.room(in: store.subscriptions)
     }
 
-    /// The chosen ones that aren't on the list already: the ones the free limit applies to.
+    /// The chosen ones that aren't charging on the list already: the ones the free limit applies to.
     private var newlyChosen: Int {
-        chosen.filter { found in !store.subscriptions.contains { ServiceName.same($0.name, found.name) } }.count
+        chosen.filter { found in !store.subscriptions.charging.contains { ServiceName.same($0.name, found.name) } }.count
     }
 
     /// Whether the bar at the bottom edge holds only "Add to my list", with the free-limit note
@@ -570,8 +597,8 @@ struct InboxImportView: View {
     private var freeLimitNote: some View {
         if !chosen.isEmpty, let slots = freeSlots, newlyChosen > slots {
             // By name, in the importer's own order: a count left the person to guess which (2026-11-22).
-            let split = Self.freeLimitSplit(chosen, existing: store.subscriptions.map(\.name), slots: slots,
-                                            in: CurrencyManager.shared.selectedCurrency, rates: CurrencyManager.shared.rates)
+            let split = Self.freeLimitSplit(chosen, existing: store.subscriptions.charging.map(\.name), slots: slots,
+                                            in: currencyManager.selectedCurrency, rates: currencyManager.rates)
             Text(slots == 0
                  // What happens to what waits, as it happens: Home offers it when a place is free (2026-11-23).
                  ? L10n.string("The free plan tracks \(FreeTier.subscriptionLimit) and your list is full. What you add now waits, and Home offers it when there's room.")
@@ -628,7 +655,7 @@ struct InboxImportView: View {
     /// The receipts' price, and their renewal day where the list has none, on the listed subscription: only
     /// when the person asks, and with the way back.
     private func useReceipts(_ found: FoundSubscription) async {
-        guard let listed = store.subscriptions.first(where: { ServiceName.same($0.name, found.name) }) else { return }
+        guard let listed = store.subscriptions.charging.first(where: { ServiceName.same($0.name, found.name) }) else { return }
         let updated = FoundRow.updatedFromReceipts(listed, by: found)
         guard updated != listed else { return }
         await store.updateSubscription(updated)

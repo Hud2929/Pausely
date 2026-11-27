@@ -37,14 +37,23 @@ struct SubscriptionsView: View {
         }
     }
 
+    private var trimmedSearch: String {
+        searchText.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
     private var sections: [SubscriptionGroups.Section] {
-        let shown = searchText.isEmpty
+        let query = trimmedSearch
+        let options: String.CompareOptions = [.caseInsensitive, .diacriticInsensitive, .widthInsensitive]
+        let shown = query.isEmpty
             ? store.subscriptions
             : store.subscriptions.filter { sub in
-                sub.name.localizedCaseInsensitiveContains(searchText)
-                    || (sub.paymentMethod?.localizedCaseInsensitiveContains(searchText) ?? false)
-                    || (sub.notes?.localizedCaseInsensitiveContains(searchText) ?? false)
-                    || SubscriptionCategory.localizedLabel(for: sub.category).localizedCaseInsensitiveContains(searchText)
+                sub.name.range(of: query, options: options, locale: L10n.locale) != nil
+                    || (sub.paymentMethod?.range(of: query, options: options, locale: L10n.locale) != nil)
+                    || (sub.notes?.range(of: query, options: options, locale: L10n.locale) != nil)
+                    || SubscriptionCategory.localizedLabel(for: sub.category).range(of: query, options: options, locale: L10n.locale) != nil
+                    || sub.currency.range(of: query, options: options, locale: L10n.locale) != nil
+                    || sub.billingFrequency.displayName.range(of: query, options: options, locale: L10n.locale) != nil
+                    || sub.status.displayName.range(of: query, options: options, locale: L10n.locale) != nil
             }
         let pending = Set(VerdictCenter.shared.pendingDecisions(rotating: pausePlanStore.activePlan).map(\.subscriptionId))
         return SubscriptionGroups.sections(shown, pending: pending, now: Date())
@@ -159,6 +168,14 @@ struct SubscriptionsView: View {
                 }
                 .font(.subheadline)
                 .foregroundStyle(Color.inkTextMuted)
+                if store.unconvertibleCount > 0 {
+                    Text(store.unconvertibleCount == 1
+                         ? L10n.string("1 subscription is in a currency without an exchange rate and isn't in this total.")
+                         : L10n.string("\(store.unconvertibleCount) subscriptions are in currencies without an exchange rate and aren't in this total."))
+                        .font(.footnote)
+                        .foregroundStyle(Color.inkTextMuted)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
             }
         }
     }
@@ -174,8 +191,9 @@ struct SubscriptionsView: View {
                     .listRowSeparator(.hidden)
             }
 
-            // Search earns its place only once the list is long enough to lose something in.
-            if store.subscriptions.count > 8 {
+            // Search earns its place once the list is long enough to lose something in, and stays
+            // visible while a query is active so deleting a row past the threshold never locks the list.
+            if store.subscriptions.count > 8 || !searchText.isEmpty {
                 SearchField(text: $searchText, identifier: "subscriptionSearchField")
                     .listRowInsets(EdgeInsets(top: 12, leading: Layout.margin, bottom: 4, trailing: Layout.margin))
                     .listRowBackground(Color.clear)
@@ -183,14 +201,26 @@ struct SubscriptionsView: View {
             }
 
             if sections.isEmpty {
-                Text(L10n.string("Nothing matches \"\(searchText)\"."))
-                    .font(.body)
-                    .foregroundStyle(Color.inkTextMuted)
-                    .fixedSize(horizontal: false, vertical: true)
-                    // On the screen's margin, like the field above it (it sat four points to its left).
-                    .listRowInsets(EdgeInsets(top: 12, leading: Layout.margin, bottom: 12, trailing: Layout.margin))
-                    .listRowBackground(Color.clear)
-                    .listRowSeparator(.hidden)
+                VStack(alignment: .leading, spacing: 8) {
+                    Text(L10n.string("Nothing matches \"\(trimmedSearch)\"."))
+                        .font(.body)
+                        .foregroundStyle(Color.inkTextMuted)
+                        .fixedSize(horizontal: false, vertical: true)
+                    if !searchText.isEmpty {
+                        Button { searchText = "" } label: {
+                            Text("Clear search")
+                                .font(.subheadline.weight(.semibold))
+                                .foregroundStyle(Color.inkText)
+                                .underline()
+                                .tapArea(.leading)
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+                // On the screen's margin, like the field above it (it sat four points to its left).
+                .listRowInsets(EdgeInsets(top: 12, leading: Layout.margin, bottom: 12, trailing: Layout.margin))
+                .listRowBackground(Color.clear)
+                .listRowSeparator(.hidden)
             }
 
             ForEach(sections) { section in
@@ -251,6 +281,9 @@ struct SubscriptionsView: View {
         .scrollContentBackground(.hidden)
         .readableScroll()
         .contentMargins(.bottom, 24, for: .scrollContent)
+        .refreshable {
+            await store.fetchSubscriptions(force: true)
+        }
     }
 
     /// True while this row is the one being asked about: the question comes up from its row.
@@ -359,7 +392,7 @@ private struct SubscriptionRow: View {
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
-        .accessibilityLabel(Text(verbatim: "\(subscription.name), \(subscription.billingFrequency.priced(subscription.chargeText)), \(detail)"))
+        .accessibilityLabel(Text(verbatim: [subscription.name, subscription.billingFrequency.priced(subscription.chargeText), detail].filter { !$0.isEmpty }.joined(separator: ", ")))
     }
 
     private var words: some View {
@@ -403,7 +436,9 @@ private struct SubscriptionRow: View {
         case .cancelled:
             return L10n.string("Cancelled")
         case .undated:
-            return L10n.string("Add its renewal date")
+            return subscription.status == .trial
+                ? L10n.string("Add when the free trial ends")
+                : L10n.string("Add its renewal date")
         case .decide, .thisWeek, .thisMonth, .later:
             guard let charge = RenewalDecisions.upcomingCharge(for: subscription, now: Date()) else { return "" }
             let days = Calendar.billing.calendarDays(from: Date(), to: charge.date)
@@ -429,8 +464,8 @@ private struct WaitingSection: View {
     private var subtitle: String {
         if let risk = PaywallCase.waitingRisk(lines: lines, displayCurrency: currencyManager.selectedCurrency,
                                               proYearly: nil, proCurrency: nil, rates: currencyManager.rates) {
-            let yearly = MoneyFormat.total(risk.yearlyAmount, risk.currency, converted: risk.isConverted,
-                                           locale: L10n.locale, wholeUnits: true)
+            let yearly = MoneyFormat.string(risk.yearlyAmount, risk.currency,
+                                            locale: L10n.locale, wholeUnits: true)
             return L10n.string("About \(yearly) a year without reminders. The free plan tracks \(FreeTier.subscriptionLimit).")
         }
         return L10n.string("Kept for later: the free plan tracks \(FreeTier.subscriptionLimit). These aren't in your totals or reminders.")

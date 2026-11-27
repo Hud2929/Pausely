@@ -1954,7 +1954,7 @@ Stage G, as it closes (each line: what, and the evidence):
 > is expected to change: each is held where it is by what only a device, a person or the owner
 > can do. The fourth version is not written; the last entry of 5.2 says what it waits for.
 
-Written 2026-11-17, at the end of the run, from what the run produced: captures that were opened,
+Written 2026-11-17 (historical baseline; see 2026-11-26 full-app 5-squad audit addendum below), at the end of the run, from what the run produced: captures that were opened,
 numbers a script printed, tests that ran. Nothing here is from memory. It is the third version
 written that day: the first (`d0e0206`), the second (`9490b27`) and the scorecard of 11-11 are in
 this file's history.
@@ -2053,6 +2053,8 @@ is what stands between the other lines and 9.5, if they find nothing.
 | Find in Email (not in the release build) | 9 | 9.5 | 9.5 | 9.5 | 9.5 | 9.5 | 9.0 | 9.0 | 9.0 | **9.3** | At the largest size the results are fifteen screens long. Walked against a real mailbox served on this Mac (6.5). |
 
 ### 7.3 The six customers
+
+> *Historical snapshot (`2026-11-17`, commit `3ef0f31`): recorded before 1.0.4 expanded Pausely Pro to 5 features (Unlimited subscriptions, Pause Plan, 12-month Forecast & Cut Simulator, Batch Screenshot Import, Cancel & Refund Email Drafts) and before the 2026-11-26 full-app audit rounds.*
 
 Walked by the builder from captures of the real flows, in three rounds: round 1 on the four whole
 tours (11-16), round 2 on the captures taken after its fixes (11-16 night), round 3 on the final

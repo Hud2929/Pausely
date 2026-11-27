@@ -84,6 +84,11 @@ final class WidgetWordsTests: XCTestCase {
             }
         }
         XCTAssertEqual(missing, [], "Shown by a widget and not translated")
+        let pausePlan = strings["Pause Plan"]?["localizations"] as? [String: Any] ?? [:]
+        for language in ["ar", "de", "es", "fr", "ja"] {
+            let value = ((pausePlan[language] as? [String: Any])?["stringUnit"] as? [String: Any])?["value"] as? String ?? ""
+            XCTAssertFalse(value.contains("Pause Plan"), "Widget 'Pause Plan' must be translated in \(language)")
+        }
     }
 
     /// Nothing a widget shows is built by gluing English words together.

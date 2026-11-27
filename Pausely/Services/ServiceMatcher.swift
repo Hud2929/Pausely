@@ -75,6 +75,10 @@ struct CancelHelp: Equatable {
     enum Kind: Equatable {
         /// Billed by Apple: cancelled in Settings, by the same steps for every Apple subscription.
         case appleSubscription
+        /// Billed through Google Play: cancelled in Google Play Payments & subscriptions.
+        case googlePlay
+        /// Billed through Amazon Prime Video Channels: cancelled in Amazon Channels settings.
+        case amazonChannel
         /// A service Pausely knows: its own cancellation page.
         case cancellationPage
         /// The service's own site, from the catalog entry of exactly this name.
@@ -97,9 +101,13 @@ struct CancelHelp: Equatable {
     static let amazonChannels = URL(string: "https://www.amazon.com/gp/video/settings/channels")
     static let googlePlaySubscriptions = URL(string: "https://play.google.com/store/account/subscriptions")
 
-    private static let appleBillerNames: Set<String> = ["apple", "app store", "apple subscriptions"]
-    private static let amazonBillerNames: Set<String> = ["amazon", "prime video", "amazon prime video"]
-    private static let googlePlayBillerNames: Set<String> = ["google play", "googleplay"]
+    private static let appleBillerNames: Set<String> = [
+        "apple", "app store", "app store billing", "apple subscriptions",
+        "apple billing", "apple id", "itunes", "itunes store"
+    ]
+    private static let amazonBillerNames: Set<String> = ["amazon", "prime video", "amazon prime video", "amazon channels"]
+    private static let amazonFirstPartyIDs: Set<String> = ["amazonprime", "amazonprimevideo", "amazonmusic", "aws"]
+    private static let googlePlayBillerNames: Set<String> = ["google play", "googleplay", "google play store"]
 
     @MainActor
     static func find(for subscription: Subscription) -> CancelHelp {
@@ -110,14 +118,23 @@ struct CancelHelp: Equatable {
                 return CancelHelp(kind: .appleSubscription, link: applesSubscriptions)
             }
             if amazonBillerNames.contains(billedBy) {
-                return CancelHelp(kind: .cancellationPage, link: amazonChannels)
+                // Amazon's own first-party services (Prime, Prime Video, Amazon Music, Kindle, Audible, AWS)
+                // have their own direct management pages and must not be hijacked to Prime Video Channels.
+                let matchedID = service(named: subscription.name)?.id
+                let lowerName = subscription.name.lowercased()
+                let isFirstParty = (matchedID.map { amazonFirstPartyIDs.contains($0) } ?? false)
+                    || lowerName.contains("amazon") || lowerName.contains("kindle") || lowerName.contains("audible")
+                if !isFirstParty {
+                    return CancelHelp(kind: .amazonChannel, link: amazonChannels)
+                }
             }
             if googlePlayBillerNames.contains(billedBy) {
-                return CancelHelp(kind: .cancellationPage, link: googlePlaySubscriptions)
+                return CancelHelp(kind: .googlePlay, link: googlePlaySubscriptions)
             }
         }
         if let service = service(named: subscription.name), let page = URL(string: service.cancelURL) {
             if service.isBilledByApple { return CancelHelp(kind: .appleSubscription, link: page) }
+            if page == googlePlaySubscriptions { return CancelHelp(kind: .googlePlay, link: page) }
             // A link to a site's front page is its website, not its cancellation page: said as that.
             return CancelHelp(kind: isFrontPage(page) ? .website : .cancellationPage, link: page)
         }
@@ -129,8 +146,8 @@ struct CancelHelp: Equatable {
     }
 
     /// Where to reopen/resubscribe to a paused service: Apple's Subscriptions screen for Apple-billed
-    /// plans, or the service's clean origin homepage (`https://<host>`) for web services (never a
-    /// `/cancel*` path or a Google cancel search).
+    /// plans, the full store subscription screen for Google Play / Amazon Channels, or the service's
+    /// clean origin homepage (`https://<host>`) for web services (never a `/cancel*` path or Google search).
     @MainActor
     static func resubscribeLink(for subscription: Subscription) -> (url: URL, openInSystem: Bool)? {
         let help = find(for: subscription)
@@ -138,6 +155,12 @@ struct CancelHelp: Equatable {
         case .appleSubscription:
             guard let url = help.link ?? applesSubscriptions else { return nil }
             return (url, true)
+        case .googlePlay:
+            guard let url = help.link ?? googlePlaySubscriptions else { return nil }
+            return (url, false)
+        case .amazonChannel:
+            guard let url = help.link ?? amazonChannels else { return nil }
+            return (url, false)
         case .cancellationPage, .website:
             guard let link = help.link, var components = URLComponents(url: link, resolvingAgainstBaseURL: false),
                   let host = components.host, !host.isEmpty else { return nil }

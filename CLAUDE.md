@@ -175,10 +175,10 @@ Supabase project `ddaotwyaowspwspyddzs`. Migrations live in `supabase/migrations
 hand in the Supabase SQL editor: paste the newest `supabase/APPLY_*.sql`. It is safe to run more than
 once and brings any state of the database up to date (account deletion, cancel-difficulty ratings and
 sync need it).
-Edge functions (`supabase/functions/`): `waitlist-signup`, `auth-email` (sends the sign-in codes) and
+Edge functions (`supabase/functions/`): `waitlist-signup`, `auth-email` (sends the sign-in codes),
 `apple-revoke` (revokes Apple's tokens when an account made with Sign in with Apple is deleted; needs
-Apple's key as secrets, see its header). Website and policies: `pausely.pro/` (GitHub Pages; the live
-site is the `gh-pages` branch).
+Apple's key as secrets, see its header), and `appstore-notifications` (App Store Server Notifications
+webhook). Website and policies: `pausely.pro/` (GitHub Pages; the live site is the `gh-pages` branch).
 
 Account emails are sent by Supabase from templates edited in its dashboard; the copy to paste is
 `SUPABASE_EMAIL_TEMPLATES.md`. The app asks for the 6-digit code in them (`Views/Auth/EmailCodeViews.swift`)
