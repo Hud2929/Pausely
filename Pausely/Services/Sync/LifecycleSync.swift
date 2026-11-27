@@ -97,14 +97,24 @@ final class LifecycleSync {
             guard !session.isExpired else { return }
             let userId = session.user.id
             guard LocalUserData.belongs(to: userId.uuidString) else { return }
-            let remoteRows: [LifecycleEventRecord] = try await client
-                .from("lifecycle_events")
-                .select()
-                .eq("user_id", value: userId)
-                .order("occurred_at", ascending: false)
-                .limit(LifecycleEventLog.maxEvents)
-                .execute()
-                .value
+            let pageSize = 1_000
+            var remoteRows: [LifecycleEventRecord] = []
+            var offset = 0
+            while remoteRows.count < LifecycleEventLog.maxEvents {
+                let end = min(offset + pageSize - 1, LifecycleEventLog.maxEvents - 1)
+                let page: [LifecycleEventRecord] = try await client
+                    .from("lifecycle_events")
+                    .select()
+                    .eq("user_id", value: userId)
+                    .order("occurred_at", ascending: false)
+                    .order("id", ascending: false)
+                    .range(from: offset, to: end)
+                    .execute()
+                    .value
+                remoteRows.append(contentsOf: page)
+                if page.count < pageSize { break }
+                offset += pageSize
+            }
 
             let remoteEvents = remoteRows.compactMap { $0.toEvent() }
             let result = Self.merge(local: LifecycleEventLog.shared.events, remote: remoteEvents)
@@ -116,10 +126,14 @@ final class LifecycleSync {
             }
             if !result.toUpload.isEmpty {
                 let records = result.toUpload.map { LifecycleEventRecord(from: $0, userId: userId) }
-                _ = try await client
-                    .from("lifecycle_events")
-                    .upsert(records, onConflict: "id")
-                    .execute()
+                let chunkSize = 500
+                for start in stride(from: 0, to: records.count, by: chunkSize) {
+                    let batch = Array(records[start..<min(start + chunkSize, records.count)])
+                    _ = try await client
+                        .from("lifecycle_events")
+                        .upsert(batch, onConflict: "id")
+                        .execute()
+                }
             }
         } catch {
             os_log("LifecycleSync failed: %{public}@", log: .default, type: .error, String(describing: type(of: error)))

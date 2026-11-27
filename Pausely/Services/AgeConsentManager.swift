@@ -115,6 +115,17 @@ final class AgeConsentManager: ObservableObject {
         await syncPendingConsent(userId: userId)
     }
 
+    /// Hydrates local age consent from the account's remote `profiles.age_confirmed_at` record so
+    /// returning users on a reinstall or second device aren't re-prompted and keep their original timestamp.
+    func adoptRemoteConsent(userId: String, confirmedAt: Date) {
+        let existing = defaults.object(forKey: Key.user(userId)) as? Date
+        let earliest = existing.map { min($0, confirmedAt) } ?? confirmedAt
+        defaults.set(earliest, forKey: Key.user(userId))
+        defaults.set(false, forKey: Key.pendingSync(userId))
+        defaults.removeObject(forKey: Key.devicePassed)
+        stateVersion += 1
+    }
+
     func syncPendingConsent(userId: String) async {
         guard SubscriptionStore.cloudSyncEnabled,
               !AuthManager.shared.isGuest,
@@ -139,7 +150,12 @@ final class AgeConsentManager: ObservableObject {
                              consent_policy_version: Self.policyVersion,
                              consent_app_version: appVersion)
         do {
-            try await SupabaseManager.shared.client
+            let client = SupabaseManager.shared.client
+            guard client.auth.currentSession != nil else { return }
+            let session = try await client.auth.session
+            guard !session.isExpired,
+                  session.user.id.uuidString.caseInsensitiveCompare(userId) == .orderedSame else { return }
+            try await client
                 .from("profiles")
                 .upsert(row)
                 .execute()

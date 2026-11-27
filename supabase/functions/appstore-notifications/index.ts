@@ -5,17 +5,27 @@
 // Security:
 // - Cryptographically verifies every ES256 JWS (outer envelope, signedTransactionInfo, and
 //   optional signedRenewalInfo) using WebCrypto against the leaf certificate in header.x5c.
-// - Verifies every X.509 link in header.x5c (signature + validity dates) and pins the chain root
-//   to Apple Root CA - G3 SHA-256 (or APP_STORE_TEST_ROOT_SHA256 strictly for local test rigs).
-// - Enforces bundle ID, allowlisted product IDs, and monotonic signedDate (rejecting stale replays).
-// - Writes exclusively to public.app_store_entitlements via service_role.
+// - Verifies the strict 3-cert X.509 chain (Leaf -> WWDR Intermediate -> Apple Root CA - G3):
+//   AlgorithmIdentifier TLV, BasicConstraints (leaf CA=FALSE, issuers CA=TRUE), KeyUsage
+//   (keyCertSign on CA certs), DN chaining, Apple ASSN v2 OIDs, validity at payload.signedDate,
+//   strict DER ECDSA signature framing, and pinned Root CA SHA-256 fingerprint.
+// - Enforces bundle ID, appAppleId (Production), environment isolation, renewal-info binding,
+//   allowlisted product IDs, and atomic monotonic signedDate replay protection via Postgres RPC.
 // Tested by scripts/dbtest/appstore_notifications_function.sh.
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.117.3'
+import { readBoundedText } from '../_shared/http.ts'
+
+function positiveInt(value: string | undefined, fallback: number): number {
+  const parsed = Number.parseInt(value ?? '', 10)
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback
+}
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL') ?? ''
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
 const EXPECTED_BUNDLE_ID = Deno.env.get('APP_STORE_BUNDLE_ID') ?? 'com.pausely.app.Pausely'
+const EXPECTED_APP_APPLE_ID = positiveInt(Deno.env.get('APP_STORE_APP_APPLE_ID'), 6759973158)
+const ALLOW_SANDBOX = (Deno.env.get('APP_STORE_ALLOW_SANDBOX') ?? 'true').toLowerCase() !== 'false'
 
 // Official Apple Root CA - G3 SHA-256 fingerprint (https://www.apple.com/certificateauthority/).
 const APPLE_ROOT_CA_G3_SHA256 = '63343abfb89a6a03ebb57e9b3f5fa7be7c4f5c756f3017b3a8c488c3653e9179'
@@ -53,21 +63,11 @@ function decodeBase64Url(segment: string): Uint8Array | null {
 }
 
 async function sha256Hex(bytes: Uint8Array): Promise<string> {
-  const digest = new Uint8Array(await crypto.subtle.digest('SHA-256', bytes))
+  const digest = new Uint8Array(await crypto.subtle.digest('SHA-256', bytes as BufferSource))
   return Array.from(digest).map((b) => b.toString(16).padStart(2, '0')).join('')
 }
 
-function bytesContain(haystack: Uint8Array, needle: number[]): boolean {
-  outer: for (let i = 0; i <= haystack.length - needle.length; i++) {
-    for (let j = 0; j < needle.length; j++) {
-      if (haystack[i + j] !== needle[j]) continue outer
-    }
-    return true
-  }
-  return false
-}
-
-// MARK: - Minimal ASN.1 / DER X.509 Certificate Parser & Chain Verifier
+// MARK: - Strict ASN.1 / DER X.509 Certificate Parser & Chain Verifier
 
 interface TLV {
   tag: number
@@ -87,8 +87,6 @@ function readTLV(bytes: Uint8Array, offset: number, limit: number = bytes.length
     length = lenByte
   } else {
     const numOctets = lenByte & 0x7f
-    // Cap at 3 length octets (16 MiB) and use unsigned arithmetic so crafted 4-byte lengths
-    // can never wrap negative via signed 32-bit bitwise shifts and stall ASN.1 loops.
     if (numOctets === 0 || numOctets > 3 || offset + 2 + numOctets > limit) return null
     for (let i = 0; i < numOctets; i++) {
       length = length * 256 + bytes[offset + 2 + i]
@@ -118,12 +116,14 @@ function parseAsn1Time(bytes: Uint8Array, tlv: TLV): Date | null {
 }
 
 // OIDs in DER form
+const OID_EC_PUBLIC_KEY = [0x06, 0x07, 0x2a, 0x86, 0x48, 0xce, 0x3d, 0x02, 0x01]
 const OID_P256 = [0x06, 0x08, 0x2a, 0x86, 0x48, 0xce, 0x3d, 0x03, 0x01, 0x07]
 const OID_P384 = [0x06, 0x05, 0x2b, 0x81, 0x04, 0x00, 0x22]
 const OID_ECDSA_SHA256 = [0x06, 0x08, 0x2a, 0x86, 0x48, 0xce, 0x3d, 0x04, 0x03, 0x02]
 const OID_ECDSA_SHA384 = [0x06, 0x08, 0x2a, 0x86, 0x48, 0xce, 0x3d, 0x04, 0x03, 0x03]
+const OID_KEY_USAGE = [0x06, 0x03, 0x55, 0x1d, 0x0f]
 const OID_BASIC_CONSTRAINTS = [0x06, 0x03, 0x55, 0x1d, 0x13]
-// Apple App Store Server Notifications v2 certificate extension OIDs (Apple App Store Server Library spec):
+// Apple App Store Server Notifications v2 certificate extension OIDs:
 // Leaf: 1.2.840.113635.100.6.11.1 | WWDR Intermediate: 1.2.840.113635.100.6.2.1
 const OID_APPLE_APPSTORE_LEAF = [0x06, 0x0a, 0x2a, 0x86, 0x48, 0x86, 0xf7, 0x63, 0x64, 0x06, 0x0b, 0x01]
 const OID_APPLE_WWDR_INTERMEDIATE = [0x06, 0x0a, 0x2a, 0x86, 0x48, 0x86, 0xf7, 0x63, 0x64, 0x06, 0x02, 0x01]
@@ -154,29 +154,33 @@ interface ParsedCert {
   notBefore: Date
   notAfter: Date
   isCA: boolean
+  hasKeyUsageExtension: boolean
+  hasKeyCertSign: boolean
   hasAppleLeafOID: boolean
   hasAppleIntermediateOID: boolean
 }
 
 function parseX509Cert(der: Uint8Array): ParsedCert | null {
   const certSeq = readTLV(der, 0, der.length)
-  if (!certSeq || certSeq.tag !== 0x30) return null
+  if (!certSeq || certSeq.tag !== 0x30 || certSeq.end !== der.length) return null
 
   const tbs = readTLV(der, certSeq.valueStart, certSeq.end)
   if (!tbs || tbs.tag !== 0x30) return null
   const sigAlg = readTLV(der, tbs.end, certSeq.end)
   if (!sigAlg || sigAlg.tag !== 0x30) return null
   const sigBitString = readTLV(der, sigAlg.end, certSeq.end)
-  if (!sigBitString || sigBitString.tag !== 0x03 || sigBitString.length < 2) return null
+  if (!sigBitString || sigBitString.tag !== 0x03 || sigBitString.length < 2 || sigBitString.end !== certSeq.end) return null
   if (der[sigBitString.valueStart] !== 0x00) return null
 
-  const sigAlgBytes = der.subarray(sigAlg.start, sigAlg.end)
+  // Parse outer signatureAlgorithm OID TLV strictly (never substring-search arbitrary bytes).
+  const sigAlgOid = readTLV(der, sigAlg.valueStart, sigAlg.end)
+  if (!sigAlgOid || sigAlgOid.tag !== 0x06) return null
   let sigAlgHash: 'SHA-256' | 'SHA-384' | null = null
-  if (bytesContain(sigAlgBytes, OID_ECDSA_SHA256)) sigAlgHash = 'SHA-256'
-  else if (bytesContain(sigAlgBytes, OID_ECDSA_SHA384)) sigAlgHash = 'SHA-384'
+  if (derMatches(der, sigAlgOid, OID_ECDSA_SHA256)) sigAlgHash = 'SHA-256'
+  else if (derMatches(der, sigAlgOid, OID_ECDSA_SHA384)) sigAlgHash = 'SHA-384'
   if (!sigAlgHash) return null
 
-  // Walk TBSCertificate children strictly inside tbs.end: [version?], serial, sig, issuer, validity, subject, spki, [extensions?]
+  // Walk TBSCertificate children strictly inside tbs.end.
   let pos = tbs.valueStart
   const first = readTLV(der, pos, tbs.end)
   if (!first) return null
@@ -197,17 +201,26 @@ function parseX509Cert(der: Uint8Array): ParsedCert | null {
   const notAfter = parseAsn1Time(der, notAfterTlv)
   if (!notBefore || !notAfter) return null
 
+  // Parse SubjectPublicKeyInfo -> AlgorithmIdentifier TLV strictly (algorithm=id-ecPublicKey + namedCurve).
   const spkiBytes = der.subarray(spki.start, spki.end)
+  const spkiAlg = readTLV(der, spki.valueStart, spki.end)
+  if (!spkiAlg || spkiAlg.tag !== 0x30) return null
+  const pubKeyAlgOid = readTLV(der, spkiAlg.valueStart, spkiAlg.end)
+  if (!pubKeyAlgOid || !derMatches(der, pubKeyAlgOid, OID_EC_PUBLIC_KEY)) return null
+  const curveOid = readTLV(der, pubKeyAlgOid.end, spkiAlg.end)
+  if (!curveOid || curveOid.tag !== 0x06) return null
   let namedCurve: 'P-256' | 'P-384' | null = null
-  if (bytesContain(spkiBytes, OID_P256)) namedCurve = 'P-256'
-  else if (bytesContain(spkiBytes, OID_P384)) namedCurve = 'P-384'
+  if (derMatches(der, curveOid, OID_P256)) namedCurve = 'P-256'
+  else if (derMatches(der, curveOid, OID_P384)) namedCurve = 'P-384'
   if (!namedCurve) return null
 
   let isCA = false
+  let hasKeyUsageExtension = false
+  let hasKeyCertSign = false
   let hasAppleLeafOID = false
   let hasAppleIntermediateOID = false
 
-  // Parse optional trailing fields in TBSCertificate until [3] extensions (0xa3), bounded at every level
+  // Parse optional trailing fields in TBSCertificate until [3] extensions (0xa3), bounded at every level.
   while (pos < tbs.end) {
     const field = readTLV(der, pos, tbs.end)
     if (!field || field.end <= pos) return null
@@ -226,13 +239,30 @@ function parseX509Cert(der: Uint8Array): ParsedCert | null {
         if (derMatches(der, oid, OID_APPLE_WWDR_INTERMEDIATE)) hasAppleIntermediateOID = true
         if (derMatches(der, oid, OID_BASIC_CONSTRAINTS)) {
           let next = readTLV(der, oid.end, ext.end)
-          if (next && next.tag === 0x01) next = readTLV(der, next.end, ext.end) // skip optional critical BOOLEAN
+          if (next && next.tag === 0x01) next = readTLV(der, next.end, ext.end)
           if (next && next.tag === 0x04) {
             const bcSeq = readTLV(der, next.valueStart, next.end)
             if (bcSeq && bcSeq.tag === 0x30 && bcSeq.length > 0) {
               const caBool = readTLV(der, bcSeq.valueStart, bcSeq.end)
               if (caBool && caBool.tag === 0x01 && caBool.length === 1 && der[caBool.valueStart] !== 0x00) {
                 isCA = true
+              }
+            }
+          }
+        }
+        if (derMatches(der, oid, OID_KEY_USAGE)) {
+          hasKeyUsageExtension = true
+          let next = readTLV(der, oid.end, ext.end)
+          if (next && next.tag === 0x01) next = readTLV(der, next.end, ext.end)
+          if (next && next.tag === 0x04) {
+            const kuBits = readTLV(der, next.valueStart, next.end)
+            // BIT STRING: first byte is unused-bits count (0..7); bit 5 (keyCertSign) is 0x04 of byte 1.
+            if (kuBits && kuBits.tag === 0x03 && kuBits.length >= 2) {
+              const unusedBits = der[kuBits.valueStart]
+              const firstOctet = der[kuBits.valueStart + 1]
+              const validBitCount = (kuBits.length - 1) * 8 - unusedBits
+              if (unusedBits <= 7 && validBitCount >= 6 && (firstOctet & 0x04) !== 0) {
+                hasKeyCertSign = true
               }
             }
           }
@@ -253,23 +283,27 @@ function parseX509Cert(der: Uint8Array): ParsedCert | null {
     notBefore,
     notAfter,
     isCA,
+    hasKeyUsageExtension,
+    hasKeyCertSign,
     hasAppleLeafOID,
     hasAppleIntermediateOID,
   }
 }
 
 function derEcdsaSigToRaw(sigDer: Uint8Array, coordLen: number): Uint8Array | null {
-  const seq = readTLV(sigDer, 0)
-  if (!seq || seq.tag !== 0x30) return null
-  const rTlv = readTLV(sigDer, seq.valueStart)
-  if (!rTlv || rTlv.tag !== 0x02) return null
-  const sTlv = readTLV(sigDer, rTlv.end)
-  if (!sTlv || sTlv.tag !== 0x02) return null
+  const seq = readTLV(sigDer, 0, sigDer.length)
+  if (!seq || seq.tag !== 0x30 || seq.end !== sigDer.length) return null
+  const rTlv = readTLV(sigDer, seq.valueStart, seq.end)
+  if (!rTlv || rTlv.tag !== 0x02 || rTlv.length < 1) return null
+  const sTlv = readTLV(sigDer, rTlv.end, seq.end)
+  if (!sTlv || sTlv.tag !== 0x02 || sTlv.length < 1 || sTlv.end !== seq.end) return null
 
   const copyInt = (tlv: TLV, out: Uint8Array, offset: number): boolean => {
     let raw = sigDer.subarray(tlv.valueStart, tlv.end)
+    // Reject negative ASN.1 INTEGER values (high bit set without leading 0x00).
+    if ((raw[0] & 0x80) !== 0) return false
     while (raw.length > 0 && raw[0] === 0x00) raw = raw.subarray(1)
-    if (raw.length > coordLen) return false
+    if (raw.length === 0 || raw.length > coordLen) return false
     out.set(raw, offset + (coordLen - raw.length))
     return true
   }
@@ -283,7 +317,7 @@ async function importCertKey(cert: ParsedCert): Promise<CryptoKey | null> {
   try {
     return await crypto.subtle.importKey(
       'spki',
-      cert.spkiBytes,
+      cert.spkiBytes as BufferSource,
       { name: 'ECDSA', namedCurve: cert.namedCurve },
       false,
       ['verify'],
@@ -327,11 +361,24 @@ async function verifyAppleJWS(token: unknown): Promise<{ ok: true; jws: Verified
   }
 
   if (header.alg !== 'ES256') return { ok: false, status: 400, error: 'unsupported_alg' }
-  if (!Array.isArray(header.x5c) || header.x5c.length < 3 || header.x5c.length > 6) {
+  // Apple App Store Server Notifications v2 chains are strictly 3 certs: Leaf -> WWDR Intermediate -> Root CA.
+  if (!Array.isArray(header.x5c) || header.x5c.length !== 3) {
     return { ok: false, status: 401, error: 'invalid_x5c_length' }
   }
 
-  const now = new Date()
+  // Validate X.509 validity windows at payload.signedDate (matching Apple SignedDataVerifier so
+  // delayed retries across Apple leaf certificate rotation still verify), falling back to now.
+  const nowMs = Date.now()
+  const rawSignedDate = typeof payload.signedDate === 'number' ? payload.signedDate : null
+  const effectiveDate = (
+    rawSignedDate !== null
+    && Number.isFinite(rawSignedDate)
+    && rawSignedDate > 0
+    && rawSignedDate <= nowMs + 5 * 60 * 1000
+  )
+    ? new Date(rawSignedDate)
+    : new Date(nowMs)
+
   const certs: ParsedCert[] = []
   for (const entry of header.x5c) {
     if (typeof entry !== 'string') return { ok: false, status: 401, error: 'invalid_x5c' }
@@ -339,30 +386,34 @@ async function verifyAppleJWS(token: unknown): Promise<{ ok: true; jws: Verified
     if (!der) return { ok: false, status: 401, error: 'invalid_x5c' }
     const parsed = parseX509Cert(der)
     if (!parsed) return { ok: false, status: 401, error: 'invalid_x5c' }
-    if (now < parsed.notBefore || now > parsed.notAfter) {
+    if (effectiveDate < parsed.notBefore || effectiveDate > parsed.notAfter) {
       return { ok: false, status: 401, error: 'expired_certificate' }
     }
     certs.push(parsed)
   }
 
-  // 1. Verify Apple ASSN v2 leaf & WWDR intermediate OIDs so non-App-Store certs under Apple Root CA - G3 cannot forge webhooks.
+  // 1. Verify leaf is NOT a CA and carries Apple ASSN v2 OIDs (preventing arbitrary certs under Apple Root CA G3).
   const leaf = certs[0]
   const intermediate = certs[1]
+  const root = certs[2]
+  if (leaf.isCA) return { ok: false, status: 401, error: 'leaf_is_ca' }
   if (!leaf.hasAppleLeafOID) return { ok: false, status: 401, error: 'missing_apple_leaf_oid' }
   if (!intermediate.hasAppleIntermediateOID) return { ok: false, status: 401, error: 'missing_apple_intermediate_oid' }
 
-  // 2. Verify the root certificate matches a pinned trusted Apple Root CA (or explicit test root).
-  const root = certs[certs.length - 1]
+  // 2. Pin the root certificate to Apple Root CA - G3 (or explicit local test root).
   const rootHash = await sha256Hex(root.der)
   if (!TRUSTED_ROOTS.has(rootHash)) {
     return { ok: false, status: 401, error: 'untrusted_root_ca' }
   }
 
-  // 3. Verify every certificate link: issuer has BasicConstraints CA=TRUE, DN chains cleanly, and signature verifies.
+  // 3. Verify every certificate link: CA BasicConstraints, KeyUsage keyCertSign, DN chaining, and ECDSA signature.
   for (let i = 0; i < certs.length - 1; i++) {
     const child = certs[i]
     const issuer = certs[i + 1]
     if (!issuer.isCA) return { ok: false, status: 401, error: 'issuer_not_ca' }
+    if (issuer.hasKeyUsageExtension && !issuer.hasKeyCertSign) {
+      return { ok: false, status: 401, error: 'issuer_missing_key_cert_sign' }
+    }
     if (!bytesEqual(child.issuerBytes, issuer.subjectBytes)) {
       return { ok: false, status: 401, error: 'broken_dn_chain' }
     }
@@ -374,8 +425,8 @@ async function verifyAppleJWS(token: unknown): Promise<{ ok: true; jws: Verified
     const validLink = await crypto.subtle.verify(
       { name: 'ECDSA', hash: child.sigAlgHash },
       issuerKey,
-      rawSig,
-      child.tbsBytes,
+      rawSig as BufferSource,
+      child.tbsBytes as BufferSource,
     )
     if (!validLink) return { ok: false, status: 401, error: 'broken_cert_chain' }
   }
@@ -390,8 +441,8 @@ async function verifyAppleJWS(token: unknown): Promise<{ ok: true; jws: Verified
   const validSig = await crypto.subtle.verify(
     { name: 'ECDSA', hash: 'SHA-256' },
     leafKey,
-    sigBytes,
-    signingInput,
+    sigBytes as BufferSource,
+    signingInput as BufferSource,
   )
   if (!validSig) return { ok: false, status: 401, error: 'invalid_jws_signature' }
 
@@ -413,6 +464,8 @@ function deriveStatus(
   notificationType: string,
   subtype: string | undefined,
   transaction: Record<string, unknown>,
+  renewal: Record<string, unknown> | null,
+  nowMs: number = Date.now(),
 ): EntitlementStatus {
   if (notificationType === 'REFUND') return 'refunded'
   if (notificationType === 'REVOKE' || transaction.revocationDate) return 'revoked'
@@ -420,43 +473,34 @@ function deriveStatus(
   if (notificationType === 'DID_FAIL_TO_RENEW') {
     return subtype === 'GRACE_PERIOD' ? 'grace_period' : 'billing_retry'
   }
+
+  // Respect active billing grace period or billing retry from signedRenewalInfo so non-renewal events
+  // (DID_CHANGE_RENEWAL_STATUS, PRICE_INCREASE, CONSUMPTION_REQUEST, REFUND_DECLINED) never downgrade an entitled user.
+  const graceMs = typeof renewal?.gracePeriodExpiresDate === 'number' ? renewal.gracePeriodExpiresDate : null
+  if (graceMs !== null && Number.isFinite(graceMs) && graceMs > nowMs) {
+    return 'grace_period'
+  }
+  if (renewal?.isInBillingRetryPeriod === true) {
+    return 'billing_retry'
+  }
+
   const expiresMs = typeof transaction.expiresDate === 'number' ? transaction.expiresDate : null
-  if (expiresMs !== null && Number.isFinite(expiresMs) && expiresMs > 0 && expiresMs < Date.now()
-      && notificationType !== 'SUBSCRIBED' && notificationType !== 'DID_RENEW') {
+  if (expiresMs !== null && Number.isFinite(expiresMs) && expiresMs > 0 && expiresMs < nowMs) {
     return 'expired'
   }
-  if (transaction.offerType === 1) return 'trial'
+
+  // Both Introductory (offerType=1) and Win-Back (offerType=4) free trials record as 'trial'.
+  const offerType = transaction.offerType
+  const offerDiscountType = transaction.offerDiscountType
+  const isFreeTrial = (offerType === 1 || offerType === 4)
+    && (offerDiscountType === undefined || offerDiscountType === null || offerDiscountType === 'FREE_TRIAL')
+  if (isFreeTrial) return 'trial'
+
   return 'active'
 }
 
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 const MAX_BODY_BYTES = 256 * 1024
-
-async function readBoundedText(request: Request, maxBytes: number): Promise<string | null> {
-  const lenHeader = request.headers.get('content-length')
-  if (lenHeader !== null) {
-    const declared = Number(lenHeader)
-    if (Number.isFinite(declared) && declared > maxBytes) return null
-  }
-  if (!request.body) return ''
-  const reader = request.body.getReader()
-  const chunks: Uint8Array[] = []
-  let total = 0
-  while (true) {
-    const { done, value } = await reader.read()
-    if (done) break
-    total += value.byteLength
-    if (total > maxBytes) {
-      await reader.cancel().catch(() => {})
-      return null
-    }
-    chunks.push(value)
-  }
-  const combined = new Uint8Array(total)
-  let offset = 0
-  for (const chunk of chunks) { combined.set(chunk, offset); offset += chunk.byteLength }
-  return new TextDecoder().decode(combined)
-}
 
 Deno.serve(async (request) => {
   if (request.method !== 'POST') return json(405, { error: 'method_not_allowed' })
@@ -479,18 +523,43 @@ Deno.serve(async (request) => {
 
   const notificationType = envelope.payload.notificationType
   const subtype = typeof envelope.payload.subtype === 'string' ? envelope.payload.subtype : undefined
-  const data = envelope.payload.data as Record<string, unknown> | undefined
-  if (typeof notificationType !== 'string' || !data || typeof data !== 'object') {
+  if (typeof notificationType !== 'string') {
     return json(400, { error: 'missing_notification_data' })
   }
 
   if (notificationType === 'TEST') {
     return json(200, { ok: true, test: true })
   }
+  // External purchase token notifications carry `externalPurchaseToken` instead of `data`.
+  if (notificationType === 'EXTERNAL_PURCHASE_TOKEN') {
+    return json(200, { ok: true, ignored: 'non_transaction_notification' })
+  }
+
+  const data = envelope.payload.data as Record<string, unknown> | undefined
+  if (!data || typeof data !== 'object') {
+    return json(400, { error: 'missing_notification_data' })
+  }
 
   const bundleId = data.bundleId
   if (bundleId !== EXPECTED_BUNDLE_ID) {
     return json(403, { error: 'wrong_bundle_id' })
+  }
+
+  const rawEnv = data.environment
+  if (rawEnv !== 'Production' && rawEnv !== 'Sandbox') {
+    return json(400, { error: 'invalid_environment' })
+  }
+  if (rawEnv === 'Sandbox' && !ALLOW_SANDBOX) {
+    return json(403, { error: 'sandbox_not_allowed' })
+  }
+  if (rawEnv === 'Production' && data.appAppleId !== EXPECTED_APP_APPLE_ID) {
+    return json(403, { error: 'wrong_app_apple_id' })
+  }
+  const environment: 'Production' | 'Sandbox' = rawEnv
+
+  // Bulk summary notifications (e.g. RENEWAL_EXTENSION:SUMMARY) carry no signedTransactionInfo; acknowledge cleanly.
+  if (notificationType === 'RENEWAL_EXTENSION' && subtype === 'SUMMARY') {
+    return json(200, { ok: true, ignored: 'non_transaction_notification' })
   }
 
   const txRes = await verifyAppleJWS(data.signedTransactionInfo)
@@ -499,6 +568,9 @@ Deno.serve(async (request) => {
 
   if (tx.bundleId !== EXPECTED_BUNDLE_ID) {
     return json(403, { error: 'wrong_transaction_bundle_id' })
+  }
+  if (typeof tx.environment === 'string' && tx.environment !== rawEnv) {
+    return json(400, { error: 'environment_mismatch' })
   }
 
   const originalTransactionId = tx.originalTransactionId
@@ -510,23 +582,22 @@ Deno.serve(async (request) => {
     return json(400, { error: 'unknown_product_id' })
   }
 
-  // If Apple included signedRenewalInfo, it MUST verify cleanly — never silently swallow tampering.
+  // If Apple included signedRenewalInfo, it MUST verify cleanly and bind to this transaction + environment.
+  let renewalPayload: Record<string, unknown> | null = null
   let willAutoRenew: boolean | null = null
   if (data.signedRenewalInfo !== undefined && data.signedRenewalInfo !== null) {
     const renewalRes = await verifyAppleJWS(data.signedRenewalInfo)
     if (!renewalRes.ok) return json(renewalRes.status, { error: 'invalid_renewal_jws' })
-    const autoRenewStatus = renewalRes.jws.payload.autoRenewStatus
+    renewalPayload = renewalRes.jws.payload
+    if (renewalPayload.originalTransactionId !== originalTransactionId) {
+      return json(400, { error: 'renewal_transaction_mismatch' })
+    }
+    if (typeof renewalPayload.environment === 'string' && renewalPayload.environment !== rawEnv) {
+      return json(400, { error: 'renewal_environment_mismatch' })
+    }
+    const autoRenewStatus = renewalPayload.autoRenewStatus
     willAutoRenew = typeof autoRenewStatus === 'number' ? autoRenewStatus === 1 : null
   }
-
-  const rawEnv = data.environment
-  if (rawEnv !== 'Production' && rawEnv !== 'Sandbox') {
-    return json(400, { error: 'invalid_environment' })
-  }
-  if (typeof tx.environment === 'string' && tx.environment !== rawEnv) {
-    return json(400, { error: 'environment_mismatch' })
-  }
-  const environment: 'Production' | 'Sandbox' = rawEnv
 
   const MAX_DATE_MS = 8.64e15
   const expiresMs = typeof tx.expiresDate === 'number' ? tx.expiresDate : null
@@ -540,14 +611,13 @@ Deno.serve(async (request) => {
   if (rawSignedMs === null || !Number.isFinite(rawSignedMs) || rawSignedMs <= 0 || rawSignedMs > MAX_DATE_MS) {
     return json(400, { error: 'missing_signed_date' })
   }
-  const signedMs = rawSignedMs
-  const signedIso = new Date(signedMs).toISOString()
+  const signedIso = new Date(rawSignedMs).toISOString()
 
   const appAccountToken = typeof tx.appAccountToken === 'string' && UUID_PATTERN.test(tx.appAccountToken)
     ? tx.appAccountToken.toLowerCase()
     : null
 
-  const status = deriveStatus(notificationType, subtype, tx)
+  const status = deriveStatus(notificationType, subtype, tx, renewalPayload)
 
   if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
     return json(503, { error: 'not_configured' })
@@ -557,60 +627,29 @@ Deno.serve(async (request) => {
     auth: { autoRefreshToken: false, persistSession: false },
   })
 
-  // Out-of-order replay protection + preserve existing user_id and will_auto_renew when omitted.
-  // Never ignore a read error: failing closed with 500 asks Apple to retry instead of bypassing replay protection.
-  const { data: existing, error: selectError } = await supabase
-    .from('app_store_entitlements')
-    .select('last_signed_date, user_id, will_auto_renew')
-    .eq('original_transaction_id', originalTransactionId)
-    .maybeSingle()
-
-  if (selectError) {
-    console.error('appstore-notifications select error:', selectError.message)
-    return json(500, { error: 'db_error' })
-  }
-
-  if (existing?.last_signed_date) {
-    const prevMs = Date.parse(String(existing.last_signed_date))
-    if (!Number.isNaN(prevMs) && signedMs <= prevMs) {
-      return json(200, { ok: true, ignored: 'stale', originalTransactionId })
-    }
-  }
-
-  const resolvedUserId = appAccountToken ?? (typeof existing?.user_id === 'string' ? existing.user_id : null)
-  const terminalAutoRenew = (status === 'refunded' || status === 'revoked' || status === 'expired') ? false : null
-  const resolvedAutoRenew = willAutoRenew ?? terminalAutoRenew ?? (typeof existing?.will_auto_renew === 'boolean' ? existing.will_auto_renew : null)
-
-  const buildRow = (userId: string | null) => ({
-    original_transaction_id: originalTransactionId,
-    user_id: userId,
-    product_id: productId,
-    status,
-    environment,
-    will_auto_renew: resolvedAutoRenew,
-    expires_at: expiresAt,
-    last_notification_type: subtype ? `${notificationType}:${subtype}` : notificationType,
-    last_signed_date: signedIso,
-    last_event_at: new Date().toISOString(),
+  // Atomic advisory-locked upsert RPC: prevents concurrent out-of-order replays from reverting refunds/revocations,
+  // preserves existing user_id and will_auto_renew when omitted, and handles deleted-user FK fallback atomically.
+  const { data: rpcData, error } = await supabase.rpc('upsert_app_store_entitlement', {
+    p_original_transaction_id: originalTransactionId,
+    p_user_id: appAccountToken,
+    p_product_id: productId,
+    p_status: status,
+    p_environment: environment,
+    p_will_auto_renew: willAutoRenew,
+    p_expires_at: expiresAt,
+    p_last_notification_type: subtype ? `${notificationType}:${subtype}` : notificationType,
+    p_last_signed_date: signedIso,
   })
 
-  let { error } = await supabase
-    .from('app_store_entitlements')
-    .upsert(buildRow(resolvedUserId), { onConflict: 'original_transaction_id' })
-
-  // If the account has already been deleted (FK violation 23503 on user_id), record the
-  // entitlement cleanly with user_id = null instead of returning 500 and triggering Apple retries.
-  if (error && resolvedUserId && (error.code === '23503' || error.message.toLowerCase().includes('foreign key'))) {
-    const retry = await supabase
-      .from('app_store_entitlements')
-      .upsert(buildRow(null), { onConflict: 'original_transaction_id' })
-    error = retry.error
-  }
-
   if (error) {
-    console.error('appstore-notifications upsert error:', error.message)
+    console.error('appstore-notifications rpc error:', error.message)
     return json(500, { error: 'db_error' })
   }
 
-  return json(200, { ok: true, status, originalTransactionId })
+  const resultRow = Array.isArray(rpcData) ? rpcData[0] : rpcData
+  if (!resultRow || resultRow.applied !== true) {
+    return json(200, { ok: true, ignored: 'stale', originalTransactionId })
+  }
+
+  return json(200, { ok: true, status: resultRow.current_status ?? status, originalTransactionId })
 })

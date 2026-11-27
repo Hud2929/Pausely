@@ -7,6 +7,7 @@ struct PausePlanRecord: Codable, Equatable {
     var user_id: UUID
     var subscription_ids: [UUID]
     var started_on: String
+    var savings_since: String?
     var ended_at: String?
     var updated_at: String?
 
@@ -15,22 +16,26 @@ struct PausePlanRecord: Codable, Equatable {
         if let plan = state.plan {
             self.subscription_ids = plan.subscriptionIds
             self.started_on = plan.startedOn.iso8601String
+            self.savings_since = plan.effectiveSavingsStart.iso8601String
             self.ended_at = nil
         } else {
             let ended = state.endedAt ?? state.updatedAt
             self.subscription_ids = []
             self.started_on = ended.iso8601String
+            self.savings_since = nil
             self.ended_at = ended.iso8601String
         }
         self.updated_at = state.updatedAt.iso8601String
     }
 
-    /// Always sends `ended_at` (including explicit `null`) so restarting a plan clears an earlier tombstone.
+    /// Always sends `ended_at` and `savings_since` (including explicit `null`) so restarting or ending
+    /// a plan updates server columns cleanly without preserving stale values.
     func encode(to encoder: Encoder) throws {
         var c = encoder.container(keyedBy: CodingKeys.self)
         try c.encode(user_id, forKey: .user_id)
         try c.encode(subscription_ids, forKey: .subscription_ids)
         try c.encode(started_on, forKey: .started_on)
+        try c.encode(savings_since, forKey: .savings_since)
         try c.encode(ended_at, forKey: .ended_at)
         try c.encodeIfPresent(updated_at, forKey: .updated_at)
     }
@@ -44,7 +49,7 @@ struct PausePlanRecord: Codable, Equatable {
         }
         guard subscription_ids.count >= 2, let started = started_on.iso8601Date else { return nil }
         return PausePlanStore.SyncState(
-            plan: PausePlan(subscriptionIds: subscription_ids, startedOn: started),
+            plan: PausePlan(subscriptionIds: subscription_ids, startedOn: started, savingsSince: savings_since?.iso8601Date),
             updatedAt: updated,
             endedAt: nil,
             pendingSync: false
@@ -78,8 +83,20 @@ final class PausePlanSync {
         case (let localState?, let remoteState?):
             let localUpdated = PausePlanStore.wholeSecond(localState.updatedAt)
             let remoteUpdated = PausePlanStore.wholeSecond(remoteState.updatedAt)
-            let localPlan = localState.plan.map { PausePlan(subscriptionIds: $0.subscriptionIds, startedOn: PausePlanStore.wholeSecond($0.startedOn)) }
-            let remotePlan = remoteState.plan.map { PausePlan(subscriptionIds: $0.subscriptionIds, startedOn: PausePlanStore.wholeSecond($0.startedOn)) }
+            let localPlan = localState.plan.map {
+                PausePlan(
+                    subscriptionIds: $0.subscriptionIds,
+                    startedOn: PausePlanStore.wholeSecond($0.startedOn),
+                    savingsSince: PausePlanStore.wholeSecond($0.effectiveSavingsStart)
+                )
+            }
+            let remotePlan = remoteState.plan.map {
+                PausePlan(
+                    subscriptionIds: $0.subscriptionIds,
+                    startedOn: PausePlanStore.wholeSecond($0.startedOn),
+                    savingsSince: PausePlanStore.wholeSecond($0.effectiveSavingsStart)
+                )
+            }
             let localEnded = localState.endedAt.map(PausePlanStore.wholeSecond)
             let remoteEnded = remoteState.endedAt.map(PausePlanStore.wholeSecond)
 

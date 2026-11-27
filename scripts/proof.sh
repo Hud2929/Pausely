@@ -6,7 +6,7 @@
 # `mail` writes the synthetic mailbox, serves it on this Mac and runs the tests that a plain run skips
 # for want of a mail server: the scan scored against the mailbox's truth, the app's own IMAP stack end
 # to end, and the walk through the mailbox screens. Nothing leaves this Mac.
-# `db` is the database rig and the three function rigs. It needs Docker, so it runs only when named.
+# `db` is the database rig and the four function rigs. It needs Docker, so it runs only when named.
 # The simulator is PAUSELY_SIM=<simulator id>, or the first iPhone simulator there is.
 # The UI tests are in the plain run on purpose: left out of it, one of them failed unseen for four days.
 # The screen tour is not: it takes pictures, it does not pass or fail (see CLAUDE.md).

@@ -188,11 +188,12 @@ A link is acted on only when this device asked for a code or reset within the ho
 and the account that comes back has the address that was asked for (`AuthLinkGate`). Keep that gate: without
 it, a link carrying someone else's code signs the person holding the phone into the sender's account.
 
-Database rules are proven locally, never against the real project: `bash scripts/dbtest/run.sh` builds five
+Database rules are proven locally, never against the real project: `bash scripts/dbtest/run.sh` builds six
 starting states in a throwaway Postgres that stands in for Supabase, applies the newest APPLY file twice to
 each, and checks what a signed-out visitor, two signed-in people and the service role can each do.
-`bash scripts/dbtest/waitlist_function.sh`, `auth_email_function.sh` and `apple_revoke_function.sh` run each
-function against stand-ins. All need Docker (Colima works). A new migration goes into the APPLY file too, and both scripts must pass.
+`bash scripts/dbtest/waitlist_function.sh`, `auth_email_function.sh`, `apple_revoke_function.sh` and
+`appstore_notifications_function.sh` run each function against stand-ins. All need Docker (Colima works).
+A new migration goes into the APPLY file too, and all five scripts must pass.
 
 ## App Store
 

@@ -80,11 +80,11 @@ struct SubscriptionRecord: Codable {
     var created_at: String?
     var notes: String?
     var payment_method: String?
-    var split_count: Int?
 
     init(from subscription: Subscription) {
         self.id = subscription.id
-        self.name = String(subscription.name.prefix(200))
+        let trimmedName = subscription.name.trimmingCharacters(in: .whitespacesAndNewlines)
+        self.name = String((trimmedName.isEmpty ? "Subscription" : trimmedName).prefix(200))
         self.category = subscription.category.map { String($0.prefix(80)) }
         self.amount = max(0, subscription.amount)
         self.currency = String(subscription.currency.prefix(10))
@@ -96,7 +96,6 @@ struct SubscriptionRecord: Codable {
         self.status = subscription.status.rawValue
         self.notes = subscription.notes.map { String($0.prefix(2_000)) }
         self.payment_method = subscription.paymentMethod.map { String($0.prefix(120)) }
-        self.split_count = 1
     }
 
     /// Dates and optional user fields that can be cleared are always sent, as null when empty, so
@@ -106,7 +105,7 @@ struct SubscriptionRecord: Codable {
         try c.encodeIfPresent(id, forKey: .id)
         try c.encodeIfPresent(user_id, forKey: .user_id)
         try c.encode(name, forKey: .name)
-        try c.encodeIfPresent(category, forKey: .category)
+        try c.encode(category, forKey: .category)
         try c.encode(amount, forKey: .amount)
         try c.encode(currency, forKey: .currency)
         try c.encode(billing_frequency, forKey: .billing_frequency)
@@ -117,7 +116,6 @@ struct SubscriptionRecord: Codable {
         try c.encodeIfPresent(created_at, forKey: .created_at)
         try c.encode(notes, forKey: .notes)
         try c.encode(payment_method, forKey: .payment_method)
-        try c.encode(split_count ?? 1, forKey: .split_count)
     }
 
     /// True when a day in this row was saved by an earlier version (as noon where it was typed). Read on

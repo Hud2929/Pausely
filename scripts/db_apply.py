@@ -173,7 +173,7 @@ select json_build_object(
   'columns', (select json_object_agg(table_name, cols) from (
       select table_name, json_agg(column_name || ' ' || data_type || case when is_nullable = 'NO' and column_default is null then ' (required)' else '' end order by ordinal_position) as cols
       from information_schema.columns
-      where table_schema = 'public' and table_name in ('profiles', 'subscriptions', 'referral_codes', 'waitlist', 'user_settings')
+      where table_schema = 'public' and table_name in ('profiles', 'subscriptions', 'lifecycle_events', 'pause_plans', 'app_store_entitlements', 'edge_rate_limits', 'referral_codes', 'waitlist', 'user_settings')
       group by table_name) x),
   'constraints_on_profiles', (select json_agg(conname order by conname) from pg_constraint where conrelid = to_regclass('public.profiles')),
   'indexes_on_ratings', (select json_agg(indexname order by indexname) from pg_indexes
@@ -226,6 +226,7 @@ DECLARE
     closed_objects text[] := ARRAY['affiliates', 'affiliate_conversions', 'waitlist', 'user_profiles',
                                    'usage_snapshots', 'user_devices', 'ai_insights_log', 'alternatives',
                                    'tracked_trials', 'app_store_entitlements', 'deletion_requests',
+                                   'edge_rate_limits', 'profiles_missing_age_consent',
                                    'orders', 'user_subscriptions', 'active_subscriptions',
                                    'expiring_subscriptions', 'payment_failures'];
     report text := '';

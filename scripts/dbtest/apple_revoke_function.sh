@@ -1,13 +1,16 @@
 #!/bin/bash
-# Runs supabase/functions/apple-revoke in a Deno container against stand-ins for the account service
-# and for Apple's two endpoints (token exchange and revocation), and checks what it does with honest
-# and hostile requests. The stand-in for Apple verifies the client secret's signature with the public
-# half of a key made for this run.
+# Runs supabase/functions/apple-revoke in a Deno container against stand-ins for the account service,
+# the Postgres rate-limit RPC, and Apple's two endpoints (token exchange and revocation), and checks
+# honest and hostile requests.
 #
 #   bash scripts/dbtest/apple_revoke_function.sh
 #
 # No real project and no Apple server is touched. Needs Docker (Colima is fine). Exits 1 if a check fails.
 set -uo pipefail
+
+if ! command -v docker >/dev/null 2>&1 && [ -x "$HOME/.local/bin/docker" ]; then
+  export PATH="$HOME/.local/bin:$PATH"
+fi
 
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 IMAGE=denoland/deno:alpine
@@ -18,7 +21,9 @@ fi
 
 WORK="$(mktemp -d)"
 trap 'rm -rf "$WORK"' EXIT
-cp "${FUNCTION_FILE:-$ROOT/supabase/functions/apple-revoke/index.ts}" "$WORK/index.ts"
+mkdir -p "$WORK/_shared" "$WORK/apple-revoke"
+cp "$ROOT/supabase/functions/_shared/http.ts" "$WORK/_shared/http.ts"
+cp "${FUNCTION_FILE:-$ROOT/supabase/functions/apple-revoke/index.ts}" "$WORK/apple-revoke/index.ts"
 
 # ---- a key pair for this run: the private half for the function, the public half for the stand-in ----
 cat > "$WORK/keys.ts" <<'EOF'
@@ -29,18 +34,21 @@ await Deno.writeTextFile('/work/key.pem', `-----BEGIN PRIVATE KEY-----\n${body}\
 await Deno.writeTextFile('/work/public.json', JSON.stringify(await crypto.subtle.exportKey('jwk', pair.publicKey)))
 EOF
 
-# ---- a stand-in for the account service (/auth/v1/user) and for Apple (/auth/token, /auth/revoke) ----
+# ---- a stand-in for Auth (/auth/v1/user), RPC (/rest/v1/rpc/consume_rate_limit), and Apple (/auth/token, /auth/revoke) ----
 cat > "$WORK/mock.ts" <<'EOF'
 const publicKey = await crypto.subtle.importKey('jwk', JSON.parse(await Deno.readTextFile('/work/public.json')),
   { name: 'ECDSA', namedCurve: 'P-256' }, false, ['verify'])
 const fromBase64url = (value: string) =>
   Uint8Array.from(atob(value.replace(/-/g, '+').replace(/_/g, '/')), (c) => c.charCodeAt(0))
 const decode = (part: string) => JSON.parse(new TextDecoder().decode(fromBase64url(part)))
+const b64url = (obj: unknown) =>
+  btoa(JSON.stringify(obj)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')
 
 type Seen = { path: string; fields: Record<string, string>; secret?: { header: unknown; claims: unknown; signed: boolean } }
 let seen: Seen[] = []
 let revoked: string[] = []
 let failRevoke = false
+const rateHits = new Map<string, number>()
 
 async function read(req: Request): Promise<Seen> {
   const fields = Object.fromEntries(new URLSearchParams(await req.text()))
@@ -58,30 +66,82 @@ async function read(req: Request): Promise<Seen> {
 Deno.serve({ port: 54321, onListen() {} }, async (req) => {
   const url = new URL(req.url)
   if (url.pathname === '/__seen') return Response.json({ seen, revoked })
-  if (url.pathname === '/__reset') { seen = []; revoked = []; failRevoke = url.searchParams.get('failRevoke') === '1'; return new Response('ok') }
+  if (url.pathname === '/__reset') {
+    seen = []; revoked = []; rateHits.clear()
+    failRevoke = url.searchParams.get('failRevoke') === '1'
+    return new Response('ok')
+  }
+
+  if (url.pathname === '/rest/v1/rpc/consume_rate_limit' && req.method === 'POST') {
+    const body = await req.json()
+    const key = String(body.p_key)
+    const max = Number(body.p_max_hits ?? 5)
+    const next = (rateHits.get(key) ?? 0) + 1
+    rateHits.set(key, next)
+    return Response.json(next <= max)
+  }
 
   if (url.pathname === '/auth/v1/user') {
-    if (req.headers.get('Authorization') === 'Bearer a-signed-in-session') {
+    const auth = req.headers.get('Authorization')
+    if (auth === 'Bearer a-signed-in-session') {
       return Response.json({ id: '5f0c3a0e-0000-4000-8000-000000000001', identities: [{ provider: 'apple', id: 'apple-sub-1' }] })
     }
-    if (req.headers.get('Authorization') === 'Bearer an-email-only-session') {
+    if (auth === 'Bearer identity-data-sub-session') {
+      return Response.json({ id: '5f0c3a0e-0000-4000-8000-000000000005', identities: [{ provider: 'apple', identity_data: { sub: 'apple-sub-5' } }] })
+    }
+    if (auth === 'Bearer an-email-only-session') {
       return Response.json({ id: '5f0c3a0e-0000-4000-8000-000000000002', identities: [{ provider: 'email', id: 'email-1' }] })
+    }
+    if (auth === 'Bearer missing-identities-session') {
+      return Response.json({ id: '5f0c3a0e-0000-4000-8000-000000000003' })
+    }
+    if (auth === 'Bearer apple-missing-sub-session') {
+      return Response.json({ id: '5f0c3a0e-0000-4000-8000-000000000004', identities: [{ provider: 'apple' }] })
     }
     return Response.json({ msg: 'invalid JWT' }, { status: 401 })
   }
+
   if (url.pathname === '/auth/token' && req.method === 'POST') {
     const entry = await read(req)
     if (!entry.secret?.signed) return Response.json({ error: 'invalid_grant' }, { status: 400 })
+    const makeIdToken = (claims: Record<string, unknown>) => `eyJhbGciOiJSUzI1NiJ9.${b64url(claims)}.sig`
+
     if (entry.fields.code === 'a-code-for-someone-else') {
-      const otherSub = btoa(JSON.stringify({ sub: 'apple-sub-other' })).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')
-      return Response.json({ access_token: 'access-2', token_type: 'Bearer', expires_in: 3600, refresh_token: 'refresh-other', id_token: `eyJhbGciOiJSUzI1NiJ9.${otherSub}.sig` })
+      return Response.json({
+        access_token: 'access-2', token_type: 'Bearer', expires_in: 3600, refresh_token: 'refresh-other',
+        id_token: makeIdToken({ iss: 'https://appleid.apple.com', aud: 'com.example.app', sub: 'apple-sub-other' }),
+      })
+    }
+    if (entry.fields.code === 'a-code-wrong-aud') {
+      return Response.json({
+        access_token: 'access-3', token_type: 'Bearer', expires_in: 3600, refresh_token: 'refresh-3',
+        id_token: makeIdToken({ iss: 'https://appleid.apple.com', aud: 'com.evil.other', sub: 'apple-sub-1' }),
+      })
+    }
+    if (entry.fields.code === 'a-code-wrong-iss') {
+      return Response.json({
+        access_token: 'access-4', token_type: 'Bearer', expires_in: 3600, refresh_token: 'refresh-4',
+        id_token: makeIdToken({ iss: 'https://evil.example', aud: 'com.example.app', sub: 'apple-sub-1' }),
+      })
+    }
+    if (entry.fields.code === 'a-code-no-refresh-token') {
+      return Response.json({ access_token: 'access-5', token_type: 'Bearer', expires_in: 3600 })
+    }
+    if (entry.fields.code === 'a-code-for-sub-5') {
+      return Response.json({
+        access_token: 'access-5', token_type: 'Bearer', expires_in: 3600, refresh_token: 'refresh-for-sub-5',
+        id_token: makeIdToken({ iss: 'https://appleid.apple.com', aud: 'com.example.app', sub: 'apple-sub-5' }),
+      })
     }
     if (entry.fields.code !== 'a-code-apple-issued') {
       return Response.json({ error: 'invalid_grant' }, { status: 400 })
     }
-    const ownSub = btoa(JSON.stringify({ sub: 'apple-sub-1' })).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')
-    return Response.json({ access_token: 'access-1', token_type: 'Bearer', expires_in: 3600, refresh_token: 'refresh-for-this-person', id_token: `eyJhbGciOiJSUzI1NiJ9.${ownSub}.sig` })
+    return Response.json({
+      access_token: 'access-1', token_type: 'Bearer', expires_in: 3600, refresh_token: 'refresh-for-this-person',
+      id_token: makeIdToken({ iss: 'https://appleid.apple.com', aud: 'com.example.app', sub: 'apple-sub-1' }),
+    })
   }
+
   if (url.pathname === '/auth/revoke' && req.method === 'POST') {
     const entry = await read(req)
     if (failRevoke || !entry.secret?.signed) return Response.json({ error: 'invalid_client' }, { status: 400 })
@@ -127,6 +187,10 @@ if (phase === 'configured') {
   check("a caller holding only the project's public key is refused", answer.status === 401, `got ${answer.status}`)
   answer = await post({ code: 'a-code-apple-issued' }, 'Bearer an-email-only-session')
   check('an email-only account cannot call apple-revoke', answer.status === 403 && answer.json?.error === 'not_apple_account', answer.text)
+  answer = await post({ code: 'a-code-apple-issued' }, 'Bearer missing-identities-session')
+  check('a user payload omitting identities fails closed with 403', answer.status === 403 && answer.json?.error === 'not_apple_account', answer.text)
+  answer = await post({ code: 'a-code-apple-issued' }, 'Bearer apple-missing-sub-session')
+  check('an Apple identity missing sub fails closed with 403', answer.status === 403 && answer.json?.error === 'not_apple_account', answer.text)
   answer = await post({ code: 'x'.repeat(5000) })
   check('an oversized body (>4KB) is rejected with 413', answer.status === 413, `got ${answer.status}`)
   check('and Apple was asked nothing', (await seen()).seen.length === 0)
@@ -154,9 +218,28 @@ if (phase === 'configured') {
   check('and lasts five minutes (Apple allows at most six months)', claims.exp - claims.iat === 300 && Math.abs(claims.iat - Date.now() / 1000) < 60, JSON.stringify(claims))
 
   await reset()
+  answer = await post({ code: 'a-code-for-sub-5' }, 'Bearer identity-data-sub-session')
+  record = await seen()
+  check('identity_data.sub fallback works when top-level identity.id is absent', answer.status === 200 && answer.json?.revoked === true && JSON.stringify(record.revoked) === '["refresh-for-sub-5"]', answer.text)
+
+  await reset()
   answer = await post({ code: 'a-code-for-someone-else' })
   record = await seen()
   check('a code whose Apple sub does not match the caller is refused without revoking', answer.status === 403 && answer.json?.error === 'identity_mismatch' && record.revoked.length === 0, answer.text)
+
+  await reset()
+  answer = await post({ code: 'a-code-wrong-aud' })
+  record = await seen()
+  check('an id_token with wrong aud is refused without revoking', answer.status === 403 && answer.json?.error === 'identity_mismatch' && record.revoked.length === 0, answer.text)
+
+  await reset()
+  answer = await post({ code: 'a-code-wrong-iss' })
+  record = await seen()
+  check('an id_token with wrong iss is refused without revoking', answer.status === 403 && answer.json?.error === 'identity_mismatch' && record.revoked.length === 0, answer.text)
+
+  await reset()
+  answer = await post({ code: 'a-code-no-refresh-token' })
+  check('missing refresh_token returns 502 no_token', answer.status === 502 && answer.json?.error === 'no_token', answer.text)
 
   await reset()
   answer = await post({ code: 'a-code-someone-made-up' })
@@ -166,6 +249,13 @@ if (phase === 'configured') {
   await reset('?failRevoke=1')
   answer = await post({ code: 'a-code-apple-issued' })
   check('if Apple refuses the revocation the app is told so', answer.status === 502 && answer.json?.error === 'not_revoked', answer.text)
+}
+
+if (phase === 'rate-limit') {
+  const first = await post({ code: 'a-code-apple-issued' })
+  const second = await post({ code: 'a-code-apple-issued' })
+  const third = await post({ code: 'a-code-apple-issued' })
+  check('per-user rate limit allows hits up to ceiling and returns 429 afterwards', first.status === 200 && second.status === 200 && third.status === 429 && third.json?.error === 'rate_limited', `${first.status}/${second.status}/${third.status} ${third.text}`)
 }
 
 if (phase === 'not-configured') {
@@ -186,8 +276,8 @@ deno run --quiet --allow-write keys.ts
 deno run --quiet --allow-net --allow-read mock.ts &
 
 start_function() {
-  env SUPABASE_URL=http://127.0.0.1:54321 SUPABASE_ANON_KEY=the-projects-public-key APPLE_ID_URL=http://127.0.0.1:54321 "$@" \
-    deno run --quiet --allow-net --allow-env index.ts >> /work/function.log 2>&1 &
+  env SUPABASE_URL=http://127.0.0.1:54321 SUPABASE_ANON_KEY=the-projects-public-key SUPABASE_SERVICE_ROLE_KEY=service-role-key APPLE_ID_URL=http://127.0.0.1:54321 "$@" \
+    deno run --quiet --allow-net --allow-env apple-revoke/index.ts >> /work/function.log 2>&1 &
   FUNCTION_PID=$!
   for _ in $(seq 1 240); do
     if deno eval --quiet "try { await (await fetch('http://127.0.0.1:8000', { method: 'OPTIONS' })).text() } catch { Deno.exit(1) }" 2>/dev/null; then
@@ -200,9 +290,16 @@ start_function() {
 stop_function() { kill "$FUNCTION_PID" 2>/dev/null; wait "$FUNCTION_PID" 2>/dev/null; }
 
 failures=0
+deno check --quiet apple-revoke/index.ts && echo "    pass  the function type-checks" || { echo "    FAIL  the function type-checks"; failures=1; }
+
 echo "  with Apple's key set"
-start_function APPLE_TEAM_ID=TEAMID1234 APPLE_KEY_ID=KEYID12345 APPLE_CLIENT_ID=com.example.app APPLE_PRIVATE_KEY="$(cat /work/key.pem)"
+start_function APPLE_TEAM_ID=TEAMID1234 APPLE_KEY_ID=KEYID12345 APPLE_CLIENT_ID=com.example.app APPLE_PRIVATE_KEY="$(cat /work/key.pem)" APPLE_REVOKE_MAX_PER_HOUR=20
 deno run --quiet --allow-net client.ts configured || failures=1
+stop_function
+
+echo "  per-user rate limiting (ceiling of 2/hour)"
+start_function APPLE_TEAM_ID=TEAMID1234 APPLE_KEY_ID=KEYID12345 APPLE_CLIENT_ID=com.example.app APPLE_PRIVATE_KEY="$(cat /work/key.pem)" APPLE_REVOKE_MAX_PER_HOUR=2
+deno run --quiet --allow-net client.ts rate-limit || failures=1
 stop_function
 
 echo "  with no key set"

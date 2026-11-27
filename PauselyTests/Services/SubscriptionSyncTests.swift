@@ -67,7 +67,7 @@ final class SubscriptionSyncTests: XCTestCase {
         XCTAssertEqual(back.notes, "Shared with family")
         XCTAssertEqual(back.paymentMethod, "Apple")
 
-        // Oversized text fields are clamped before upload to satisfy Postgres CHECK constraints.
+        // Oversized text fields are clamped and blank names fall back before upload to satisfy Postgres CHECK constraints.
         var oversized = TestFactories.makeSubscription(name: String(repeating: "x", count: 300), amount: -5)
         oversized.notes = String(repeating: "n", count: 3_000)
         oversized.paymentMethod = String(repeating: "p", count: 200)
@@ -76,7 +76,13 @@ final class SubscriptionSyncTests: XCTestCase {
         XCTAssertEqual(clamped.notes?.count, 2_000)
         XCTAssertEqual(clamped.payment_method?.count, 120)
         XCTAssertEqual(clamped.amount, 0)
-        XCTAssertEqual(clamped.split_count, 1)
+
+        var blank = TestFactories.makeSubscription(name: "   ")
+        blank.category = nil
+        let blankRecord = SubscriptionRecord(from: blank)
+        XCTAssertEqual(blankRecord.name, "Subscription")
+        let blankJSON = try json(blankRecord)
+        XCTAssertTrue(blankJSON["category"] is NSNull, "cleared category must encode as explicit null")
     }
 
     // MARK: Merging the server's list with this iPhone's
@@ -153,12 +159,12 @@ final class SubscriptionSyncTests: XCTestCase {
         XCTAssertFalse(TestFactories.makeSubscription(name: "Pausely Pro Max").isPausely)
     }
 
-    /// The app has fourteen fields and sends those. Columns earlier versions filled are left as they are.
+    /// The app has thirteen synced fields and sends those. Columns earlier versions filled are left as they are.
     func testOnlyTheFieldsTheAppHasAreSent() throws {
         let sent = try json(SubscriptionRecord(from: TestFactories.makeSubscription(name: "Netflix")))
         XCTAssertEqual(sent.keys.sorted(), ["amount", "billing_frequency", "category", "currency", "id", "name",
                                             "next_billing_date", "notes", "notify_before_days", "payment_method",
-                                            "split_count", "status", "trial_ends_at"])
+                                            "status", "trial_ends_at"])
     }
 
     // MARK: Pro

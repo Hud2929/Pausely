@@ -240,46 +240,51 @@ EXCEPTION WHEN duplicate_object THEN NULL;
 END $$;
 
 -- ============================================
--- SEED DATA - Popular alternatives
+-- SEED DATA - Popular alternatives (idempotent)
 -- ============================================
-INSERT INTO alternatives (source_subscription_name, source_category, alternative_name, alternative_url, alternative_cost, alternative_billing_cycle, is_free, is_cheaper, savings_amount, description) VALUES
--- Entertainment
-('Netflix', 'entertainment', 'Hulu (with ads)', 'https://www.hulu.com', 7.99, 'monthly', false, true, 7.50, 'Cheaper streaming with ads'),
-('Netflix', 'entertainment', 'Peacock', 'https://www.peacocktv.com', 5.99, 'monthly', false, true, 9.50, 'NBC content at lower price'),
-('Netflix', 'entertainment', 'Tubi', 'https://tubitv.com', 0, 'monthly', true, true, 15.49, 'Free ad-supported streaming'),
-('Spotify', 'entertainment', 'Apple Music Voice', 'https://music.apple.com', 4.99, 'monthly', false, true, 5.00, 'Voice-controlled music'),
-('Spotify', 'entertainment', 'YouTube Music (free)', 'https://music.youtube.com', 0, 'monthly', true, true, 9.99, 'Free tier with ads'),
-('Spotify', 'entertainment', 'Pandora (free)', 'https://www.pandora.com', 0, 'monthly', true, true, 9.99, 'Free ad-supported radio'),
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM public.alternatives) THEN
+        INSERT INTO public.alternatives (source_subscription_name, source_category, alternative_name, alternative_url, alternative_cost, alternative_billing_cycle, is_free, is_cheaper, savings_amount, description) VALUES
+        -- Entertainment
+        ('Netflix', 'entertainment', 'Hulu (with ads)', 'https://www.hulu.com', 7.99, 'monthly', false, true, 7.50, 'Cheaper streaming with ads'),
+        ('Netflix', 'entertainment', 'Peacock', 'https://www.peacocktv.com', 5.99, 'monthly', false, true, 9.50, 'NBC content at lower price'),
+        ('Netflix', 'entertainment', 'Tubi', 'https://tubitv.com', 0, 'monthly', true, true, 15.49, 'Free ad-supported streaming'),
+        ('Spotify', 'entertainment', 'Apple Music Voice', 'https://music.apple.com', 4.99, 'monthly', false, true, 5.00, 'Voice-controlled music'),
+        ('Spotify', 'entertainment', 'YouTube Music (free)', 'https://music.youtube.com', 0, 'monthly', true, true, 9.99, 'Free tier with ads'),
+        ('Spotify', 'entertainment', 'Pandora (free)', 'https://www.pandora.com', 0, 'monthly', true, true, 9.99, 'Free ad-supported radio'),
 
--- Productivity
-('Notion', 'productivity', 'Obsidian', 'https://obsidian.md', 0, 'monthly', true, true, 10.00, 'Free for personal use, one-time purchase'),
-('Notion', 'productivity', 'Standard Notes', 'https://standardnotes.com', 0, 'monthly', true, true, 10.00, 'Free encrypted notes'),
-('Adobe Creative Cloud', 'productivity', 'Affinity Suite', 'https://affinity.serif.com', 69.99, 'one-time', false, true, 50.00, 'One-time purchase vs subscription'),
-('Adobe Creative Cloud', 'productivity', 'GIMP + Inkscape', 'https://www.gimp.org', 0, 'monthly', true, true, 54.99, 'Free open-source alternatives'),
+        -- Productivity
+        ('Notion', 'productivity', 'Obsidian', 'https://obsidian.md', 0, 'monthly', true, true, 10.00, 'Free for personal use, one-time purchase'),
+        ('Notion', 'productivity', 'Standard Notes', 'https://standardnotes.com', 0, 'monthly', true, true, 10.00, 'Free encrypted notes'),
+        ('Adobe Creative Cloud', 'productivity', 'Affinity Suite', 'https://affinity.serif.com', 69.99, 'one-time', false, true, 50.00, 'One-time purchase vs subscription'),
+        ('Adobe Creative Cloud', 'productivity', 'GIMP + Inkscape', 'https://www.gimp.org', 0, 'monthly', true, true, 54.99, 'Free open-source alternatives'),
 
--- Fitness
-('Peloton', 'fitness', 'Apple Fitness+', 'https://fitness.apple.com', 9.99, 'monthly', false, true, 35.00, 'Lower cost fitness'),
-('Peloton', 'fitness', 'Nike Training Club', 'https://www.nike.com/ntc', 0, 'monthly', true, true, 44.99, 'Free workout app'),
-('Peloton', 'fitness', 'Down Dog', 'https://www.downdogapp.com', 7.99, 'monthly', false, true, 37.00, 'Lower cost yoga/fitness'),
+        -- Fitness
+        ('Peloton', 'fitness', 'Apple Fitness+', 'https://fitness.apple.com', 9.99, 'monthly', false, true, 35.00, 'Lower cost fitness'),
+        ('Peloton', 'fitness', 'Nike Training Club', 'https://www.nike.com/ntc', 0, 'monthly', true, true, 44.99, 'Free workout app'),
+        ('Peloton', 'fitness', 'Down Dog', 'https://www.downdogapp.com', 7.99, 'monthly', false, true, 37.00, 'Lower cost yoga/fitness'),
 
--- Wellness
-('Headspace', 'wellness', 'Insight Timer', 'https://insighttimer.com', 0, 'monthly', true, true, 12.99, 'Free meditation library'),
-('Headspace', 'wellness', 'UCLA Mindful', 'https://mindful.ucla.edu', 0, 'monthly', true, true, 12.99, 'Free from UCLA'),
-('Calm', 'wellness', 'MyLife Meditation', 'https://my.life', 0, 'monthly', true, true, 14.99, 'Free meditation app'),
+        -- Wellness
+        ('Headspace', 'wellness', 'Insight Timer', 'https://insighttimer.com', 0, 'monthly', true, true, 12.99, 'Free meditation library'),
+        ('Headspace', 'wellness', 'UCLA Mindful', 'https://mindful.ucla.edu', 0, 'monthly', true, true, 12.99, 'Free from UCLA'),
+        ('Calm', 'wellness', 'MyLife Meditation', 'https://my.life', 0, 'monthly', true, true, 14.99, 'Free meditation app'),
 
--- Utilities
-('1Password', 'utilities', 'Bitwarden', 'https://bitwarden.com', 0, 'monthly', true, true, 3.99, 'Free password manager'),
-('LastPass', 'utilities', 'Bitwarden', 'https://bitwarden.com', 0, 'monthly', true, true, 3.00, 'Free secure alternative'),
-('Dropbox', 'utilities', 'Google Drive (15GB free)', 'https://drive.google.com', 0, 'monthly', true, true, 9.99, 'Generous free tier'),
-('Dropbox', 'utilities', 'pCloud', 'https://www.pcloud.com', 4.99, 'monthly', false, true, 5.00, 'Lower cost storage'),
+        -- Utilities
+        ('1Password', 'utilities', 'Bitwarden', 'https://bitwarden.com', 0, 'monthly', true, true, 3.99, 'Free password manager'),
+        ('LastPass', 'utilities', 'Bitwarden', 'https://bitwarden.com', 0, 'monthly', true, true, 3.00, 'Free secure alternative'),
+        ('Dropbox', 'utilities', 'Google Drive (15GB free)', 'https://drive.google.com', 0, 'monthly', true, true, 9.99, 'Generous free tier'),
+        ('Dropbox', 'utilities', 'pCloud', 'https://www.pcloud.com', 4.99, 'monthly', false, true, 5.00, 'Lower cost storage'),
 
--- News
-('NYTimes', 'news', 'AP News', 'https://apnews.com', 0, 'monthly', true, true, 17.00, 'Free news source'),
-('Washington Post', 'news', 'NPR', 'https://www.npr.org', 0, 'monthly', true, true, 12.00, 'Free quality journalism'),
-('Apple News+', 'news', 'Feedly (free)', 'https://feedly.com', 0, 'monthly', true, true, 9.99, 'Free RSS reader'),
+        -- News
+        ('NYTimes', 'news', 'AP News', 'https://apnews.com', 0, 'monthly', true, true, 17.00, 'Free news source'),
+        ('Washington Post', 'news', 'NPR', 'https://www.npr.org', 0, 'monthly', true, true, 12.00, 'Free quality journalism'),
+        ('Apple News+', 'news', 'Feedly (free)', 'https://feedly.com', 0, 'monthly', true, true, 9.99, 'Free RSS reader'),
 
--- Education
-('MasterClass', 'education', 'Khan Academy', 'https://www.khanacademy.org', 0, 'monthly', true, true, 15.00, 'Free education platform'),
-('Skillshare', 'education', 'YouTube', 'https://www.youtube.com', 0, 'monthly', true, true, 13.99, 'Free tutorials on everything'),
-('Duolingo Plus', 'education', 'Duolingo (free)', 'https://www.duolingo.com', 0, 'monthly', true, true, 6.99, 'Use free tier with ads'),
-('Coursera Plus', 'education', 'edX (audit free)', 'https://www.edx.org', 0, 'monthly', true, true, 59.00, 'Audit courses for free');
+        -- Education
+        ('MasterClass', 'education', 'Khan Academy', 'https://www.khanacademy.org', 0, 'monthly', true, true, 15.00, 'Free education platform'),
+        ('Skillshare', 'education', 'YouTube', 'https://www.youtube.com', 0, 'monthly', true, true, 13.99, 'Free tutorials on everything'),
+        ('Duolingo Plus', 'education', 'Duolingo (free)', 'https://www.duolingo.com', 0, 'monthly', true, true, 6.99, 'Use free tier with ads'),
+        ('Coursera Plus', 'education', 'edX (audit free)', 'https://www.edx.org', 0, 'monthly', true, true, 59.00, 'Audit courses for free');
+    END IF;
+END $$;

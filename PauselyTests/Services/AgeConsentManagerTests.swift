@@ -120,6 +120,20 @@ final class AgeConsentManagerTests: XCTestCase {
         XCTAssertTrue(manager.needsConsent(userId: "user-1"))
     }
 
+    func testAdoptRemoteConsentHydratesLocalStateAndKeepsEarliestTimestamp() {
+        let (manager, defaults) = makeManager()
+        let original = date(2026, 5, 1)
+        let later = date(2026, 10, 1)
+
+        manager.adoptRemoteConsent(userId: "user-remote", confirmedAt: original)
+        XCTAssertFalse(manager.needsConsent(userId: "user-remote"))
+        XCTAssertEqual(defaults.object(forKey: "age_consent_user_user-remote") as? Date, original)
+        XCTAssertFalse(defaults.bool(forKey: "age_consent_pending_sync_user-remote"))
+
+        manager.adoptRemoteConsent(userId: "user-remote", confirmedAt: later)
+        XCTAssertEqual(defaults.object(forKey: "age_consent_user_user-remote") as? Date, original)
+    }
+
     /// When the lockout ends, said in the reader's language: one hour is "hour", not "hour(s)".
     func testTheLockoutLineIsInTheReadersLanguage() {
         let saved = UserDefaults.standard.object(forKey: L10n.languageKey)

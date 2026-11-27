@@ -67,11 +67,23 @@ final class CancelDifficultyService: ObservableObject {
         guard !loaded, SubscriptionStore.cloudSyncEnabled, !AuthManager.shared.isGuest else { return }
         loaded = true
         do {
-            let rows: [Score] = try await SupabaseManager.shared.client
-                .from("service_difficulty_scores")
-                .select()
-                .execute()
-                .value
+            let pageSize = 1_000
+            let maxRows = 5_000
+            var rows: [Score] = []
+            var offset = 0
+            while rows.count < maxRows {
+                let end = min(offset + pageSize - 1, maxRows - 1)
+                let page: [Score] = try await SupabaseManager.shared.client
+                    .from("service_difficulty_scores")
+                    .select()
+                    .order("service_name", ascending: true)
+                    .range(from: offset, to: end)
+                    .execute()
+                    .value
+                rows.append(contentsOf: page)
+                if page.count < pageSize { break }
+                offset += pageSize
+            }
             scores = Dictionary(
                 rows.compactMap { row -> (String, Score)? in
                     let key = Self.serviceKey(for: row.serviceName)
@@ -123,16 +135,18 @@ final class CancelDifficultyService: ObservableObject {
         let clamped = max(1, min(5, difficulty))
         guard SubscriptionStore.cloudSyncEnabled, AuthManager.shared.isSignedIntoCloud else { return false }
         let client = SupabaseManager.shared.client
-        guard let userId = client.auth.currentSession?.user.id else { return false }
+        guard client.auth.currentSession != nil else { return false }
 
         let key = Self.serviceKey(for: serviceName)
         guard !key.isEmpty else { return false }
-        let payload = RatingInsert(
-            user_id: userId,
-            service_name: key,
-            difficulty_rating: clamped
-        )
         do {
+            let session = try await client.auth.session
+            guard !session.isExpired else { return false }
+            let payload = RatingInsert(
+                user_id: session.user.id,
+                service_name: key,
+                difficulty_rating: clamped
+            )
             _ = try await client
                 .from("cancel_difficulty_ratings")
                 .insert(payload)

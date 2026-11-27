@@ -155,16 +155,18 @@ class AuthManager: ObservableObject {
     // MARK: - Post Auth Setup
 
     /// Called after any successful authentication.
-    /// Checks Supabase `profiles.is_pro` to honor lifetime/admin-granted Pro status.
+    /// Syncs remote `profiles` state (admin-granted Pro status and prior age confirmation).
     private func postAuthSetup(user: User) {
         Task {
-            await checkLifetimeProStatus(userId: user.id)
+            await syncRemoteProfileState(userId: user.id)
         }
     }
 
-    private func checkLifetimeProStatus(userId: String) async {
+    private func syncRemoteProfileState(userId: String) async {
         struct ProfileRow: Decodable {
             let is_pro: Bool?
+            let age_confirmed_at: String?
+            let age_minimum_met: Bool?
         }
         do {
             // Require a valid, refreshed session so an expired token never queries `profiles` as `anon`
@@ -173,15 +175,19 @@ class AuthManager: ObservableObject {
             guard !session.isExpired else { return }
             let rows: [ProfileRow] = try await SupabaseManager.shared.client
                 .from("profiles")
-                .select("is_pro")
+                .select("is_pro, age_confirmed_at, age_minimum_met")
                 .eq("id", value: userId)
                 .limit(1)
                 .execute()
                 .value
-            // Admin-granted Pro follows the account: granted, or taken away when the flag is cleared.
-            await PaymentManager.shared.setProGrant(rows.first?.is_pro == true)
+            let row = rows.first
+            guard currentUser?.id.caseInsensitiveCompare(userId) == .orderedSame else { return }
+            await PaymentManager.shared.setProGrant(row?.is_pro == true)
+            if row?.age_minimum_met == true, let confirmedAt = row?.age_confirmed_at?.iso8601Date {
+                AgeConsentManager.shared.adoptRemoteConsent(userId: userId, confirmedAt: confirmedAt)
+            }
         } catch {
-            PauselyLogger.error("Failed to check lifetime pro: \(error)", category: "auth")
+            PauselyLogger.error("Failed to sync profile state: \(String(describing: type(of: error)))", category: "auth")
         }
     }
 
@@ -279,11 +285,13 @@ class AuthManager: ObservableObject {
             noteCodeRequested(for: email)
             AccountMemory.holdName(first: firstName, last: lastName, for: email)
 
-            // Send OTP — creates user if they don't exist
+            // Send OTP — creates user if they don't exist; pass app locale so auth-email localizes the code email.
+            let lang = L10n.locale.language.languageCode?.identifier ?? "en"
             try await client.auth.signInWithOTP(
                 email: email,
                 redirectTo: Self.confirmRedirect,
-                shouldCreateUser: true
+                shouldCreateUser: true,
+                data: ["locale": .string(lang)]
             )
 
             state = .emailConfirmationRequired(email)
@@ -340,10 +348,12 @@ class AuthManager: ObservableObject {
     func resendOTP(email: String) async throws {
         noteCodeRequested(for: email)
         do {
+            let lang = L10n.locale.language.languageCode?.identifier ?? "en"
             try await client.auth.signInWithOTP(
                 email: email,
                 redirectTo: Self.confirmRedirect,
-                shouldCreateUser: true
+                shouldCreateUser: true,
+                data: ["locale": .string(lang)]
             )
         } catch {
             throw PauselyAuthError.unknown(error)
@@ -457,14 +467,15 @@ class AuthManager: ObservableObject {
         client.auth.currentSession?.user.identities?.contains { $0.provider == "apple" } ?? false
     }
 
-    /// Deletes the account and everything stored with it: on the server (supabase function
-    /// `delete_my_account`, which cascades to every table) and on this iPhone. Subscriptions billed by
-    /// Apple, including Pausely Pro, are not cancelled; Apple manages those.
-    ///
-    /// An account that signs in with Apple confirms with Apple first, and the tokens Apple gave Pausely
-    /// are revoked (`AppleRevocation`). Closing Apple's sheet stops the deletion (`CancellationError`).
+    /// Deletes the account on the server (`delete_my_account`) and wipes local device data.
+    /// Apple accounts confirm with Apple first so tokens are revoked (`AppleRevocation`).
     func deleteAccount() async throws {
-        if signsInWithApple {
+        // Refresh the JWT before checking identities and calling `apple-revoke` / `delete_my_account`,
+        // so an app foregrounded after >1 hour never fails Apple token revocation with a stale token.
+        let session = try await client.auth.session
+        guard !session.isExpired else { throw SyncFailure.signedOut }
+        let isAppleAccount = session.user.identities?.contains { $0.provider == "apple" } ?? false
+        if isAppleAccount {
             let coordinator = AppleSignInCoordinator()
             let revocation = AppleRevocation(
                 authorizationCode: { try await coordinator.authorizationCode() },
@@ -549,13 +560,8 @@ class AuthManager: ObservableObject {
 
     // MARK: - Links from account emails
 
-    /// A link from a sign-up, sign-in or reset email was opened. Whatever shape the account service gave
-    /// it (see `AuthLink`), the person ends up signed in, or choosing a new password after a reset.
-    ///
-    /// Only a link this device asked for is acted on (see `AuthLinkGate`): a code or reset was requested
-    /// here within the hour, nobody is signed in, and the account that comes back has that address.
-    /// Anything else is ignored, so a link someone else made can't switch the account on this phone.
-    /// - Returns: true when the link signed someone in or started a reset.
+    /// Handles a deep link from a sign-up, sign-in, or password-reset email, gated by `AuthLinkGate`
+    /// so links not requested by this device within the last hour (or for another address) are ignored.
     @discardableResult
     func handleDeepLink(_ url: URL) async -> Bool {
         guard url.scheme?.lowercased() == "pausely", url.host?.lowercased() == "auth" else { return false }

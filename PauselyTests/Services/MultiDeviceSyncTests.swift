@@ -169,4 +169,22 @@ final class MultiDeviceSyncTests: XCTestCase {
         let remoteEnded = try XCTUnwrap(JSONDecoder().decode(PausePlanRecord.self, from: encodedEnded).toSyncState())
         XCTAssertEqual(PausePlanSync.resolve(local: localEnded, remote: remoteEnded), .inSync)
     }
+
+    func testPausePlanRecordPreservesSavingsSinceAcrossDevicesAndReinstalls() throws {
+        let a = UUID(), b = UUID()
+        let origin = day(2026, 1, 1)
+        let extendedStart = day(2026, 4, 1)
+        let plan = PausePlan(subscriptionIds: [a, b], startedOn: extendedStart, savingsSince: origin)
+        let state = PausePlanStore.SyncState(plan: plan, updatedAt: extendedStart, endedAt: nil, pendingSync: false)
+
+        let encoded = try JSONEncoder().encode(PausePlanRecord(from: state, userId: UUID()))
+        let json = try XCTUnwrap(JSONSerialization.jsonObject(with: encoded) as? [String: Any])
+        XCTAssertNotNil(json["savings_since"], "PausePlanRecord must serialize savings_since for multi-device sync")
+
+        let decoded = try XCTUnwrap(JSONDecoder().decode(PausePlanRecord.self, from: encoded).toSyncState())
+        XCTAssertEqual(decoded.plan?.startedOn, extendedStart)
+        XCTAssertEqual(decoded.plan?.savingsSince, origin)
+        XCTAssertEqual(decoded.plan?.effectiveSavingsStart, origin)
+        XCTAssertEqual(PausePlanSync.resolve(local: nil, remote: decoded), .adoptRemote(decoded))
+    }
 }

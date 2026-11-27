@@ -2,21 +2,27 @@
 -- Mirrors the 2026-11-24 hardening additions in supabase/APPLY_2026-11-23.sql so fresh migrations stay 100% identical.
 
 -- 1. Cancel-difficulty canonical slug + privacy threshold (>= 3 ratings)
+-- Deduplicate on the computed canonical slug BEFORE normalizing rows so existing unique index
+-- `cancel_difficulty_one_per_user` never aborts with 23505 when mixed-case duplicates coexist.
+DELETE FROM public.cancel_difficulty_ratings r
+USING (
+    SELECT id,
+           row_number() OVER (
+               PARTITION BY user_id,
+                   left(coalesce(nullif(trim(BOTH '-' FROM regexp_replace(lower(trim(service_name)), '[^a-z0-9]+', '-', 'g')), ''), 'service'), 120)
+               ORDER BY created_at DESC NULLS LAST, id
+           ) AS position
+    FROM public.cancel_difficulty_ratings
+    WHERE user_id IS NOT NULL
+) ranked
+WHERE r.id = ranked.id AND ranked.position > 1;
+
 UPDATE public.cancel_difficulty_ratings
 SET service_name = left(
   coalesce(nullif(trim(BOTH '-' FROM regexp_replace(lower(trim(service_name)), '[^a-z0-9]+', '-', 'g')), ''), 'service'),
   120
 )
 WHERE service_name !~ '^[a-z0-9][a-z0-9-]{0,119}$';
-
-DELETE FROM public.cancel_difficulty_ratings r
-USING (
-    SELECT id, row_number() OVER (PARTITION BY user_id, service_name
-                                  ORDER BY created_at DESC NULLS LAST, id) AS position
-    FROM public.cancel_difficulty_ratings
-    WHERE user_id IS NOT NULL
-) ranked
-WHERE r.id = ranked.id AND ranked.position > 1;
 
 DO $$
 BEGIN

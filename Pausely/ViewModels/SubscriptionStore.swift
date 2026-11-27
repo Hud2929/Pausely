@@ -209,13 +209,25 @@ class SubscriptionStore: ObservableObject {
             guard LocalUserData.belongs(to: userId.uuidString) else { return }
 
             try await reconcileWithServer(userId: userId.uuidString) {
-                let response: [SubscriptionRecord] = try await client
-                    .from("subscriptions")
-                    .select()
-                    .eq("user_id", value: userId)
-                    .order("created_at", ascending: false)
-                    .execute()
-                    .value
+                let pageSize = 1_000
+                let maxRows = 2_000
+                var response: [SubscriptionRecord] = []
+                var offset = 0
+                while response.count < maxRows {
+                    let end = min(offset + pageSize - 1, maxRows - 1)
+                    let page: [SubscriptionRecord] = try await client
+                        .from("subscriptions")
+                        .select()
+                        .eq("user_id", value: userId)
+                        .order("created_at", ascending: false)
+                        .order("id", ascending: false)
+                        .range(from: offset, to: end)
+                        .execute()
+                        .value
+                    response.append(contentsOf: page)
+                    if page.count < pageSize { break }
+                    offset += pageSize
+                }
                 let oldForm = response.filter(\.hasADayInTheOldForm).compactMap(\.id)
                 return (response.map { $0.toSubscription() }, oldForm)
             }
