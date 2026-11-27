@@ -161,8 +161,13 @@ final class ReminderScheduler {
             content.title = L10n.string("\(sub.name) trial ends tomorrow")
             content.body = L10n.string("After that it costs \(amount) \(sub.billingFrequency.billingPeriodLabel). Keep it or cancel it?")
         case .planCancel:
-            content.title = L10n.string("Pause Plan: cancel \(sub.name) today")
-            content.body = L10n.string("It renews tomorrow for \(amount). Cancel today and it comes back on its turn.")
+            if reminder.daysBefore > 1 {
+                content.title = L10n.string("Pause Plan: cancel \(sub.name) before \(day)")
+                content.body = L10n.string("It renews \(L10n.relativeDay(reminder.daysBefore)) for \(amount). Cancel at least 24 hours ahead and it comes back on its turn.")
+            } else {
+                content.title = L10n.string("Pause Plan: cancel \(sub.name) today")
+                content.body = L10n.string("It renews tomorrow for \(amount). Cancel today and it comes back on its turn.")
+            }
         case .planStart:
             content.title = L10n.string("Pause Plan: \(sub.name) is on")
             content.body = L10n.string("Its month starts today. Start it again whenever you're ready to watch.")
@@ -172,7 +177,8 @@ final class ReminderScheduler {
             content.body = L10n.string("\(sub.name) didn't charge you today. Open your Savings Receipt to see what you've kept.")
         }
         switch reminder.kind {
-        case .planCancel, .planStart: content.categoryIdentifier = ReminderActions.pausePlanCategory
+        case .planCancel: content.categoryIdentifier = ReminderActions.pausePlanCategory
+        case .planStart: content.categoryIdentifier = ReminderActions.pausePlanStartCategory
         case .savingsAvoided: break
         default: content.categoryIdentifier = ReminderActions.decisionCategory
         }

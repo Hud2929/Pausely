@@ -1,35 +1,40 @@
 import SwiftUI
 
-/// Pause Plan: pick the streaming services to rotate, see what it saves, then follow a short
-/// to-do list (cancel this one, start that one). Pausely can't cancel for you; it tells you when,
-/// and the Savings Receipt counts what rotating saved.
+/// Pause Plan: keep one streaming (or opted-in monthly) service on at a time and rotate monthly.
+/// Supports full queue editing, 1-month extensions, early switches, interactive "Up next" ordering,
+/// undated-service prompts (never showing a false "You're all set"), direct resubscribe links, and
+/// cumulative saved + 12-month on-track progress.
 struct PausePlanView: View {
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.openURL) private var openURL
     @ObservedObject private var store = SubscriptionStore.shared
     @ObservedObject private var planStore = PausePlanStore.shared
     @ObservedObject private var paymentManager = PaymentManager.shared
     @ObservedObject private var currencyManager = CurrencyManager.shared
     @ObservedObject private var eventLog = LifecycleEventLog.shared
 
-    @State private var selected: Set<UUID> = []
-    @State private var firstId: UUID?
-    @State private var didSetDefaults = false
     @State private var paywallRequest: PaywallRequest?
     @State private var cancelTarget: Subscription?
+    @State private var addDateTarget: Subscription?
+    @State private var openLinkURL: URL?
+    @State private var showingEditor = false
     @State private var confirmEnd = false
     @State private var isWorking = false
+    @State private var undoSnapshot: UndoSnapshot?
     @Environment(\.dynamicTypeSize) private var typeSize
 
     private struct PaywallRequest: Identifiable {
         let id = UUID()
         let context: PaywallContext
         let pendingStartSub: Subscription?
-        let autoStartPlan: Bool
+        let pendingOrder: [UUID]?
     }
 
-    private var eligible: [Subscription] {
-        store.subscriptions.filter(PausePlanSchedule.isEligible).sorted { $0.name < $1.name }
+    private struct UndoSnapshot: Equatable {
+        let plan: PausePlan
+        let message: String
     }
+
     private var byId: [UUID: Subscription] {
         Dictionary(store.subscriptions.map { ($0.id, $0) }, uniquingKeysWith: { a, _ in a })
     }
@@ -41,7 +46,15 @@ struct PausePlanView: View {
                     if let plan = planStore.activePlan {
                         activeView(plan)
                     } else {
-                        setupView
+                        PausePlanSetupView(
+                            existingPlan: nil,
+                            isUnlocked: paymentManager.isUnlocked(.pausePlan),
+                            isWorking: isWorking,
+                            onCommit: { order in startPlan(order: order) },
+                            onRequestPro: { ctx, order in
+                                paywallRequest = PaywallRequest(context: ctx, pendingStartSub: nil, pendingOrder: order)
+                            }
+                        )
                     }
                 }
                 .padding(.horizontal, 20)
@@ -56,13 +69,23 @@ struct PausePlanView: View {
                 ToolbarItem(placement: .topBarLeading) {
                     Button("Done") { dismiss() }.foregroundStyle(Color.inkText)
                 }
+                if planStore.activePlan != nil && paymentManager.isUnlocked(.pausePlan) {
+                    ToolbarItem(placement: .topBarTrailing) {
+                        Button("Edit") {
+                            Feel.selection()
+                            showingEditor = true
+                        }
+                        .foregroundStyle(Color.inkText)
+                        .accessibilityIdentifier("editPausePlanButton")
+                    }
+                }
             }
         }
         .preferredColorScheme(.dark)
         .sheet(item: $paywallRequest) { request in
             StoreKitUpgradeView(context: request.context) {
-                if request.autoStartPlan {
-                    startSelectedPlan()
+                if let order = request.pendingOrder {
+                    startPlan(order: order)
                 } else if let sub = request.pendingStartSub {
                     Task { _ = await planStore.markStarted(sub) }
                 }
@@ -71,262 +94,69 @@ struct PausePlanView: View {
         .sheet(item: $cancelTarget) { sub in
             CancelSubscriptionFlow(subscription: sub)
         }
-        .onAppear(perform: setDefaults)
-    }
-
-    /// In the display currency ("≈" when converted); in its own when there is no rate for it.
-    private func money(_ amount: Decimal, from currency: String) -> String {
-        guard let converted = currencyManager.convertToSelected(amount, from: currency) else {
-            return MoneyFormat.string(amount, currency)
+        .sheet(item: $addDateTarget) { sub in
+            RenewalDatesSheet(subscriptions: [sub])
         }
-        return MoneyFormat.total(converted, currencyManager.selectedCurrency,
-                                 converted: MoneyFormat.normalizedCode(currency) != MoneyFormat.normalizedCode(currencyManager.selectedCurrency))
+        .sheet(isPresented: Binding(get: { openLinkURL != nil }, set: { if !$0 { openLinkURL = nil } })) {
+            if let url = openLinkURL { SafariView(url: url).ignoresSafeArea() }
+        }
+        .sheet(isPresented: $showingEditor) {
+            if let plan = planStore.activePlan {
+                NavigationStack {
+                    ScrollView {
+                        PausePlanSetupView(
+                            existingPlan: plan,
+                            isUnlocked: true,
+                            isWorking: isWorking,
+                            onCommit: { newOrder in
+                                showingEditor = false
+                                undoSnapshot = nil
+                                runPlanMutation {
+                                    await planStore.updateOrder(newOrder)
+                                    Feel.tick()
+                                }
+                            },
+                            onRequestPro: { _, _ in }
+                        )
+                        .padding(.horizontal, 20)
+                        .padding(.top, 12)
+                        .padding(.bottom, 40)
+                    }
+                    .readableScroll()
+                    .background(Color.ink.ignoresSafeArea())
+                    .navigationTitle("Edit Pause Plan")
+                    .navigationBarTitleDisplayMode(.inline)
+                    .toolbar {
+                        ToolbarItem(placement: .topBarLeading) {
+                            Button("Cancel") { showingEditor = false }
+                                .foregroundStyle(Color.inkText)
+                        }
+                    }
+                }
+                .preferredColorScheme(.dark)
+            }
+        }
     }
 
     private func short(_ date: Date) -> String {
         DayText.date(date, locale: L10n.locale)
     }
 
-    // MARK: - Setup
-
-    private func startSelectedPlan() {
-        guard chosen.count >= 2, !isWorking else { return }
-        isWorking = true
-        Task {
-            var order = PausePlanSchedule.suggestedOrder(chosen, now: Date())
-            if let firstId, let index = order.firstIndex(of: firstId) {
-                order.remove(at: index)
-                order.insert(firstId, at: 0)
-            }
+    private func startPlan(order: [UUID]) {
+        guard order.count >= 2 else { return }
+        runPlanMutation {
             await planStore.start(order: order)
             Feel.landed()
+        }
+    }
+
+    private func runPlanMutation(_ work: @escaping () async -> Void) {
+        guard !isWorking else { return }
+        isWorking = true
+        Task {
+            await work()
             isWorking = false
         }
-    }
-
-    private func setDefaults() {
-        guard !didSetDefaults else { return }
-        didSetDefaults = true
-        let active = eligible.filter { $0.status != .cancelled }
-        selected = Set((active.count >= 2 ? active : eligible).map(\.id))
-        firstId = PausePlanSchedule.suggestedOrder(eligible.filter { selected.contains($0.id) }, now: Date()).first
-    }
-
-    private var chosen: [Subscription] { eligible.filter { selected.contains($0.id) } }
-
-    @ViewBuilder
-    private var setupView: some View {
-        intro
-
-        if eligible.count < 2 {
-            VStack(alignment: .leading, spacing: 8) {
-                Text("Add two or more streaming services")
-                    .font(.headline)
-                    .foregroundStyle(Color.inkText)
-                    .fixedSize(horizontal: false, vertical: true)
-                    .accessibilityAddTraits(.isHeader)
-                Text("Netflix, Max, Disney+, Hulu, Prime Video and the like. Pause Plan rotates monthly video services; music and storage stay on.")
-                    .font(.subheadline)
-                    .foregroundStyle(Color.inkTextMuted)
-                    .fixedSize(horizontal: false, vertical: true)
-                // Which of theirs can't rotate, and so why this asks for more: Insights showed three video
-                // services side by side while this asked for two (the rating of 2026-11-23).
-                let video = store.subscriptions.charging.filter { OverlapDetector.cluster(for: $0) == .videoStreaming && !PausePlanSchedule.isEligible($0) }
-                if !video.isEmpty {
-                    let named = video.map { $0.billingFrequency == .monthly ? $0.name : L10n.string("\($0.name) (not billed monthly)") }
-                    Text("Not in the plan: \(named.formatted(.list(type: .and).locale(L10n.locale))).")
-                        .font(.subheadline)
-                        .foregroundStyle(Color.inkTextMuted)
-                        .fixedSize(horizontal: false, vertical: true)
-                }
-            }
-            .frame(maxWidth: .infinity, alignment: .leading)
-        } else {
-            VStack(alignment: .leading, spacing: 10) {
-                Text("Rotate these")
-                    .font(.subheadline.weight(.semibold))
-                    .foregroundStyle(Color.inkTextMuted)
-                    .accessibilityAddTraits(.isHeader)
-                VStack(spacing: 0) {
-                    ForEach(Array(eligible.enumerated()), id: \.element.id) { index, sub in
-                        if index > 0 { Hairline() }
-                        selectableRow(sub)
-                    }
-                }
-            }
-
-            estimateCard
-
-            Button {
-                guard chosen.count >= 2 else { return }
-                if paymentManager.isUnlocked(.pausePlan) {
-                    startSelectedPlan()
-                } else {
-                    let info = PausePlanCard.yearlySavingsInfo(in: chosen, currency: currencyManager)
-                    paywallRequest = PaywallRequest(
-                        context: PaywallContext(
-                            trigger: .pausePlan,
-                            pausePlanYearlySavings: info?.amount,
-                            pausePlanCurrency: info?.currency,
-                            pausePlanIsConverted: info?.isConverted ?? false,
-                            pausePlanServices: chosen.map(\.name)
-                        ),
-                        pendingStartSub: nil,
-                        autoStartPlan: true
-                    )
-                }
-            } label: {
-                Label(paymentManager.isUnlocked(.pausePlan) ? L10n.string("Start Pause Plan") : L10n.string("Start Pause Plan with Pro"),
-                      systemImage: paymentManager.isUnlocked(.pausePlan) ? "arrow.triangle.2.circlepath" : "lock.fill")
-            }
-            .buttonStyle(.ink)
-            .disabled(chosen.count < 2 || isWorking)
-            .accessibilityIdentifier("startPausePlanButton")
-
-            Text("Pausely can't cancel for you. It tells you when to cancel and when to start again, and your Savings Receipt counts what rotating saves.")
-                .font(.footnote)
-                .foregroundStyle(Color.inkTextFaint)
-                .frame(maxWidth: .infinity, alignment: .leading)
-        }
-    }
-
-    private var intro: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            Text("Watch one at a time")
-                .font(.question(.title))
-                .foregroundStyle(Color.inkText)
-                .fixedSize(horizontal: false, vertical: true)
-                .accessibilityAddTraits(.isHeader)
-            // What the person does, said first: "pauses the rest" read as Pausely pausing them, and the page later
-            // said Pausely can't cancel for you (the rating of 2026-11-23).
-            Text("Pause Plan keeps one streaming service on at a time: you cancel the rest, and it tells you when to switch each month, so you still see everything.")
-                .font(.body)
-                .foregroundStyle(Color.inkTextMuted)
-                .fixedSize(horizontal: false, vertical: true)
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-    }
-
-    private func selectableRow(_ sub: Subscription) -> some View {
-        let isSelected = selected.contains(sub.id)
-        let isFirst = isSelected && firstId == sub.id
-        let price = sub.status == .cancelled
-            ? L10n.string("Cancelled") + " · " + L10n.string("\(money(sub.amount, from: sub.currency)) a month")
-            : L10n.string("\(money(sub.amount, from: sub.currency)) a month")
-        let toggle = {
-            Feel.selection()
-            if isSelected {
-                selected.remove(sub.id)
-                if firstId == sub.id { firstId = PausePlanSchedule.suggestedOrder(chosen, now: Date()).first }
-            } else {
-                selected.insert(sub.id)
-                if firstId == nil { firstId = sub.id }
-            }
-        }
-        let check = Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
-            .font(.title3)
-            .foregroundStyle(isSelected ? Color.inkText : Color.inkTextFaint)
-            .accessibilityHidden(true)
-        let words = VStack(alignment: .leading, spacing: 2) {
-            Text(verbatim: sub.name)
-                .font(.body.weight(.medium))
-                .foregroundStyle(Color.inkText)
-                .fixedSize(horizontal: false, vertical: true)
-            Facts(price)
-                .font(.subheadline)
-                .foregroundStyle(Color.inkTextMuted)
-                .fixedSize(horizontal: false, vertical: true)
-        }
-        // Two things to tap, side by side and not one inside the other: the service (in or out of the
-        // rotation) and which one goes first.
-        return Group {
-            if typeSize.isAccessibilitySize {
-                // Words only, one under the other. Beside a logo and "Put first", a name had a column
-                // three letters wide and "a month" broke after "mont".
-                VStack(alignment: .leading, spacing: 4) {
-                    Button(action: toggle) {
-                        HStack(alignment: .firstTextBaseline, spacing: 10) { check; words }
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .contentShape(Rectangle())
-                    }
-                    .buttonStyle(.plain)
-                    .accessibilityElement(children: .combine)
-                    .accessibilityAddTraits(isSelected ? .isSelected : [])
-                    firstControl(sub, isSelected: isSelected, isFirst: isFirst)
-                }
-            } else {
-                HStack(spacing: 12) {
-                    Button(action: toggle) {
-                        HStack(spacing: 12) {
-                            check
-                            ServiceLogoView(name: sub.name, category: sub.category, size: 34)
-                                .accessibilityHidden(true)
-                            words
-                            Spacer(minLength: 8)
-                        }
-                        .contentShape(Rectangle())
-                    }
-                    .buttonStyle(.plain)
-                    .accessibilityElement(children: .combine)
-                    .accessibilityAddTraits(isSelected ? .isSelected : [])
-                    firstControl(sub, isSelected: isSelected, isFirst: isFirst)
-                }
-            }
-        }
-        .padding(.vertical, 12)
-    }
-
-    /// Which service the rotation starts with: said of the one that does, offered on the others.
-    @ViewBuilder
-    private func firstControl(_ sub: Subscription, isSelected: Bool, isFirst: Bool) -> some View {
-        if isFirst {
-            Text("On first")
-                .font(.caption.weight(.bold))
-                .foregroundStyle(Color.paperInk)
-                .padding(.horizontal, 8)
-                .padding(.vertical, 4)
-                .background(Capsule().fill(Color.paper))
-        } else if isSelected {
-            Button {
-                Feel.selection()
-                firstId = sub.id
-            } label: {
-                Text("Put first")
-                    .font(.subheadline.weight(.semibold))
-                    .foregroundStyle(Color.inkText)
-                    .tapArea(typeSize.isAccessibilitySize ? .leading : .trailing)
-            }
-            .buttonStyle(.plain)
-            .accessibilityLabel(Text(verbatim: L10n.string("Put first") + ", " + sub.name))
-        }
-    }
-
-    /// The sum, printed: what all of them cost together, what one at a time costs, and the difference.
-    private var estimateCard: some View {
-        let costs = chosen.compactMap { currencyManager.convertToSelected($0.monthlyCost, from: $0.currency) }
-        let now = costs.reduce(0, +)
-        let rotating = PausePlanSchedule.monthlyCostWhileRotating(monthlyCosts: costs)
-        let yearly = PausePlanSchedule.yearlySavings(monthlyCosts: costs)
-        // A service billed in another currency is added at an exchange rate, and the figures say so.
-        let display = currencyManager.selectedCurrency
-        let converted = chosen.isConverted(to: display)
-        return PaperSlip(tornTop: true, tornBottom: true) {
-            VStack(alignment: .leading, spacing: 10) {
-                ProofLine(label: L10n.string("All at once"), value: BillingFrequency.monthly.priced(MoneyFormat.total(now, display, converted: converted)))
-                // "on average" is part of the name, so the figure stands alone in the amounts' column
-                // (as the value it made that line the one long value on the slip).
-                ProofLine(label: L10n.string("One at a time, on average"), value: BillingFrequency.monthly.priced(MoneyFormat.total(rotating, display, converted: converted)))
-                Perforation()
-                ProofLine(label: L10n.string("Back in your pocket"), value: L10n.string("About \(currencyManager.format(yearly)) a year"),
-                          emphasised: true)
-                // An estimate, and what it assumes.
-                Text("If you rotate every month, at today's prices.")
-                    .font(.proof(.footnote))
-                    .foregroundStyle(Color.paperMuted)
-                    .fixedSize(horizontal: false, vertical: true)
-            }
-        }
-        .accessibilityElement(children: .combine)
     }
 
     // MARK: - Active plan
@@ -340,8 +170,9 @@ struct PausePlanView: View {
             let upcoming = PausePlanSchedule.turns(plan, subscriptions: subs, count: current.index + 5)
                 .filter { $0.index > current.index }
             let nextSub = upcoming.first.flatMap { subs[$0.subscriptionId] }
+            let unlocked = paymentManager.isUnlocked(.pausePlan)
 
-            if !paymentManager.isUnlocked(.pausePlan) {
+            if !unlocked {
                 VStack(alignment: .leading, spacing: 10) {
                     Text("Your Pausely Pro plan ended")
                         .font(.subheadline.weight(.semibold))
@@ -354,7 +185,7 @@ struct PausePlanView: View {
                         paywallRequest = PaywallRequest(
                             context: PaywallContext(trigger: .pausePlan),
                             pendingStartSub: nil,
-                            autoStartPlan: false
+                            pendingOrder: nil
                         )
                     } label: { Text("Renew Pausely Pro") }
                         .buttonStyle(.ink(.quiet))
@@ -364,11 +195,16 @@ struct PausePlanView: View {
                 Hairline()
             }
 
-            nowCard(currentSub, until: current.end, next: nextSub)
-            if paymentManager.isUnlocked(.pausePlan) {
-                todoCard(plan, current: current, currentSub: currentSub, next: upcoming.first, today: today)
+            nowCard(plan, currentSub: currentSub, until: current.end, next: nextSub, unlocked: unlocked)
+
+            if let snapshot = undoSnapshot {
+                undoBar(snapshot)
             }
-            scheduleCard(upcoming)
+
+            if unlocked {
+                todoCard(plan, next: upcoming.first, today: today)
+            }
+            scheduleCard(plan, upcoming: upcoming, unlocked: unlocked)
             savedCard(plan)
 
             Button {
@@ -384,21 +220,25 @@ struct PausePlanView: View {
             .accessibilityIdentifier("endPausePlanButton")
             .asksFirst(Text("End your Pause Plan?"), isPresented: $confirmEnd,
                        message: Text("Your subscriptions stay as they are. Pausely goes back to its usual renewal reminders.")) {
-                Button("End Pause Plan", role: .destructive) { Task { await planStore.end() } }
+                Button("End Pause Plan", role: .destructive) {
+                    undoSnapshot = nil
+                    Task { await planStore.end() }
+                }
                 Button("Keep it", role: .cancel) {}
             }
         }
     }
 
-    private func nowCard(_ sub: Subscription, until end: Date, next: Subscription?) -> some View {
+    private func nowCard(_ plan: PausePlan, currentSub: Subscription, until end: Date,
+                         next: Subscription?, unlocked: Bool) -> some View {
         VStack(alignment: .leading, spacing: 10) {
             Text("On now")
                 .font(.subheadline.weight(.semibold))
                 .foregroundStyle(Color.inkTextMuted)
                 .accessibilityAddTraits(.isHeader)
             HStack(spacing: 12) {
-                ServiceLogoView(name: sub.name, category: sub.category, size: 48)
-                Text(sub.name)
+                ServiceLogoView(name: currentSub.name, category: currentSub.category, size: 48)
+                Text(verbatim: currentSub.name)
                     .font(.question(.title))
                     .foregroundStyle(Color.inkText)
                     .fixedSize(horizontal: false, vertical: true)
@@ -406,54 +246,101 @@ struct PausePlanView: View {
             Text(next.map { L10n.string("Until \(short(end)). Then \($0.name).") } ?? L10n.string("Until \(short(end))."))
                 .font(.body)
                 .foregroundStyle(Color.inkTextMuted)
+
+            if unlocked, let next {
+                LineOrStack(spacing: 10, lineSpacing: 8) {
+                    Button {
+                        let previous = plan
+                        runPlanMutation {
+                            await planStore.extendCurrentTurn()
+                            Feel.tick()
+                            withAnimation(Motion.unlessReduced(Motion.touch)) {
+                                undoSnapshot = UndoSnapshot(
+                                    plan: previous,
+                                    message: L10n.string("Kept \(currentSub.name) for 1 more month.")
+                                )
+                            }
+                        }
+                    } label: {
+                        Text("Stay 1 more month")
+                            .font(.footnote.weight(.semibold))
+                            .foregroundStyle(Color.inkText)
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 8)
+                            .overlay(Capsule().stroke(Color.outline, lineWidth: 1))
+                            .tapArea(.leading)
+                    }
+                    .buttonStyle(.plain)
+                    .disabled(isWorking)
+                    .accessibilityIdentifier("extendPausePlanButton")
+
+                    Button {
+                        let previous = plan
+                        runPlanMutation {
+                            await planStore.switchToNext()
+                            Feel.tick()
+                            withAnimation(Motion.unlessReduced(Motion.touch)) {
+                                undoSnapshot = UndoSnapshot(
+                                    plan: previous,
+                                    message: L10n.string("Switched to \(next.name).")
+                                )
+                            }
+                        }
+                    } label: {
+                        Text("Switch to \(next.name) now")
+                            .font(.footnote.weight(.semibold))
+                            .foregroundStyle(Color.inkText)
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 8)
+                            .overlay(Capsule().stroke(Color.outline, lineWidth: 1))
+                            .tapArea(.leading)
+                    }
+                    .buttonStyle(.plain)
+                    .disabled(isWorking)
+                    .accessibilityIdentifier("switchPausePlanButton")
+                }
+                .padding(.top, 2)
+            }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .accessibilityElement(children: .combine)
     }
 
-    private struct Todo: Identifiable {
-        enum Action { case cancel, start }
-        let id: String
-        let sub: Subscription
-        let text: String
-        let action: Action
+    private func undoBar(_ snapshot: UndoSnapshot) -> some View {
+        SideBySide(alignment: .center, spacing: 12) {
+            Text(verbatim: snapshot.message)
+                .font(.footnote)
+                .foregroundStyle(Color.inkText)
+                .fixedSize(horizontal: false, vertical: true)
+        } trailing: {
+            Button {
+                Feel.selection()
+                let restorePlan = snapshot.plan
+                withAnimation(Motion.unlessReduced(Motion.touch)) { undoSnapshot = nil }
+                runPlanMutation { await planStore.restore(restorePlan) }
+            } label: {
+                Text("Undo")
+                    .font(.footnote.weight(.semibold))
+                    .foregroundStyle(Color.paperInk)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 6)
+                    .background(Capsule().fill(Color.paper))
+                    .tapArea(.trailing)
+            }
+            .buttonStyle(.plain)
+            .disabled(isWorking)
+            .accessibilityIdentifier("undoPausePlanActionButton")
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 8)
+        .background(Color.inkRaised, in: RoundedRectangle(cornerRadius: Layout.cardRadius, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: Layout.cardRadius, style: .continuous).stroke(Color.line, lineWidth: 1))
     }
 
-    private func todos(_ plan: PausePlan, current: PausePlanSchedule.Turn, currentSub: Subscription,
-                       next: PausePlanSchedule.Turn?, today: Date) -> [Todo] {
+    // MARK: - To do
+
+    private func todoCard(_ plan: PausePlan, next: PausePlanSchedule.Turn?, today: Date) -> some View {
+        let items = PausePlanSchedule.actionItems(for: plan, subscriptions: store.subscriptions, now: today)
         let subs = byId
-        let calendar = Calendar.billing
-        var items: [Todo] = []
-        // Its month has started: it should be on.
-        if !currentSub.renewsAutomatically, current.start != nil {
-            items.append(Todo(id: "start-\(currentSub.id)", sub: currentSub,
-                              text: L10n.string("Start \(currentSub.name). Its month began \(short(current.start ?? today))."),
-                              action: .start))
-        }
-        for id in plan.subscriptionIds where id != current.subscriptionId {
-            guard let sub = subs[id], sub.renewsAutomatically,
-                  let renewal = RenewalDecisions.upcomingCharge(for: sub, now: today)?.date,
-                  PausePlanSchedule.shouldPause(id, renewingOn: renewal, plan: plan, current: current) else { continue }
-            items.append(Todo(id: "cancel-\(id)", sub: sub,
-                              // A free trial doesn't renew: it ends, and that is its first charge.
-                              text: sub.status == .trial
-                                ? L10n.string("Cancel \(sub.name) before its free trial ends \(short(renewal)).")
-                                : L10n.string("Cancel \(sub.name) before it renews \(short(renewal))."),
-                              action: .cancel))
-        }
-        // The handoff is close: cancel the current one before its month ends.
-        if let next, currentSub.renewsAutomatically, calendar.calendarDays(from: today, to: current.end) <= 3,
-           let nextSub = subs[next.subscriptionId] {
-            items.append(Todo(id: "handoff-\(currentSub.id)", sub: currentSub,
-                              text: L10n.string("Cancel \(currentSub.name) by \(short(calendar.date(byAdding: .day, value: -1, to: current.end) ?? current.end)). \(nextSub.name) starts \(short(current.end))."),
-                              action: .cancel))
-        }
-        return items
-    }
-
-    private func todoCard(_ plan: PausePlan, current: PausePlanSchedule.Turn, currentSub: Subscription,
-                          next: PausePlanSchedule.Turn?, today: Date) -> some View {
-        let items = todos(plan, current: current, currentSub: currentSub, next: next, today: today)
         return VStack(alignment: .leading, spacing: 12) {
             Text("To do")
                 .font(.headline)
@@ -461,7 +348,7 @@ struct PausePlanView: View {
                 .accessibilityAddTraits(.isHeader)
             if items.isEmpty {
                 Label {
-                    Text(next.flatMap { byId[$0.subscriptionId] }.map { L10n.string("You're all set. We'll remind you before \($0.name) starts.") }
+                    Text(next.flatMap { subs[$0.subscriptionId] }.map { L10n.string("You're all set. We'll remind you before \($0.name) starts.") }
                          ?? L10n.string("You're all set."))
                         .font(.subheadline)
                         .foregroundStyle(Color.inkTextMuted)
@@ -470,49 +357,8 @@ struct PausePlanView: View {
                 }
             } else {
                 ForEach(items) { item in
-                    // What to do, and the button for it: side by side, or the button underneath at
-                    // accessibility sizes, where the sentence needs the whole width.
-                    SideBySide(alignment: .center, spacing: 8) {
-                        HStack(alignment: .center, spacing: 12) {
-                            if !typeSize.isAccessibilitySize {
-                                ServiceLogoView(name: item.sub.name, category: item.sub.category, size: 32)
-                                    .accessibilityHidden(true)
-                            }
-                            Text(verbatim: item.text)
-                                .font(.subheadline)
-                                .foregroundStyle(Color.inkText)
-                                .fixedSize(horizontal: false, vertical: true)
-                        }
-                    } trailing: {
-                        Button {
-                            switch item.action {
-                            case .cancel: cancelTarget = item.sub
-                            case .start: Task {
-                                if !(await planStore.markStarted(item.sub)) {
-                                    paywallRequest = PaywallRequest(
-                                        context: PaywallContext(
-                                            trigger: .unlimitedSubscriptions,
-                                            serviceName: item.sub.name,
-                                            serviceChargeAmount: item.sub.amount,
-                                            serviceChargeCurrency: item.sub.currency
-                                        ),
-                                        pendingStartSub: item.sub,
-                                        autoStartPlan: false
-                                    )
-                                }
-                            }
-                            }
-                        } label: {
-                            Text(item.action == .cancel ? L10n.string("How") : L10n.string("I started it"))
-                                .font(.caption.weight(.bold))
-                                .foregroundStyle(item.action == .cancel ? Color.ink : Color.paperInk)
-                                .padding(.horizontal, 10)
-                                .frame(minHeight: 30)
-                                .background(Capsule().fill(item.action == .cancel ? Color.decide : Color.paper))
-                                // The pill is small; the place to tap is not.
-                                .tapArea()
-                        }
-                        .buttonStyle(.plain)
+                    if let sub = subs[item.subscriptionId] {
+                        todoRow(item, sub: sub, subs: subs, today: today)
                     }
                 }
             }
@@ -520,31 +366,191 @@ struct PausePlanView: View {
         .frame(maxWidth: .infinity, alignment: .leading)
     }
 
-    private func scheduleCard(_ upcoming: [PausePlanSchedule.Turn]) -> some View {
-        VStack(alignment: .leading, spacing: 10) {
+    private func todoRow(_ item: PausePlanSchedule.ActionItem, sub: Subscription,
+                         subs: [UUID: Subscription], today: Date) -> some View {
+        let message = todoText(item, sub: sub, subs: subs, today: today)
+        return SideBySide(alignment: .center, spacing: 8) {
+            HStack(alignment: .center, spacing: 12) {
+                if !typeSize.isAccessibilitySize {
+                    ServiceLogoView(name: sub.name, category: sub.category, size: 32)
+                        .accessibilityHidden(true)
+                }
+                Text(verbatim: message)
+                    .font(.subheadline)
+                    .foregroundStyle(Color.inkText)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+        } trailing: {
+            todoControls(item, sub: sub)
+        }
+    }
+
+    private func todoText(_ item: PausePlanSchedule.ActionItem, sub: Subscription,
+                          subs: [UUID: Subscription], today: Date) -> String {
+        switch item.kind {
+        case .addDate:
+            return L10n.string("Add a renewal date for \(sub.name) so Pausely can remind you before it charges.")
+        case .start:
+            return L10n.string("Start \(sub.name). Its month began \(short(item.dueDate ?? today)).")
+        case .cancel:
+            let due = item.dueDate ?? today
+            if let nextId = item.nextSubscriptionId, let nextSub = subs[nextId] {
+                let dayBefore = Calendar.billing.date(byAdding: .day, value: -1, to: due) ?? due
+                return L10n.string("Cancel \(sub.name) by \(short(dayBefore)). \(nextSub.name) starts \(short(due)).")
+            }
+            return item.isTrialEnd
+                ? L10n.string("Cancel \(sub.name) before its free trial ends \(short(due)).")
+                : L10n.string("Cancel \(sub.name) before it renews \(short(due)).")
+        }
+    }
+
+    @ViewBuilder
+    private func todoControls(_ item: PausePlanSchedule.ActionItem, sub: Subscription) -> some View {
+        switch item.kind {
+        case .addDate:
+            Button {
+                Feel.selection()
+                addDateTarget = sub
+            } label: {
+                Text("Add date")
+                    .font(.caption.weight(.bold))
+                    .foregroundStyle(Color.ink)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 6)
+                    .background(Capsule().fill(Color.decide))
+                    .tapArea()
+            }
+            .buttonStyle(.plain)
+            .accessibilityIdentifier("pausePlanAddDate_\(sub.name)")
+
+        case .cancel:
+            Button {
+                Feel.selection()
+                cancelTarget = sub
+            } label: {
+                Text("How")
+                    .font(.caption.weight(.bold))
+                    .foregroundStyle(Color.ink)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 6)
+                    .background(Capsule().fill(Color.decide))
+                    .tapArea()
+            }
+            .buttonStyle(.plain)
+
+        case .start:
+            let destination = CancelHelp.resubscribeLink(for: sub)
+            LineOrStack(spacing: 6, lineSpacing: 4) {
+                if let destination {
+                    Button {
+                        Feel.selection()
+                        if destination.openInSystem {
+                            openURL(destination.url)
+                        } else {
+                            openLinkURL = destination.url
+                        }
+                    } label: {
+                        Text("Open")
+                            .font(.caption.weight(.semibold))
+                            .foregroundStyle(Color.inkText)
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 6)
+                            .overlay(Capsule().stroke(Color.outline, lineWidth: 1))
+                            .tapArea()
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel(Text(L10n.string("Open \(sub.name)")))
+                }
+
+                Button {
+                    Task {
+                        if await planStore.markStarted(sub) {
+                            Feel.landed()
+                        } else {
+                            paywallRequest = PaywallRequest(
+                                context: PaywallContext(
+                                    trigger: .unlimitedSubscriptions,
+                                    serviceName: sub.name,
+                                    serviceChargeAmount: sub.amount,
+                                    serviceChargeCurrency: sub.currency
+                                ),
+                                pendingStartSub: sub,
+                                pendingOrder: nil
+                            )
+                        }
+                    }
+                } label: {
+                    Text("I started it")
+                        .font(.caption.weight(.bold))
+                        .foregroundStyle(Color.paperInk)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 6)
+                        .background(Capsule().fill(Color.paper))
+                        .tapArea()
+                }
+                .buttonStyle(.plain)
+            }
+        }
+    }
+
+    // MARK: - Coming up & savings
+
+    private func scheduleCard(_ plan: PausePlan, upcoming: [PausePlanSchedule.Turn], unlocked: Bool) -> some View {
+        let nextId = upcoming.first?.subscriptionId
+        return VStack(alignment: .leading, spacing: 10) {
             Text("Coming up")
                 .font(.headline)
                 .foregroundStyle(Color.inkText)
                 .accessibilityAddTraits(.isHeader)
-            ForEach(upcoming, id: \.index) { turn in
+            ForEach(Array(upcoming.enumerated()), id: \.element.index) { offset, turn in
                 if let sub = byId[turn.subscriptionId], let start = turn.start {
-                    SideBySide(alignment: .center) {
+                    let canPromote = unlocked && offset > 0 && plan.subscriptionIds.count >= 3 && turn.subscriptionId != nextId
+                    SideBySide(alignment: .center, spacing: 8) {
                         HStack(spacing: 12) {
                             if !typeSize.isAccessibilitySize {
                                 ServiceLogoView(name: sub.name, category: sub.category, size: 28)
                                     .accessibilityHidden(true)
                             }
-                            Text(verbatim: sub.name)
-                                .font(.subheadline.weight(.semibold))
-                                .foregroundStyle(Color.inkText)
-                                .fixedSize(horizontal: false, vertical: true)
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(verbatim: sub.name)
+                                    .font(.subheadline.weight(.semibold))
+                                    .foregroundStyle(Color.inkText)
+                                    .fixedSize(horizontal: false, vertical: true)
+                                Text("\(short(start)) – \(short(turn.end))")
+                                    .font(.footnote)
+                                    .foregroundStyle(Color.inkTextMuted)
+                            }
                         }
+                        .accessibilityElement(children: .combine)
                     } trailing: {
-                        Text("\(short(start)) – \(short(turn.end))")
-                            .font(.footnote)
-                            .foregroundStyle(Color.inkTextMuted)
+                        if canPromote {
+                            Button {
+                                let previous = plan
+                                runPlanMutation {
+                                    await planStore.bringUpNext(sub.id)
+                                    Feel.tick()
+                                    withAnimation(Motion.unlessReduced(Motion.touch)) {
+                                        undoSnapshot = UndoSnapshot(
+                                            plan: previous,
+                                            message: L10n.string("Moved \(sub.name) up next.")
+                                        )
+                                    }
+                                }
+                            } label: {
+                                Text("Up next")
+                                    .font(.caption.weight(.semibold))
+                                    .foregroundStyle(Color.inkText)
+                                    .padding(.horizontal, 10)
+                                    .padding(.vertical, 6)
+                                    .overlay(Capsule().stroke(Color.outline, lineWidth: 1))
+                                    .tapArea(.trailing)
+                            }
+                            .buttonStyle(.plain)
+                            .disabled(isWorking)
+                            .accessibilityLabel(Text(L10n.string("Move \(sub.name) up next")))
+                            .accessibilityIdentifier("pauseUpNext_\(sub.name)")
+                        }
                     }
-                    .accessibilityElement(children: .combine)
                 }
             }
         }
@@ -552,24 +558,55 @@ struct PausePlanView: View {
     }
 
     private func savedCard(_ plan: PausePlan) -> some View {
-        let members = Set(plan.subscriptionIds)
-        let lines = SavingsSummary.current().lines.filter { members.contains($0.subscriptionId) && $0.cancelledOn >= Calendar.billing.startOfDay(for: plan.startedOn) }
-        let saved = lines.compactMap { currencyManager.convertToSelected($0.savedSoFar, from: $0.currency) }.reduce(0, +)
-        // A service billed in another currency is added at an exchange rate, and the figure says so.
-        let display = MoneyFormat.normalizedCode(currencyManager.selectedCurrency)
-        let converted = lines.contains { MoneyFormat.normalizedCode($0.currency) != display }
-        return SideBySide {
-            Text("Saved by rotating so far")
-                .font(.subheadline)
-                .foregroundStyle(Color.inkTextMuted)
-        } trailing: {
-            // Money kept is mint once there is some; nothing yet is not.
-            Text(verbatim: MoneyFormat.total(saved, currencyManager.selectedCurrency, converted: converted))
-                .font(.headline.weight(.bold))
-                .foregroundStyle(saved > 0 ? Color.kept : Color.inkText)
+        let display = currencyManager.selectedCurrency
+        let progress = PausePlanSchedule.savingsProgress(
+            for: plan,
+            lines: SavingsSummary.current().lines,
+            currency: display,
+            rates: currencyManager.rates
+        )
+        let unconvertibleOnly = progress.savedSoFar == 0 && progress.onTrack == 0 && progress.excludedUnconvertibleCount > 0
+        let savedText = unconvertibleOnly
+            ? "—"
+            : MoneyFormat.total(progress.savedSoFar, display, converted: progress.savedIsConverted, locale: L10n.locale)
+        let onTrackText = MoneyFormat.total(progress.onTrack, display, converted: progress.onTrackIsConverted, locale: L10n.locale)
+
+        return VStack(alignment: .leading, spacing: 8) {
+            SideBySide {
+                Text("Saved by rotating so far")
+                    .font(.subheadline)
+                    .foregroundStyle(Color.inkTextMuted)
+            } trailing: {
+                Text(verbatim: savedText)
+                    .font(.headline.weight(.bold).monospacedDigit())
+                    .foregroundStyle(progress.savedSoFar > 0 ? Color.kept : Color.inkText)
+            }
+            .accessibilityElement(children: .combine)
+
+            if progress.onTrack > progress.savedSoFar {
+                SideBySide {
+                    Text("On track over 12 months")
+                        .font(.footnote)
+                        .foregroundStyle(Color.inkTextMuted)
+                } trailing: {
+                    Text(verbatim: onTrackText)
+                        .font(.subheadline.weight(.semibold).monospacedDigit())
+                        .foregroundStyle(Color.kept)
+                }
+                .accessibilityElement(children: .combine)
+            }
+
+            if progress.excludedUnconvertibleCount > 0 {
+                Text(progress.excludedUnconvertibleCount == 1
+                     ? L10n.string("1 cancelled service uses a currency without a conversion rate and isn't in this total.")
+                     : L10n.string("\(progress.excludedUnconvertibleCount) cancelled services use currencies without conversion rates and aren't in this total."))
+                    .font(.footnote)
+                    .foregroundStyle(Color.inkTextMuted)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
         }
         .padding(.vertical, 12)
-        .accessibilityElement(children: .combine)
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 }
 
@@ -583,8 +620,7 @@ struct PausePlanCard: View {
     @ObservedObject private var currencyManager = CurrencyManager.shared
     @State private var showPlan = false
 
-    /// Worth showing: a plan is running, or there are at least two services to rotate. The screen
-    /// hands in the plan and the list it watches, so it asks again when either changes.
+    /// Worth showing: a plan is running, or there are at least two streaming services to rotate.
     static func isRelevant(plan: PausePlan?, subscriptions: [Subscription]) -> Bool {
         plan != nil || subscriptions.filter(PausePlanSchedule.isEligible).count >= 2
     }
@@ -607,18 +643,13 @@ struct PausePlanCard: View {
     }
 
     var body: some View {
-        // A row like the ones around it: words on the margin, no picture, the way in at the end.
-        // (It was an icon in a circle with caption-size text, set 16 points in from everything else.)
         Button {
             Feel.selection()
             showPlan = true
         } label: {
             HStack(spacing: 12) {
-                // While a plan runs the row carries the paused mark, as every state does.
                 if planStore.activePlan != nil { StateMark(state: .paused) }
                 VStack(alignment: .leading, spacing: 4) {
-                    // "Pro" beside the name, or under it where the two do not fit a line: beside
-                    // it at the largest text size the name was "Pause" above "Plan".
                     LineOrStack(spacing: 8, lineSpacing: 4) {
                         Text("Pause Plan")
                             .font(.body.weight(.medium))

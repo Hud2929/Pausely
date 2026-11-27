@@ -1,4 +1,5 @@
 import XCTest
+import UserNotifications
 @testable import Pausely
 
 /// Pause Plan: who's eligible, what rotating saves, when each service is on, and which reminders keep
@@ -250,5 +251,249 @@ final class PausePlanStartTests: XCTestCase {
         await plans.markStarted(sub, on: day(2026, 11, 11))
         XCTAssertEqual(store.subscriptions.first?.nextBillingDate, day(2026, 11, 20))
         XCTAssertEqual(LifecycleEventLog.shared.events.filter { $0.subscriptionId == sub.id }.map(\.kind), [.added])
+    }
+}
+
+/// Permanent anti-regression suite locking in every Gold Standard (>= 9.5) Pause Plan invariant so
+/// none of the real-world rotation, undated-service, currency, lead-time, or Pro-feature quality
+/// bugs can ever recur silently.
+final class PausePlanGoldTests: XCTestCase {
+
+    private var cal: Calendar = {
+        var c = Calendar(identifier: .gregorian)
+        c.timeZone = TimeZone(identifier: "America/Toronto")!
+        return c
+    }()
+
+    private let rates = CurrencyRates(perUSD: ["USD": 1, "CAD": 2])
+
+    private func day(_ y: Int, _ m: Int, _ d: Int, hour: Int = 12) -> Date {
+        cal.date(from: DateComponents(year: y, month: m, day: d, hour: hour))!
+    }
+
+    private func ymd(_ date: Date) -> String { ReminderPlanner.dayStamp(date, cal) }
+
+    private func sub(_ name: String, _ amount: Decimal = 15, currency: String = "USD",
+                     anchor: Date?, frequency: BillingFrequency = .monthly,
+                     status: SubscriptionStatus = .active, notify: Int = 3) -> Subscription {
+        var s = TestFactories.makeSubscription(name: name, amount: amount, currency: currency,
+                                               billingFrequency: frequency, status: status,
+                                               nextBillingDate: anchor, category: "Entertainment")
+        s.notifyBeforeDays = notify
+        return s
+    }
+
+    /// Day-1 undated active services MUST surface `.addDate` To-Dos instead of lying "You're all set".
+    func testUndatedRotatingServicesAlwaysEmitAddDateTodos() {
+        let now = day(2026, 11, 26)
+        let netflix = sub("Netflix", anchor: nil)
+        let hulu = sub("Hulu", anchor: nil)
+        let disney = sub("Disney+", anchor: day(2026, 12, 10))
+        let plan = PausePlan(subscriptionIds: [netflix.id, hulu.id, disney.id], startedOn: now)
+
+        let items = PausePlanSchedule.actionItems(for: plan, subscriptions: [netflix, hulu, disney], now: now, calendar: cal)
+        XCTAssertTrue(items.contains { $0.subscriptionId == netflix.id && $0.kind == .addDate },
+                      "undated active current service must ask for a date")
+        XCTAssertTrue(items.contains { $0.subscriptionId == hulu.id && $0.kind == .addDate },
+                      "undated rotating service must NEVER silently vanish behind 'You're all set'")
+        XCTAssertTrue(items.contains { $0.subscriptionId == disney.id && $0.kind == .cancel },
+                      "dated rotating service still prompts to cancel")
+    }
+
+    /// Every Pause Plan cancel event schedules an advance heads-up >= 2 days before renewal (safely
+    /// ahead of Apple's 24-hour cancellation deadline) respecting `notifyBeforeDays`, plus day-before.
+    func testCancelRemindersAlwaysIncludeAdvanceHeadsUpAheadOf24HourCutoff() {
+        let now = day(2026, 10, 20, hour: 8)
+        let netflix = sub("Netflix", anchor: day(2026, 10, 31), notify: 3)
+        let maxSub = sub("Max", anchor: day(2026, 11, 5), notify: 5)
+        let disney = sub("Disney+", anchor: day(2026, 11, 12), notify: 7)
+        let plan = PausePlan(subscriptionIds: [netflix.id, maxSub.id, disney.id], startedOn: now)
+
+        let reminders = PausePlanSchedule.reminders(plan, subscriptions: [netflix, maxSub, disney], now: now, calendar: cal)
+        let disneyCancels = reminders.filter { $0.kind == .planCancel && $0.subscriptionId == disney.id && ymd($0.eventDate) == "2026-11-12" }
+        XCTAssertTrue(disneyCancels.contains { $0.daysBefore == 7 }, "honors 7-day lead time")
+        XCTAssertTrue(disneyCancels.contains { $0.daysBefore == 1 }, "keeps day-before final reminder")
+
+        // Even when notifyBeforeDays == 1, Pause Plan enforces at least a 2-day heads-up (> 24h cutoff).
+        let tight = sub("Hulu", anchor: day(2026, 11, 12), notify: 1)
+        let tightPlan = PausePlan(subscriptionIds: [netflix.id, maxSub.id, tight.id], startedOn: now)
+        let tightReminders = PausePlanSchedule.reminders(tightPlan, subscriptions: [netflix, maxSub, tight], now: now, calendar: cal)
+        let tightCancels = tightReminders.filter { $0.kind == .planCancel && $0.subscriptionId == tight.id && ymd($0.eventDate) == "2026-11-12" }
+        XCTAssertTrue(tightCancels.contains { $0.daysBefore == 2 }, "minimum 2-day heads-up protects against 24h cutoff")
+        XCTAssertTrue(tightCancels.contains { $0.daysBefore == 1 })
+    }
+
+    /// Estimate strictly flags FX conversion and counts unconvertible currencies without silent zero-drops.
+    func testEstimateTracksFXConversionAndCountsUnconvertibleCurrencies() {
+        let netflix = sub("Netflix", 20, currency: "USD", anchor: nil)
+        let crave = sub("Crave", 20, currency: "CAD", anchor: nil)
+        let foreign = sub("Local", 50, currency: "ZZZ", anchor: nil)
+
+        let est = PausePlanSchedule.estimate(for: [netflix, crave, foreign], currency: "USD", rates: rates)
+        XCTAssertEqual(est?.monthlyAll, Decimal(30))
+        XCTAssertEqual(est?.monthlyRotating, Decimal(15))
+        XCTAssertEqual(est?.yearlySavings, Decimal(180))
+        XCTAssertEqual(est?.isConverted, true)
+        XCTAssertEqual(est?.excludedUnconvertibleCount, 1)
+
+        // Fewer than 2 convertible services -> returns nil instead of bogus $0.
+        let impossible = PausePlanSchedule.estimate(for: [netflix, foreign], currency: "USD", rates: rates)
+        XCTAssertNil(impossible)
+    }
+
+    /// Extend, switch, reorder, and bring-up-next preserve cumulative `savingsSince` and compute exact turns.
+    func testLiveScheduleMutationsPreserveSavingsHistoryAndComputeExactTurns() throws {
+        let start = day(2026, 10, 22)
+        let netflix = sub("Netflix", 20, anchor: day(2026, 10, 31))
+        let maxSub = sub("Max", 16, anchor: day(2026, 11, 5))
+        let disney = sub("Disney+", 14, anchor: day(2026, 11, 12))
+        let byId = [netflix.id: netflix, maxSub.id: maxSub, disney.id: disney]
+        let plan = PausePlan(subscriptionIds: [netflix.id, maxSub.id, disney.id], startedOn: start, savingsSince: start)
+
+        // 1. Extend Netflix on Oct 28 -> stays on until Nov 30 (one extra cycle!), keeps savingsSince == Oct 22.
+        let extended = try XCTUnwrap(PausePlanSchedule.extendedCurrentTurn(plan, subscriptions: byId, now: day(2026, 10, 28), calendar: cal))
+        XCTAssertEqual(extended.effectiveSavingsStart, start)
+        let extTurn = try XCTUnwrap(PausePlanSchedule.currentTurn(extended, subscriptions: byId, now: day(2026, 10, 28), calendar: cal))
+        XCTAssertEqual(extTurn.subscriptionId, netflix.id)
+        XCTAssertEqual(ymd(extTurn.end), "2026-11-30")
+
+        // 2. Reordering queue while extended preserves the extension AND puts Disney+ next.
+        let promoted = try XCTUnwrap(PausePlanSchedule.bringingUpNext(disney.id, in: extended, subscriptions: byId, now: day(2026, 10, 28), calendar: cal))
+        XCTAssertEqual(promoted.subscriptionIds, [netflix.id, disney.id, maxSub.id])
+        XCTAssertEqual(promoted.effectiveSavingsStart, start)
+        let promotedTurn = try XCTUnwrap(PausePlanSchedule.currentTurn(promoted, subscriptions: byId, now: day(2026, 10, 28), calendar: cal))
+        XCTAssertEqual(ymd(promotedTurn.end), "2026-11-30", "queue reorder must not drop an active 1-month extension")
+
+        // 3. Switch to next immediately moves Disney+ into index 0 today while preserving savingsSince.
+        let switched = try XCTUnwrap(PausePlanSchedule.switchedToNext(promoted, subscriptions: byId, now: day(2026, 10, 29), calendar: cal))
+        XCTAssertEqual(switched.subscriptionIds, [disney.id, maxSub.id, netflix.id])
+        XCTAssertEqual(switched.effectiveSavingsStart, start)
+        XCTAssertEqual(PausePlanSchedule.currentTurn(switched, subscriptions: byId, now: day(2026, 10, 29), calendar: cal)?.subscriptionId, disney.id)
+    }
+
+    /// Savings progress shows 12-month `onTrack` on Day 0 right after cancelling and never loses history after edits.
+    func testSavingsProgressSurfacesDayZeroOnTrackAndSurvivesPlanExtension() {
+        let start = day(2026, 10, 22)
+        let netflix = sub("Netflix", 20, anchor: day(2026, 10, 31))
+        let hulu = sub("Hulu", 18, anchor: day(2026, 11, 10))
+        let cancelHulu = LifecycleEvent(kind: .cancelled, subscription: hulu, date: day(2026, 10, 23), renewalDate: day(2026, 11, 10))
+        let lines = SavingsLedger.lines(from: [cancelHulu], now: day(2026, 10, 24), calendar: cal)
+
+        // Extended plan has a later `startedOn` (Oct 31) than original `savingsSince` (Oct 22).
+        let extendedPlan = PausePlan(subscriptionIds: [netflix.id, hulu.id], startedOn: day(2026, 10, 31), savingsSince: start)
+        let progress = PausePlanSchedule.savingsProgress(for: extendedPlan, lines: lines, currency: "USD", rates: rates, calendar: cal)
+        XCTAssertEqual(progress.savedSoFar, Decimal(0))
+        XCTAssertEqual(progress.onTrack, Decimal(216), "Day-0 cancelled service shows $216 on track over 12 months even after extension")
+        XCTAssertFalse(progress.savedIsConverted)
+        XCTAssertFalse(progress.onTrackIsConverted)
+
+        // Day-0 cancelled CAD service (display USD): savedSoFar is $0 (NEVER `≈$0.00`), onTrack IS converted (`≈$120`).
+        let crave = sub("Crave", 20, currency: "CAD", anchor: day(2026, 11, 10))
+        let cancelCrave = LifecycleEvent(kind: .cancelled, subscription: crave, date: day(2026, 10, 23), renewalDate: day(2026, 11, 10))
+        let cadLines = SavingsLedger.lines(from: [cancelCrave], now: day(2026, 10, 24), calendar: cal)
+        let cadPlan = PausePlan(subscriptionIds: [netflix.id, crave.id], startedOn: start, savingsSince: start)
+        let cadProgress = PausePlanSchedule.savingsProgress(for: cadPlan, lines: cadLines, currency: "USD", rates: rates, calendar: cal)
+        XCTAssertEqual(cadProgress.savedSoFar, Decimal(0))
+        XCTAssertEqual(cadProgress.onTrack, Decimal(120))
+        XCTAssertFalse(cadProgress.savedIsConverted, "Day-0 $0.00 must never print an ≈ prefix")
+        XCTAssertTrue(cadProgress.onTrackIsConverted, "CAD-converted 12-month trajectory carries ≈")
+    }
+
+    /// Switching to a cancelled service with a stale pre-cancellation billing date MUST give a full
+    /// 1-month turn (not a 1-day turn!) and MUST emit a `.start` To-Do instead of lying "You're all set".
+    func testSwitchToCancelledServiceWithStaleBillingDateGivesFullMonthAndEmitsStartTodo() throws {
+        let now = day(2026, 10, 28)
+        let netflix = sub("Netflix", 20, anchor: day(2026, 10, 31), status: .cancelled)
+        let maxCancelled = sub("Max", 16, anchor: day(2026, 10, 29), status: .cancelled)
+        let disney = sub("Disney+", 14, anchor: day(2026, 11, 12), status: .cancelled)
+        let subs = [netflix, maxCancelled, disney]
+        let byId = Dictionary(uniqueKeysWithValues: subs.map { ($0.id, $0) })
+        let plan = PausePlan(subscriptionIds: [netflix.id, maxCancelled.id, disney.id], startedOn: day(2026, 10, 22))
+
+        let switched = try XCTUnwrap(PausePlanSchedule.switchedToNext(plan, subscriptions: byId, now: now, calendar: cal))
+        XCTAssertEqual(switched.subscriptionIds.first, maxCancelled.id)
+
+        let turn = try XCTUnwrap(PausePlanSchedule.currentTurn(switched, subscriptions: byId, now: now, calendar: cal))
+        XCTAssertEqual(turn.subscriptionId, maxCancelled.id)
+        XCTAssertEqual(ymd(turn.end), "2026-11-28", "cancelled service gets full 1-month turn, never 1-day stale anchor")
+
+        let todos = PausePlanSchedule.actionItems(for: switched, subscriptions: subs, now: now, calendar: cal)
+        XCTAssertTrue(todos.contains { $0.subscriptionId == maxCancelled.id && $0.kind == .start },
+                      "Turn 0 cancelled service must prompt 'Start Max' instead of 'You're all set'")
+    }
+
+    /// Extending a service restarted 2 days after the prior handoff MUST advance a full cycle (~1 month),
+    /// never just a 2-day bump to its drifted anchor.
+    func testExtendCurrentTurnAddsFullCycleEvenWhenServiceRestartedLate() throws {
+        let netflix = sub("Netflix", 20, anchor: day(2026, 10, 31))
+        let maxLate = sub("Max", 16, anchor: day(2026, 12, 2))
+        let subs = [netflix, maxLate]
+        let byId = Dictionary(uniqueKeysWithValues: subs.map { ($0.id, $0) })
+        // Plan started Oct 22: Turn 0 Netflix (end Oct 31), Turn 1 Max (Oct 31 -> Nov 30).
+        // Max restarted 2 days late on Nov 2 (anchor Dec 2). Extending on Nov 5 must reach Jan 2, NOT Dec 2!
+        let plan = PausePlan(subscriptionIds: [netflix.id, maxLate.id], startedOn: day(2026, 10, 22))
+        let extended = try XCTUnwrap(PausePlanSchedule.extendedCurrentTurn(plan, subscriptions: byId, now: day(2026, 11, 5), calendar: cal))
+        let turn = try XCTUnwrap(PausePlanSchedule.currentTurn(extended, subscriptions: byId, now: day(2026, 11, 5), calendar: cal))
+        XCTAssertEqual(turn.subscriptionId, maxLate.id)
+        XCTAssertEqual(ymd(turn.end), "2027-01-02", "extending a late-restarted service grants a full extra cycle")
+    }
+
+    /// Resubscribe links never open `/cancel*` pages for web services while preserving Apple Subscriptions.
+    @MainActor
+    func testResubscribeLinkNeverOpensCancelPathAndPreservesAppleSubscriptions() {
+        let netflix = sub("Netflix", 20, anchor: nil)
+        let netflixLink = CancelHelp.resubscribeLink(for: netflix)
+        XCTAssertNotNil(netflixLink)
+        XCTAssertEqual(netflixLink?.openInSystem, false)
+        XCTAssertFalse(netflixLink?.url.absoluteString.lowercased().contains("cancel") ?? true,
+                       "resubscribe link must never send user to /cancelplan")
+
+        var appleSub = sub("Apple TV+", 10, anchor: nil)
+        appleSub.paymentMethod = "Apple"
+        let appleLink = CancelHelp.resubscribeLink(for: appleSub)
+        XCTAssertEqual(appleLink?.openInSystem, true)
+        XCTAssertEqual(appleLink?.url, CancelHelp.applesSubscriptions)
+    }
+
+    /// Lock Screen "I started it" requires device unlock and refuses execution while signed out.
+    @MainActor
+    func testMarkStartedNotificationRequiresAuthAndRefusesWhenSignedOut() async {
+        XCTAssertTrue(ReminderActions.markStartedOptions.contains(.authenticationRequired),
+                      "markStarted must require unlock so protected files are never silently dropped pre-unlock")
+        let previousCheck = VerdictCenter.shared.isSignedIn
+        defer { VerdictCenter.shared.isSignedIn = previousCheck }
+        VerdictCenter.shared.isSignedIn = { false }
+        let ok = await VerdictCenter.shared.markPausePlanStarted(subscriptionId: UUID())
+        XCTAssertFalse(ok, "must refuse notification action when signed out")
+    }
+
+    /// Default eligibility includes YouTube Premium (excludes YouTube Music); opt-in covers monthly AI/other subs.
+    func testEligibilityIncludesYouTubePremiumAndOptInCoversMonthlyAISubscriptions() {
+        XCTAssertTrue(PausePlanSchedule.isEligible(sub("YouTube Premium", anchor: nil)))
+        XCTAssertFalse(PausePlanSchedule.isEligible(sub("YouTube Music", anchor: nil)))
+        let claude = sub("Claude Pro", 20, anchor: nil)
+        XCTAssertFalse(PausePlanSchedule.isEligible(claude), "AI tools are never auto-counted in streaming savings")
+        XCTAssertTrue(PausePlanSchedule.isOptInEligible(claude), "monthly AI tools can be opted into Pause Plan")
+        XCTAssertFalse(PausePlanSchedule.isOptInEligible(sub("Pausely Pro", 4.99, anchor: nil)))
+        XCTAssertFalse(PausePlanSchedule.isOptInEligible(sub("Claude Pro", 200, anchor: nil, frequency: .yearly)))
+    }
+
+    /// Legacy JSON without `savingsSince` decodes cleanly, and `WidgetFeed` decodes without `pauseTurnNextName`.
+    func testLegacyPausePlanAndWidgetFeedDecodeCleanly() throws {
+        let id1 = UUID(), id2 = UUID()
+        let legacyPlanJSON = """
+        {"subscriptionIds":["\(id1.uuidString)","\(id2.uuidString)"],"startedOn":800000000}
+        """.data(using: .utf8)!
+        let decodedPlan = try JSONDecoder().decode(PausePlan.self, from: legacyPlanJSON)
+        XCTAssertEqual(decodedPlan.subscriptionIds, [id1, id2])
+        XCTAssertNil(decodedPlan.savingsSince)
+        XCTAssertEqual(decodedPlan.effectiveSavingsStart, decodedPlan.startedOn)
+
+        let legacyFeedJSON = """
+        {"charges":[],"monthlyText":"$20","yearlyText":"$240","hasSubscriptions":true,"pauseTurnName":"Netflix","pauseTurnEndText":"Nov 30","pauseTurnEndStamp":"2026-11-30"}
+        """.data(using: .utf8)!
+        let decodedFeed = try JSONDecoder().decode(WidgetFeed.self, from: legacyFeedJSON)
+        XCTAssertEqual(decodedFeed.activePauseTurn(on: day(2026, 11, 25), calendar: cal)?.name, "Netflix")
+        XCTAssertEqual(decodedFeed.activePauseTurn(on: day(2026, 11, 25), calendar: cal)?.nextName, "")
     }
 }

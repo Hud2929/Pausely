@@ -30,7 +30,7 @@ struct SavingsWidgetView: View {
         return !feed.onTrackText.isEmpty || !feed.savedSoFarText.isEmpty
     }
 
-    private var activePauseTurn: (name: String, endText: String)? {
+    private var activePauseTurn: (name: String, endText: String, nextName: String)? {
         entry.feed?.activePauseTurn(on: entry.date)
     }
 
@@ -189,7 +189,7 @@ struct SavingsWidgetView: View {
         .accessibilityElement(children: .combine)
     }
 
-    private func pauseTurnColumn(_ turn: (name: String, endText: String)) -> some View {
+    private func pauseTurnColumn(_ turn: (name: String, endText: String, nextName: String)) -> some View {
         VStack(alignment: .leading, spacing: 6) {
             Text("Pause Plan")
                 .font(.caption.weight(.semibold))
@@ -206,6 +206,14 @@ struct SavingsWidgetView: View {
                     .ink(.muted)
                     .lineLimit(1)
                     .minimumScaleFactor(0.8)
+            }
+            if !turn.nextName.isEmpty {
+                Text("Next: \(turn.nextName)")
+                    .font(.caption2.weight(.medium))
+                    .ink(.muted)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.8)
+                    .privacySensitive()
             }
             Spacer(minLength: 0)
         }

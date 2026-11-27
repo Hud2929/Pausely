@@ -14,7 +14,13 @@ final class PausePlanStore: ObservableObject {
         var pendingSync: Bool
 
         init(plan: PausePlan?, updatedAt: Date = Date(), endedAt: Date? = nil, pendingSync: Bool = false) {
-            self.plan = plan.map { PausePlan(subscriptionIds: $0.subscriptionIds, startedOn: PausePlanStore.wholeSecond($0.startedOn)) }
+            self.plan = plan.map {
+                PausePlan(
+                    subscriptionIds: $0.subscriptionIds,
+                    startedOn: PausePlanStore.wholeSecond($0.startedOn),
+                    savingsSince: $0.savingsSince.map(PausePlanStore.wholeSecond)
+                )
+            }
             self.updatedAt = PausePlanStore.wholeSecond(updatedAt)
             self.endedAt = endedAt.map(PausePlanStore.wholeSecond)
             self.pendingSync = pendingSync
@@ -96,9 +102,71 @@ final class PausePlanStore: ObservableObject {
     func start(order: [UUID], now: Date = Date()) async {
         guard order.count >= 2 else { return }
         let stamp = Self.wholeSecond(now)
-        let created = PausePlan(subscriptionIds: order, startedOn: stamp)
-        let state = SyncState(plan: created, updatedAt: stamp, endedAt: nil, pendingSync: true)
-        plan = created
+        let created = PausePlan(subscriptionIds: order, startedOn: stamp, savingsSince: stamp)
+        await commit(created, now: stamp)
+    }
+
+    /// Updates a running plan's members or queue order without ending it or resetting saved totals.
+    func updateOrder(_ newOrder: [UUID], subscriptions: [Subscription]? = nil, now: Date = Date(),
+                     calendar: Calendar = .billing) async {
+        guard let current = activePlan ?? plan else {
+            await start(order: newOrder, now: now)
+            return
+        }
+        let list = subscriptions ?? SubscriptionStore.shared.subscriptions
+        let byId = Dictionary(list.map { ($0.id, $0) }, uniquingKeysWith: { a, _ in a })
+        guard let updated = PausePlanSchedule.updatedPlan(current, newOrder: newOrder, subscriptions: byId, now: now, calendar: calendar) else {
+            return
+        }
+        await commit(updated, now: now)
+    }
+
+    /// Extends the currently active service by one additional billing cycle without losing history.
+    func extendCurrentTurn(subscriptions: [Subscription]? = nil, now: Date = Date(),
+                           calendar: Calendar = .billing) async {
+        guard let current = activePlan ?? plan else { return }
+        let list = subscriptions ?? SubscriptionStore.shared.subscriptions
+        let byId = Dictionary(list.map { ($0.id, $0) }, uniquingKeysWith: { a, _ in a })
+        guard let extended = PausePlanSchedule.extendedCurrentTurn(current, subscriptions: byId, now: now, calendar: calendar) else {
+            return
+        }
+        await commit(extended, now: now)
+    }
+
+    /// Switches immediately to the next service in the rotation queue today.
+    func switchToNext(subscriptions: [Subscription]? = nil, now: Date = Date(),
+                      calendar: Calendar = .billing) async {
+        guard let current = activePlan ?? plan else { return }
+        let list = subscriptions ?? SubscriptionStore.shared.subscriptions
+        let byId = Dictionary(list.map { ($0.id, $0) }, uniquingKeysWith: { a, _ in a })
+        guard let switched = PausePlanSchedule.switchedToNext(current, subscriptions: byId, now: now, calendar: calendar) else {
+            return
+        }
+        await commit(switched, now: now)
+    }
+
+    /// Moves a later service straight into the "up next" slot right behind the active service.
+    func bringUpNext(_ subscriptionId: UUID, subscriptions: [Subscription]? = nil, now: Date = Date(),
+                     calendar: Calendar = .billing) async {
+        guard let current = activePlan ?? plan else { return }
+        let list = subscriptions ?? SubscriptionStore.shared.subscriptions
+        let byId = Dictionary(list.map { ($0.id, $0) }, uniquingKeysWith: { a, _ in a })
+        guard let updated = PausePlanSchedule.bringingUpNext(subscriptionId, in: current, subscriptions: byId, now: now, calendar: calendar) else {
+            return
+        }
+        await commit(updated, now: now)
+    }
+
+    /// Restores a previously captured plan snapshot (used by 1-tap Undo after Extend / Switch / Up next).
+    func restore(_ snapshot: PausePlan, now: Date = Date()) async {
+        guard snapshot.subscriptionIds.count >= 2 else { return }
+        await commit(snapshot, now: now)
+    }
+
+    private func commit(_ updated: PausePlan, now: Date) async {
+        let stamp = Self.wholeSecond(now)
+        let state = SyncState(plan: updated, updatedAt: stamp, endedAt: nil, pendingSync: true)
+        plan = state.plan
         syncState = state
         save()
         if self === Self.shared {
@@ -127,7 +195,14 @@ final class PausePlanStore: ObservableObject {
 
     /// Applies a Pause Plan state (active or ended tombstone) pulled from the account without pushing back.
     func applySynced(_ synced: SyncState) {
-        let normalized = SyncState(plan: synced.plan, updatedAt: synced.updatedAt, endedAt: synced.endedAt, pendingSync: false)
+        var incoming = synced
+        // Preserve cumulative local `savingsSince` when adopting an edited/extended version of the same series.
+        if var remotePlan = incoming.plan, let existing = plan,
+           !Set(remotePlan.subscriptionIds).isDisjoint(with: Set(existing.subscriptionIds)) {
+            remotePlan.savingsSince = min(existing.effectiveSavingsStart, remotePlan.effectiveSavingsStart)
+            incoming.plan = remotePlan
+        }
+        let normalized = SyncState(plan: incoming.plan, updatedAt: incoming.updatedAt, endedAt: incoming.endedAt, pendingSync: false)
         let changed = plan != normalized.plan
         syncState = normalized
         plan = normalized.plan

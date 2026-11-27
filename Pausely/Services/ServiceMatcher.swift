@@ -128,6 +128,30 @@ struct CancelHelp: Equatable {
         return CancelHelp(kind: .search, link: searchURL(for: subscription.name))
     }
 
+    /// Where to reopen/resubscribe to a paused service: Apple's Subscriptions screen for Apple-billed
+    /// plans, or the service's clean origin homepage (`https://<host>`) for web services (never a
+    /// `/cancel*` path or a Google cancel search).
+    @MainActor
+    static func resubscribeLink(for subscription: Subscription) -> (url: URL, openInSystem: Bool)? {
+        let help = find(for: subscription)
+        switch help.kind {
+        case .appleSubscription:
+            guard let url = help.link ?? applesSubscriptions else { return nil }
+            return (url, true)
+        case .cancellationPage, .website:
+            guard let link = help.link, var components = URLComponents(url: link, resolvingAgainstBaseURL: false),
+                  let host = components.host, !host.isEmpty else { return nil }
+            components.scheme = "https"
+            components.path = ""
+            components.query = nil
+            components.fragment = nil
+            guard let root = components.url else { return nil }
+            return (root, false)
+        case .search:
+            return nil
+        }
+    }
+
     /// Apple's own page for a person's subscriptions. iOS opens it in Settings.
     static let applesSubscriptions = URL(string: "https://apps.apple.com/account/subscriptions")
 

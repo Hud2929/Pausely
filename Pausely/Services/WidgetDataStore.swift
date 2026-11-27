@@ -85,6 +85,8 @@ final class WidgetDataStore {
                 feed.pauseTurnName = sub.name
                 feed.pauseTurnEndText = DayText.date(current.end, locale: L10n.locale)
                 feed.pauseTurnEndStamp = calendar.dayStamp(current.end)
+                let nextIndex = (current.index + 1) % plan.subscriptionIds.count
+                feed.pauseTurnNextName = byId[plan.subscriptionIds[nextIndex]]?.name ?? ""
             }
         }
         return feed

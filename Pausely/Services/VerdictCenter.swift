@@ -34,6 +34,22 @@ final class VerdictCenter: ObservableObject {
         showingPausePlan = true
     }
 
+    /// Marks a rotated Pause Plan subscription started from a notification action, enforcing
+    /// signed-in & visible-store protection and opening Pause Plan if reactivation can't complete
+    /// (for example, when Pro lapsed and the free limit is full).
+    @discardableResult
+    func markPausePlanStarted(subscriptionId: UUID, now: Date = Date()) async -> Bool {
+        let store = SubscriptionStore.shared
+        guard isSignedIn(), !store.isHidden else { return false }
+        PausePlanStore.shared.loadIfNeeded()
+        guard let target = store.subscriptions.first(where: { $0.id == subscriptionId }) else { return false }
+        let started = await PausePlanStore.shared.markStarted(target, on: now)
+        if !started {
+            showingPausePlan = true
+        }
+        return started
+    }
+
     func openSavingsReceipt() {
         guard isSignedIn() else { return }
         showingSavingsReceipt = true

@@ -108,6 +108,18 @@ Full rules, recipes and checks: the `pausely-currency` skill (`.claude/skills/pa
 
 - Logic that depends on time takes `now` and `calendar` parameters. Tests pass a fixed date and
   a calendar with DST (`America/Toronto`) instead of reading the clock.
+- Every shipped `ProFeature` keeps its screen decisions (estimates, to-do lists, forecasts,
+  simulations, reminders, and FX conversion flags) inside pure, deterministic, unit-tested types
+  (`PausePlanSchedule`, `InsightsEngine`, `PaywallCase`, `ProtectionSummary`) — never buried inside
+  SwiftUI views where regressions can hide.
+- Pause Plan invariants enforced permanently by `PausePlanGoldTests`:
+  - Undated active services in a plan MUST emit `.addDate` to-dos (never show "You're all set").
+  - Cancel reminders MUST include an advance heads-up `>= 2` days before renewal (ahead of Apple's
+    24-hour cancellation cutoff) plus the day-before call.
+  - Setup/editor estimates and savings totals MUST track FX conversion (`≈`) and unconvertible
+    currencies explicitly — never silently dropping foreign currencies to zero.
+  - Live edits, reorders, 1-month extensions, and early switches MUST preserve cumulative
+    `savingsSince` and stay wire-compatible with `public.pause_plans`.
 - Run the suite serially. Parallel simulator clones sometimes fail to boot:
 
   ```

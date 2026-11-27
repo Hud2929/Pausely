@@ -183,8 +183,8 @@ struct AnalysisView: View {
                 VerdictCenter.shared.showSubscription(id)
             }
         }) { group in
-            let canRotate = group.cluster == .videoStreaming
-                && PausePlanCard.isRelevant(plan: pausePlanStore.activePlan, subscriptions: store.subscriptions)
+            let monthlyCount = group.subscriptions.filter { $0.billingFrequency == .monthly && !$0.isPausely }.count
+            let canRotate = monthlyCount >= 2
             OverlapDetailSheet(
                 group: group,
                 currency: currencyManager.selectedCurrency,

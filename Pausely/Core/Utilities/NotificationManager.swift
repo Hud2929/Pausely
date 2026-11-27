@@ -17,8 +17,15 @@ enum ReminderActions {
     static let keep = "KEEP"
     static let review = "REVIEW"
 
-    /// Pause Plan handoffs: a tap opens the plan.
+    /// Pause Plan handoffs: cancel reminders open the plan; start reminders also allow "I started it"
+    /// right from the Lock Screen.
     static let pausePlanCategory = "PAUSE_PLAN"
+    static let pausePlanStartCategory = "PAUSE_PLAN_START"
+    static let openPausePlan = "OPEN_PAUSE_PLAN"
+    static let markStarted = "MARK_STARTED"
+    /// Require device unlock before marking a rotated subscription started so protected local files
+    /// and Keychain session state are readable (never silently dropped pre-unlock).
+    static let markStartedOptions: UNNotificationActionOptions = [.authenticationRequired]
 
     /// Registered on every launch; iOS forgets categories that aren't re-registered.
     static func registerCategories(on center: UNUserNotificationCenter = .current()) {
@@ -26,8 +33,13 @@ enum ReminderActions {
         let reviewAction = UNNotificationAction(identifier: review, title: L10n.string("Review"), options: [.foreground])
         let decision = UNNotificationCategory(identifier: decisionCategory, actions: [keepAction, reviewAction],
                                               intentIdentifiers: [], options: [])
-        let plan = UNNotificationCategory(identifier: pausePlanCategory, actions: [], intentIdentifiers: [], options: [])
-        center.setNotificationCategories([decision, plan])
+        let openPlanAction = UNNotificationAction(identifier: openPausePlan, title: L10n.string("Open Pause Plan"), options: [.foreground])
+        let startedAction = UNNotificationAction(identifier: markStarted, title: L10n.string("I started it"), options: markStartedOptions)
+        let planCancel = UNNotificationCategory(identifier: pausePlanCategory, actions: [openPlanAction],
+                                                intentIdentifiers: [], options: [])
+        let planStart = UNNotificationCategory(identifier: pausePlanStartCategory, actions: [startedAction, openPlanAction],
+                                               intentIdentifiers: [], options: [])
+        center.setNotificationCategories([decision, planCancel, planStart])
     }
 }
 
@@ -141,6 +153,12 @@ final class NotificationDelegate: NSObject, UNUserNotificationCenterDelegate, Se
             if let subscriptionId {
                 await VerdictCenter.shared.keep(subscriptionId: subscriptionId, renewalDay: info["renewal_date"] as? String)
             }
+        case ReminderActions.markStarted:
+            if let subscriptionId {
+                await VerdictCenter.shared.markPausePlanStarted(subscriptionId: subscriptionId)
+            }
+        case ReminderActions.openPausePlan:
+            await VerdictCenter.shared.openPausePlan()
         case UNNotificationDismissActionIdentifier:
             break
         case _ where (info["type"] as? String)?.hasPrefix("pause_plan") == true:

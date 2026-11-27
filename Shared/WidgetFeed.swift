@@ -51,13 +51,14 @@ struct WidgetFeed: Codable, Equatable {
     var pauseTurnName = ""
     var pauseTurnEndText = ""
     var pauseTurnEndStamp = ""
+    var pauseTurnNextName = ""
 
     init() {}
 
     enum CodingKeys: String, CodingKey {
         case charges, monthlyText, yearlyText, language, hasSubscriptions
         case savedSoFarText, savedSoFarIsZero, onTrackText, cancelledCount
-        case pauseTurnName, pauseTurnEndText, pauseTurnEndStamp
+        case pauseTurnName, pauseTurnEndText, pauseTurnEndStamp, pauseTurnNextName
     }
 
     init(from decoder: Decoder) throws {
@@ -74,15 +75,16 @@ struct WidgetFeed: Codable, Equatable {
         pauseTurnName = try c.decodeIfPresent(String.self, forKey: .pauseTurnName) ?? ""
         pauseTurnEndText = try c.decodeIfPresent(String.self, forKey: .pauseTurnEndText) ?? ""
         pauseTurnEndStamp = try c.decodeIfPresent(String.self, forKey: .pauseTurnEndStamp) ?? ""
+        pauseTurnNextName = try c.decodeIfPresent(String.self, forKey: .pauseTurnNextName) ?? ""
     }
 
     /// Returns the active Pause Plan turn on `today`, or nil once its end day has passed at midnight.
-    func activePauseTurn(on today: Date, calendar: Calendar = .billing) -> (name: String, endText: String)? {
+    func activePauseTurn(on today: Date, calendar: Calendar = .billing) -> (name: String, endText: String, nextName: String)? {
         guard !pauseTurnName.isEmpty else { return nil }
         if !pauseTurnEndStamp.isEmpty, calendar.dayStamp(today) > pauseTurnEndStamp {
             return nil
         }
-        return (pauseTurnName, pauseTurnEndText)
+        return (pauseTurnName, pauseTurnEndText, pauseTurnNextName)
     }
 
     // MARK: - What charges next

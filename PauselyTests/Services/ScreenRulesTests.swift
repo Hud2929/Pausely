@@ -320,7 +320,7 @@ final class ScreenRulesTests: XCTestCase {
             ("Views/Verdict/RenewalVerdictView.swift", "Facts(whenText(charge))"),
             ("Views/Verdict/RenewalVerdictView.swift", "Facts(text)"),
             ("Views/SubscriptionManagementView.swift", "Facts(line.text)"),
-            ("Views/Verdict/PausePlanView.swift", "Facts(price)"),
+            ("Views/Verdict/PausePlanSetupView.swift", "Facts(price)"),
             ("Views/Inbox/InboxAccounts.swift", "Facts(detail)"),
             ("Views/Inbox/SearchNotes.swift", "Facts(!stats.onlyNewMail")
         ]

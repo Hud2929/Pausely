@@ -4187,16 +4187,22 @@
     },
     "Add date": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add date"
+          }
+        },
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "أضف التاريخ"
+            "value": "أضف تاريخًا"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Datum eintragen"
+            "value": "Datum"
           }
         },
         "es": {
@@ -4208,7 +4214,7 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ajouter la date"
+            "value": "Date"
           }
         },
         "ja": {
@@ -20313,6 +20319,12 @@
     },
     "Open %@": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open %@"
+          }
+        },
         "ar": {
           "stringUnit": {
             "state": "translated",
@@ -23985,40 +23997,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "購入を確認できません"
-          }
-        }
-      }
-    },
-    "Put first": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "اجعلها الأولى"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "An den Anfang"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Poner primero"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Mettre en premier"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "最初にする"
           }
         }
       }
@@ -32932,6 +32910,12 @@
     },
     "Undo": {
       "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Undo"
+          }
+        },
         "ar": {
           "stringUnit": {
             "state": "translated",
@@ -32941,7 +32925,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Widerrufen"
+            "value": "Rückgängig"
           }
         },
         "es": {
@@ -32959,7 +32943,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "取り消す"
+            "value": "元に戻す"
           }
         }
       }
@@ -47415,6 +47399,1266 @@
           "stringUnit": {
             "state": "translated",
             "value": "12か月の更新予測を確認し、いつでもスクリーンショットから値上げを検出できます。"
+          }
+        }
+      }
+    },
+    "Open Pause Plan": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open Pause Plan"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "افتح خطة الإيقاف"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pausenplan öffnen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abrir Plan de Pausa"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ouvrir le plan de pause"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "一時停止プランを開く"
+          }
+        }
+      }
+    },
+    "Pause Plan: cancel %@ before %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pause Plan: cancel %1$@ before %2$@"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "خطة الإيقاف: ألغِ %1$@ قبل %2$@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pausenplan: %1$@ vor dem %2$@ kündigen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Plan de Pausa: cancela %1$@ antes del %2$@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Plan de pause : résiliez %1$@ avant le %2$@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "一時停止プラン：%1$@を%2$@までに解約"
+          }
+        }
+      }
+    },
+    "It renews %@ for %@. Cancel at least 24 hours ahead and it comes back on its turn.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "It renews %1$@ for %2$@. Cancel at least 24 hours ahead and it comes back on its turn."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يتجدّد %1$@ مقابل %2$@. ألغِ قبل أربع وعشرين ساعة على الأقل وسيعود في دوره."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verlängert sich %1$@ für %2$@. Kündigen Sie mindestens 24 Stunden vorher – es kommt bei seinem Wechsel zurück."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se renueva %1$@ por %2$@. Cancela al menos 24 horas antes y volverá en su turno."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Renouvellement %1$@ pour %2$@. Résiliez au moins 24 heures avant et il reviendra à son tour."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@に%2$@で更新されます。24時間以上前に解約すれば、次の順番で戻ってきます。"
+          }
+        }
+      }
+    },
+    "Edit Pause Plan": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Edit Pause Plan"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تعديل خطة الإيقاف"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pausenplan bearbeiten"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Editar Plan de Pausa"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Modifier le plan de pause"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "一時停止プランを編集"
+          }
+        }
+      }
+    },
+    "Rotation order": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rotation order"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ترتيب التبديل"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reihenfolge"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Orden de rotación"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ordre de rotation"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ローテーション順"
+          }
+        }
+      }
+    },
+    "Top plays first": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Top plays first"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الأول يعمل أولًا"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Oben startet zuerst"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El primero va primero"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le premier passe en premier"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "上から順に開始"
+          }
+        }
+      }
+    },
+    "Pick at least two monthly subscriptions below to build your rotation.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pick at least two monthly subscriptions below to build your rotation."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اختر اشتراكين شهريين على الأقل أدناه لبناء خطة التبديل."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wählen Sie unten mindestens zwei monatliche Abos für Ihre Rotation."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elige al menos dos suscripciones mensuales abajo para armar tu rotación."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choisissez au moins deux abonnements mensuels ci-dessous pour créer votre rotation."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "下から月額サブスクを2件以上選んでローテーションを作成します。"
+          }
+        }
+      }
+    },
+    "More streaming services": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "More streaming services"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "خدمات بثّ أخرى"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Weitere Streaming-Dienste"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Más servicios de streaming"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Autres services de streaming"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "その他の動画配信サービス"
+          }
+        }
+      }
+    },
+    "Include other monthly subscriptions": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Include other monthly subscriptions"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إضافة اشتراكات شهرية أخرى"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Andere monatliche Abos einbeziehen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Incluir otras suscripciones mensuales"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Inclure d’autres abonnements mensuels"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "他の月額サブスクを含める"
+          }
+        }
+      }
+    },
+    "You can also rotate monthly AI, creative, or gaming subscriptions.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You can also rotate monthly AI, creative, or gaming subscriptions."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يمكنك أيضًا تبديل اشتراكات الذكاء الاصطناعي أو التصميم أو الألعاب الشهرية."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sie können auch monatliche KI-, Kreativ- oder Gaming-Abos rotieren."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "También puedes rotar suscripciones mensuales de IA, diseño o videojuegos."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vous pouvez aussi faire tourner vos abonnements mensuels d’IA, de création ou de jeu."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "月額のAI・クリエイティブ・ゲーム系サブスクもローテーションできます。"
+          }
+        }
+      }
+    },
+    "Move %@ earlier": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Move %@ earlier"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تقديم %@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ nach oben verschieben"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mover %@ antes"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Avancer %@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@を上に移動"
+          }
+        }
+      }
+    },
+    "Move %@ later": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Move %@ later"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تأخير %@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ nach unten verschieben"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mover %@ después"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reculer %@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@を下に移動"
+          }
+        }
+      }
+    },
+    "1 service uses a currency without a conversion rate and isn't in this estimate.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1 service uses a currency without a conversion rate and isn't in this estimate."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تستخدم خدمة واحدة عملة بلا سعر صرف ولا تدخل في هذا التقدير."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1 Dienst nutzt eine Währung ohne Wechselkurs und fehlt in dieser Schätzung."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1 servicio usa una moneda sin tipo de cambio y no entra en esta estimación."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1 service utilise une devise sans taux de change et n’est pas dans cette estimation."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "為替レートがない通貨のサービスが1件あり、この見積もりには含まれていません。"
+          }
+        }
+      }
+    },
+    "%lld services use currencies without conversion rates and aren't in this estimate.": {
+      "localizations": {
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld service uses a currency without a conversion rate and isn't in this estimate."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld services use currencies without conversion rates and aren't in this estimate."
+                }
+              }
+            }
+          }
+        },
+        "ar": {
+          "variations": {
+            "plural": {
+              "zero": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "لا توجد خدمات بعملات بلا سعر صرف."
+                }
+              },
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "تستخدم خدمة واحدة عملة بلا سعر صرف ولا تدخل في هذا التقدير."
+                }
+              },
+              "two": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "تستخدم خدمتان عملات بلا سعر صرف ولا تدخلان في هذا التقدير."
+                }
+              },
+              "few": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "تستخدم %lld خدمات عملات بلا سعر صرف ولا تدخل في هذا التقدير."
+                }
+              },
+              "many": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "تستخدم %lld خدمة عملات بلا سعر صرف ولا تدخل في هذا التقدير."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "تستخدم %lld خدمة عملات بلا سعر صرف ولا تدخل في هذا التقدير."
+                }
+              }
+            }
+          }
+        },
+        "de": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld Dienst nutzt eine Währung ohne Wechselkurs und fehlt in dieser Schätzung."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld Dienste nutzen Währungen ohne Wechselkurs und fehlen in dieser Schätzung."
+                }
+              }
+            }
+          }
+        },
+        "es": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld servicio usa una moneda sin tipo de cambio y no entra en esta estimación."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld servicios usan monedas sin tipo de cambio y no entran en esta estimación."
+                }
+              }
+            }
+          }
+        },
+        "fr": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld service utilise une devise sans taux de change et n’est pas dans cette estimation."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld services utilisent des devises sans taux de change et ne sont pas dans cette estimation."
+                }
+              }
+            }
+          }
+        },
+        "ja": {
+          "variations": {
+            "plural": {
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "為替レートがない通貨のサービスが%lld件あり、この見積もりには含まれていません。"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "We couldn't convert these currencies to estimate yearly savings, so your rotation will still run without a combined total.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "We couldn't convert these currencies to estimate yearly savings, so your rotation will still run without a combined total."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لم نتمكّن من تحويل هذه العملات لتقدير التوفير السنوي، لذا سيعمل التبديل دون مجموع موحّد."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Diese Währungen konnten für eine Jahresschätzung nicht umgerechnet werden; Ihre Rotation läuft trotzdem ohne Gesamtsumme."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No pudimos convertir estas monedas para estimar el ahorro anual, así que tu rotación funcionará sin un total combinado."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Impossible de convertir ces devises pour estimer l’économie annuelle ; la rotation fonctionnera sans total combiné."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "通貨を換算できないため年間節約額を見積もれませんでしたが、合計額なしでローテーションはそのまま実行されます。"
+          }
+        }
+      }
+    },
+    "Stay 1 more month": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stay 1 more month"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "البقاء شهرًا إضافيًا"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1 Monat länger bleiben"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quedarse 1 mes más"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rester 1 mois de plus"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "あと1か月延長"
+          }
+        }
+      }
+    },
+    "Kept %@ for 1 more month.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kept %@ for 1 more month."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أبقيت %@ شهرًا إضافيًا."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ um 1 Monat verlängert."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mantuviste %@ 1 mes más."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ prolongé d’un mois."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@をあと1か月延長しました。"
+          }
+        }
+      }
+    },
+    "Switch to %@ now": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Switch to %@ now"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "التبديل إلى %@ الآن"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Jetzt zu %@ wechseln"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cambiar a %@ ahora"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Passer à %@ maintenant"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "今すぐ%@に切り替え"
+          }
+        }
+      }
+    },
+    "Switched to %@.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Switched to %@."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تم التبديل إلى %@."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zu %@ gewechselt."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cambiado a %@."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Passé à %@."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@に切り替えました。"
+          }
+        }
+      }
+    },
+    "Add a renewal date for %@ so Pausely can remind you before it charges.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add a renewal date for %@ so Pausely can remind you before it charges."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أضف تاريخ تجديد لـ %@ ليذكّرك Pausely قبل الخصم."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tragen Sie ein Verlängerungsdatum für %@ ein, damit Pausely Sie vor der Abbuchung erinnert."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Añade una fecha de renovación para %@ para que Pausely te avise antes del cobro."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ajoutez une date de renouvellement pour %@ afin que Pausely vous avertisse avant le prélèvement."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "請求前にお知らせできるよう、%@の更新日を追加してください。"
+          }
+        }
+      }
+    },
+    "Open": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "افتح"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Öffnen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abrir"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ouvrir"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "開く"
+          }
+        }
+      }
+    },
+    "Up next": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Up next"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "التالي"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Als Nächstes"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Siguiente"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Suivant"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "次にする"
+          }
+        }
+      }
+    },
+    "Move %@ up next": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Move %@ up next"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "جعل %@ التالي"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ als Nächstes einplanen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Poner %@ como siguiente"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Placer %@ en suivant"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@を次の順番にする"
+          }
+        }
+      }
+    },
+    "Moved %@ up next.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Moved %@ up next."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أصبح %@ التالي."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ ist als Nächstes dran."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ pasó a ser el siguiente."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ passera ensuite."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@を次の順番にしました。"
+          }
+        }
+      }
+    },
+    "1 cancelled service uses a currency without a conversion rate and isn't in this total.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1 cancelled service uses a currency without a conversion rate and isn't in this total."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تستخدم خدمة ملغاة واحدة عملة بلا سعر صرف ولا تدخل في هذا المجموع."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1 gekündigter Dienst nutzt eine Währung ohne Wechselkurs und fehlt in dieser Summe."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1 servicio cancelado usa una moneda sin tipo de cambio y no entra en este total."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1 service résilié utilise une devise sans taux de change et n’est pas dans ce total."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "為替レートがない通貨の解約済みサービスが1件あり、この合計には含まれていません。"
+          }
+        }
+      }
+    },
+    "%lld cancelled services use currencies without conversion rates and aren't in this total.": {
+      "localizations": {
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld cancelled service uses a currency without a conversion rate and isn't in this total."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld cancelled services use currencies without conversion rates and aren't in this total."
+                }
+              }
+            }
+          }
+        },
+        "ar": {
+          "variations": {
+            "plural": {
+              "zero": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "لا توجد خدمات ملغاة بعملات بلا سعر صرف."
+                }
+              },
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "تستخدم خدمة ملغاة واحدة عملة بلا سعر صرف ولا تدخل في هذا المجموع."
+                }
+              },
+              "two": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "تستخدم خدمتان ملغاتان عملات بلا سعر صرف ولا تدخلان في هذا المجموع."
+                }
+              },
+              "few": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "تستخدم %lld خدمات ملغاة عملات بلا سعر صرف ولا تدخل في هذا المجموع."
+                }
+              },
+              "many": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "تستخدم %lld خدمة ملغاة عملات بلا سعر صرف ولا تدخل في هذا المجموع."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "تستخدم %lld خدمة ملغاة عملات بلا سعر صرف ولا تدخل في هذا المجموع."
+                }
+              }
+            }
+          }
+        },
+        "de": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld gekündigter Dienst nutzt eine Währung ohne Wechselkurs und fehlt in dieser Summe."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld gekündigte Dienste nutzen Währungen ohne Wechselkurs und fehlen in dieser Summe."
+                }
+              }
+            }
+          }
+        },
+        "es": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld servicio cancelado usa una moneda sin tipo de cambio y no entra en este total."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld servicios cancelados usan monedas sin tipo de cambio y no entran en este total."
+                }
+              }
+            }
+          }
+        },
+        "fr": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld service résilié utilise une devise sans taux de change et n’est pas dans ce total."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld services résiliés utilisent des devises sans taux de change et ne sont pas dans ce total."
+                }
+              }
+            }
+          }
+        },
+        "ja": {
+          "variations": {
+            "plural": {
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "為替レートがない通貨の解約済みサービスが%lld件あり、この合計には含まれていません。"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "Save changes": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save changes"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "حفظ التغييرات"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Änderungen speichern"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Guardar cambios"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enregistrer les modifications"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "変更を保存"
           }
         }
       }
