@@ -42,6 +42,12 @@ that has a result to wait for goes through `tap(until:)` (`PauselyUITests/TabHel
 simulator a test's touch is sometimes taken back before it counts, so it taps once more, and a button
 that does nothing still fails.
 
+`python3 scripts/live_account_proof.py <simulator id>` is the account path against the live project, on
+a fresh install of the Release build, and is run before a submission: a real sign-up to Resend's own
+test inbox (the code the auth-email function mails is read back from Resend and typed), what reached
+the database, the account's deletion from inside the app, and the App Review account's sign-in with
+what App Store Connect holds (`PauselyUITests/LiveAccountTests.swift`, skipped in every other run).
+
 Tests must be able to fail: assert exact outcomes (not "not nil" or "didn't crash"), never test code the
 app doesn't call (delete the dead code instead), and never skip on every run. Tests that use the shared
 `SubscriptionStore` wrap themselves in `StoreSandbox` (TestHelpers.swift): the account is replaced by a
