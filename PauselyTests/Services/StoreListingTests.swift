@@ -198,13 +198,69 @@ final class StoreListingTests: XCTestCase {
         let capture = try XCTUnwrap(tour.range(of: "func testStoreScreenshots() throws {"))
         let body = String(tour[capture.upperBound...].prefix(1400))
         XCTAssertTrue(body.contains("[\"--uitesting\", \"--demo-mode\", \"--screenshots\", \"--varied-demo-data\"] + screen.flags"))
-        // And the pictures are the eight the listing has places for, on both devices.
+        // And the pictures are the eight the listing has places for, on both devices, in every
+        // locale of the listing.
         let names = ["01_verdict", "02_dashboard", "03_receipt", "04_pauseplan", "05_subscription", "06_analysis", "07_catalog", "08_wrapped"]
         for name in names { XCTAssertTrue(body.contains("\"\(name)\""), name) }
-        for device in ["iphone-6.9", "ipad-13"] {
-            let folder = root.appendingPathComponent("AppStoreScreenshots/\(device)")
-            let files = try FileManager.default.contentsOfDirectory(atPath: folder.path).filter { $0.hasSuffix(".png") }.sorted()
-            XCTAssertEqual(files, names.map { $0 + ".png" }, device)
+        let plan = try captionPlan()
+        XCTAssertEqual(plan.frames.map(\.file), names)
+        for listing in try listings() {
+            XCTAssertNotNil(plan.locales[listing.locale], "captions.json has no \(listing.locale)")
+            for device in ["iphone-6.9", "ipad-13"] {
+                let folder = "store/\(listing.locale)/\(device)"
+                let path = root.appendingPathComponent("AppStoreScreenshots/\(folder)").path
+                let files = try FileManager.default.contentsOfDirectory(atPath: path).filter { $0.hasSuffix(".png") }.sorted()
+                XCTAssertEqual(files, names.map { $0 + ".png" }, folder)
+            }
+        }
+    }
+
+    // MARK: - The words over the pictures
+
+    private struct CaptionPlan: Decodable {
+        struct Place: Decodable { let capture: String; let language: String }
+        struct Frame: Decodable { let file: String; let theme: String }
+        struct Caption: Decodable { let eyebrow: String; let headline: String }
+        let locales: [String: Place]
+        let frames: [Frame]
+        let captions: [String: [String: Caption]]
+    }
+
+    private func captionPlan() throws -> CaptionPlan {
+        let file = root.appendingPathComponent("AppStoreScreenshots/captions.json")
+        try XCTSkipUnless(FileManager.default.fileExists(atPath: file.path), "Sources aren't readable from this test run")
+        return try JSONDecoder().decode(CaptionPlan.self, from: Data(contentsOf: file))
+    }
+
+    /// The captions (`AppStoreScreenshots/captions.json`, set over the pictures by
+    /// `scripts/store_frames.swift`) are held as the listing is: every language captions every
+    /// picture, a feature is called what the app calls it, the one picture of a screen that needs
+    /// Pro says so (App Review 2.3.2), and the count of services is the catalog's.
+    func testTheCaptionsOverThePicturesAreHeldToTheApp() throws {
+        let plan = try captionPlan()
+        let catalog = try XCTUnwrap(JSONSerialization.jsonObject(
+            with: Data(contentsOf: root.appendingPathComponent("Pausely/Localizable.xcstrings"))) as? [String: Any])
+        let strings = try XCTUnwrap(catalog["strings"] as? [String: [String: Any]])
+        func name(_ key: String, in language: String) -> String? {
+            guard language != "en" else { return key }
+            let unit = ((strings[key]?["localizations"] as? [String: Any])?[language] as? [String: Any])?["stringUnit"] as? [String: Any]
+            return unit?["value"] as? String
+        }
+        XCTAssertEqual(Set(plan.locales.keys), Set(try listings().map(\.locale)))
+        XCTAssertTrue(ProFeature.allCases.contains(.pausePlan), "Pause Plan's picture says it needs Pro")
+        for language in Set(plan.locales.values.map(\.language)).sorted() {
+            let captions = try XCTUnwrap(plan.captions[language], language)
+            XCTAssertEqual(captions.keys.sorted(), plan.frames.map(\.file).sorted(), language)
+            for (file, key) in [("03_receipt", "Savings Receipt"), ("04_pauseplan", "Pause Plan"),
+                                ("06_analysis", "Insights"), ("08_wrapped", "Your year in subscriptions")] {
+                let appsName = try XCTUnwrap(name(key, in: language), "\(key) in \(language)")
+                XCTAssertNotNil(captions[file]?.eyebrow.range(of: appsName, options: .caseInsensitive),
+                                "\(language) doesn't call \(key) \"\(appsName)\" over \(file)")
+            }
+            XCTAssertEqual(captions["04_pauseplan"]?.eyebrow.contains("Pausely Pro"), true, language)
+            let services = try number(#"\d+"#, in: try XCTUnwrap(captions["07_catalog"]?.eyebrow))
+            XCTAssertLessThanOrEqual(services, CatalogData.entries.count, language)
+            XCTAssertGreaterThan(services + 100, CatalogData.entries.count, language)
         }
     }
 }

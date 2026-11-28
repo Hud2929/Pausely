@@ -91,3 +91,7 @@ logs/
 
 # The founder's own marketing and business notes: on this Mac only, never in the public repository
 private/
+
+# App Store pictures: the raw captures are taken again by scripts/store_capture.sh (56 MB);
+# the finished pictures in AppStoreScreenshots/store are kept.
+AppStoreScreenshots/captures/

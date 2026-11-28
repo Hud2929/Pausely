@@ -238,10 +238,16 @@ final class ScreenTourTests: XCTestCase {
             (["--demo-browser"], "07_catalog"),
             (["--demo-wrapped=list"], "08_wrapped"),
         ]
+        // `PAUSELY_STORE_LOCALE=fr_FR` takes the eight in that language and that country's money
+        // and dates, one run for each of the listing's locales (`scripts/store_capture.sh`).
+        let locale = ProcessInfo.processInfo.environment["PAUSELY_STORE_LOCALE"] ?? "en_CA"
+        let language = String(locale.prefix { $0 != "_" })
         for screen in screens where wanted(screen.file) {
             let app = XCUIApplication()
             app.launchArguments = ["--uitesting", "--demo-mode", "--screenshots", "--varied-demo-data"] + screen.flags
-                + ["-AppleLanguages", "(en)", "-AppleLocale", "en_CA"]
+                + ["-AppleLanguages", "(\(language))", "-AppleLocale", locale]
+                // A currency or language once chosen on this simulator would win over the locale.
+                + ["-selected_currency", "", "-app_language", "system"]
             app.launch()
             sleep(4)
             let png = XCUIScreen.main.screenshot().pngRepresentation

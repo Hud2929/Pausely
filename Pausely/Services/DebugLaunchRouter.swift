@@ -191,7 +191,10 @@ enum DebugLaunchRouter {
     static func applyDemoModifiers(authManager: AuthManager) {
         if LaunchFlag.isSet("--demo-guest") { authManager.enterGuestMode(persist: false) }
         if LaunchFlag.isSet("--demo-savings") || LaunchFlag.isSet("--demo-receipt") { DemoSavings.seed() }
-        if LaunchFlag.value(of: "--demo-cancel") != nil || LaunchFlag.value(of: "--demo-verdict") != nil || LaunchFlag.isSet("--demo-difficulty") {
+        // Not in a capture for the App Store: the sample scores are made up, and a picture on the
+        // listing would be saying of a real service that eighteen people found it hard to cancel.
+        let wantsScores = LaunchFlag.value(of: "--demo-cancel") != nil || LaunchFlag.value(of: "--demo-verdict") != nil || LaunchFlag.isSet("--demo-difficulty")
+        if wantsScores, !LaunchFlag.screenshots.isSet {
             CancelDifficultyService.shared.seedDemoScores()
         }
         if LaunchFlag.isSet("--demo-link-problem") {

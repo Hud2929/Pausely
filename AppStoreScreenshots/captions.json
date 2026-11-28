@@ -1,0 +1,87 @@
+{
+  "locales": {
+    "en-US": { "capture": "en_US", "language": "en" },
+    "en-CA": { "capture": "en_CA", "language": "en" },
+    "en-GB": { "capture": "en_GB", "language": "en" },
+    "en-AU": { "capture": "en_AU", "language": "en" },
+    "fr-CA": { "capture": "fr_CA", "language": "fr" },
+    "fr-FR": { "capture": "fr_FR", "language": "fr" },
+    "es-MX": { "capture": "es_MX", "language": "es" },
+    "es-ES": { "capture": "es_ES", "language": "es" },
+    "de-DE": { "capture": "de_DE", "language": "de" },
+    "ja": { "capture": "ja_JP", "language": "ja" },
+    "ar-SA": { "capture": "ar_SA", "language": "ar" }
+  },
+  "frames": [
+    { "file": "01_verdict", "theme": "paper" },
+    { "file": "02_dashboard", "theme": "ink" },
+    { "file": "03_receipt", "theme": "paper" },
+    { "file": "04_pauseplan", "theme": "ink" },
+    { "file": "05_subscription", "theme": "paper" },
+    { "file": "06_analysis", "theme": "ink" },
+    { "file": "07_catalog", "theme": "paper" },
+    { "file": "08_wrapped", "theme": "ink" }
+  ],
+  "captions": {
+    "en": {
+      "01_verdict": { "eyebrow": "Before every renewal", "headline": "Keep it or cancel it?\n*Decide before you pay.*" },
+      "02_dashboard": { "eyebrow": "Every subscription", "headline": "See what you *really*\npay each month." },
+      "03_receipt": { "eyebrow": "Savings Receipt", "headline": "See exactly\n*what you saved.*" },
+      "04_pauseplan": { "eyebrow": "Pause Plan · Pausely Pro", "headline": "Rotate your streaming.\n*Pay for one at a time.*" },
+      "05_subscription": { "eyebrow": "The real cost", "headline": "What it costs a year,\n*and when to cancel.*" },
+      "06_analysis": { "eyebrow": "Insights", "headline": "Spot the overlaps.\n*See what an hour costs.*" },
+      "07_catalog": { "eyebrow": "800+ services", "headline": "Add a subscription\n*in seconds.*" },
+      "08_wrapped": { "eyebrow": "Your year in subscriptions", "headline": "Your whole year,\n*on one slip.*" }
+    },
+    "fr": {
+      "01_verdict": { "eyebrow": "Avant chaque renouvellement", "headline": "Garder ou résilier ?\n*Décidez avant de payer.*" },
+      "02_dashboard": { "eyebrow": "Tous vos abonnements", "headline": "Voyez ce que vous payez\n*vraiment* chaque mois." },
+      "03_receipt": { "eyebrow": "Reçu d'économies", "headline": "Voyez exactement\n*vos économies.*" },
+      "04_pauseplan": { "eyebrow": "Plan de pause · Pausely Pro", "headline": "Le streaming,\n*un service à la fois.*" },
+      "05_subscription": { "eyebrow": "Le vrai coût", "headline": "Ce qu'il coûte par an,\n*et quand résilier.*" },
+      "06_analysis": { "eyebrow": "Analyses", "headline": "Repérez les doublons.\n*Et le coût de chaque heure.*" },
+      "07_catalog": { "eyebrow": "Plus de 800 services", "headline": "Ajoutez un abonnement\n*en quelques secondes.*" },
+      "08_wrapped": { "eyebrow": "Votre année en abonnements", "headline": "Toute votre année,\n*sur un seul reçu.*" }
+    },
+    "es": {
+      "01_verdict": { "eyebrow": "Antes de cada renovación", "headline": "¿Mantener o cancelar?\n*Decide antes de pagar.*" },
+      "02_dashboard": { "eyebrow": "Todas tus suscripciones", "headline": "Mira lo que *de verdad*\npagas cada mes." },
+      "03_receipt": { "eyebrow": "Recibo de ahorro", "headline": "Mira exactamente\n*cuánto ahorraste.*" },
+      "04_pauseplan": { "eyebrow": "Plan de Pausa · Pausely Pro", "headline": "Streaming, un servicio\n*a la vez.*" },
+      "05_subscription": { "eyebrow": "Lo que cuesta de verdad", "headline": "Lo que cuesta al año,\n*y cuándo cancelar.*" },
+      "06_analysis": { "eyebrow": "Análisis", "headline": "Servicios solapados,\n*y el precio de cada hora.*" },
+      "07_catalog": { "eyebrow": "Más de 800 servicios", "headline": "Añade una suscripción\n*en segundos.*" },
+      "08_wrapped": { "eyebrow": "Tu año en suscripciones", "headline": "Todo tu año,\n*en un solo recibo.*" }
+    },
+    "de": {
+      "01_verdict": { "eyebrow": "Vor jeder Verlängerung", "headline": "Behalten oder kündigen?\n*Sie entscheiden vorher.*" },
+      "02_dashboard": { "eyebrow": "Alle Ihre Abos", "headline": "Was Sie *wirklich*\njeden Monat zahlen." },
+      "03_receipt": { "eyebrow": "Sparbeleg", "headline": "Sehen Sie genau,\n*was Sie gespart haben.*" },
+      "04_pauseplan": { "eyebrow": "Pausenplan · Pausely Pro", "headline": "Streaming: ein Dienst\n*nach dem anderen.*" },
+      "05_subscription": { "eyebrow": "Die wahren Kosten", "headline": "Was es im Jahr kostet\n*und wann Sie kündigen.*" },
+      "06_analysis": { "eyebrow": "Einblicke", "headline": "Überschneidungen erkennen.\n*Und was eine Stunde kostet.*" },
+      "07_catalog": { "eyebrow": "Über 800 Dienste", "headline": "Ein Abo hinzufügen\n*in Sekunden.*" },
+      "08_wrapped": { "eyebrow": "Ihr Jahr in Abos", "headline": "Ihr ganzes Jahr\n*auf einem Beleg.*" }
+    },
+    "ja": {
+      "01_verdict": { "eyebrow": "更新のたびに", "headline": "継続か、解約か。\n*請求の前に決められる。*" },
+      "02_dashboard": { "eyebrow": "すべてのサブスク", "headline": "毎月*本当に*払っている\n金額がわかる。" },
+      "03_receipt": { "eyebrow": "節約レシート", "headline": "いくら節約できたか、\n*正確にわかる。*" },
+      "04_pauseplan": { "eyebrow": "一時停止プラン · Pausely Pro", "headline": "ストリーミングは\n*1つずつ、順番に。*" },
+      "05_subscription": { "eyebrow": "本当のコスト", "headline": "年間いくらかかるか、\n*いつ解約すべきか。*" },
+      "06_analysis": { "eyebrow": "インサイト", "headline": "重なっているサービスも、\n*1時間あたりのコストも。*" },
+      "07_catalog": { "eyebrow": "800以上のサービス", "headline": "サブスクの追加は\n*数秒で完了。*" },
+      "08_wrapped": { "eyebrow": "あなたの1年のサブスク", "headline": "1年分のサブスクを\n*1枚のレシートに。*" }
+    },
+    "ar": {
+      "01_verdict": { "eyebrow": "قبل كل تجديد", "headline": "أتبقيه أم تلغيه؟\n*قرّر قبل أن تدفع.*" },
+      "02_dashboard": { "eyebrow": "جميع اشتراكاتك", "headline": "اعرف ما تدفعه *فعلًا*\nكل شهر." },
+      "03_receipt": { "eyebrow": "إيصال التوفير", "headline": "شاهد بدقة\n*كم وفّرت.*" },
+      "04_pauseplan": { "eyebrow": "خطة الإيقاف · Pausely Pro", "headline": "خدمات البث،\n*واحدة في كل مرة.*" },
+      "05_subscription": { "eyebrow": "التكلفة الحقيقية", "headline": "كم يكلّفك في السنة،\n*ومتى تلغيه.*" },
+      "06_analysis": { "eyebrow": "تحليلات", "headline": "اكتشف الخدمات المتداخلة،\n*وكم تكلّف ساعة الاستخدام.*" },
+      "07_catalog": { "eyebrow": "أكثر من 800 خدمة", "headline": "أضف اشتراكًا\n*في ثوانٍ.*" },
+      "08_wrapped": { "eyebrow": "سنتك في الاشتراكات", "headline": "سنتك كاملةً\n*في إيصال واحد.*" }
+    }
+  }
+}

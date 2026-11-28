@@ -197,10 +197,23 @@ A new migration goes into the APPLY file too, and all five scripts must pass.
 
 ## App Store
 
-Listing text in `metadata/` (push with `asc metadata push`), screenshots in
-`AppStoreScreenshots/iphone-6.9` and `AppStoreScreenshots/ipad-13` (taken by `ScreenTourTests/testStoreScreenshots` on the 6.9-inch iPhone and the 13-inch iPad simulators, in the `en_CA` locale, with `PAUSELY_TOUR_DIR` set; the clock is set with `xcrun simctl status_bar <device> override --time 9:41`), products and review notes in `appstore_products.json`,
-`scripts/asc_apply.sh` for pricing and subscription text. Never submit for review without the
-owner's explicit go-ahead.
+Listing text in `metadata/` (push with `asc metadata push`), products and review notes in
+`appstore_products.json`, `scripts/asc_apply.sh` for pricing and subscription text. Never submit for
+review without the owner's explicit go-ahead.
+
+The pictures on the listing are in `AppStoreScreenshots/store/<locale>/<iphone-6.9|ipad-13>/`: eight
+for each of the listing's eleven locales, each a capture in a drawn device under a caption. They are
+made in two steps, and never edited by hand:
+1. `scripts/store_capture.sh <iphone-6.9|ipad-13> <simulator id> [locale …]` runs
+   `ScreenTourTests/testStoreScreenshots` once per locale (`PAUSELY_STORE_LOCALE`), on the 6.9-inch
+   iPhone and the 13-inch iPad simulators, with the clock at 9:41 and each country's own money and
+   dates, into `AppStoreScreenshots/captures/<locale>/<device>/`.
+2. `scripts/store_frames.swift` (build it with `swiftc -O`) sets the captions over them. The words,
+   the order and the ground (paper or ink) are `AppStoreScreenshots/captions.json`; the faces are in
+   `AppStoreScreenshots/fonts/`.
+`StoreListingTests` holds the captions to the app as it holds the listing: the app's own names, "Pro"
+on the picture of a Pro screen, the catalog's count. A capture run (`--screenshots`) shows nothing
+the release build lacks and no made-up community figures.
 
 ## Autonomy
 

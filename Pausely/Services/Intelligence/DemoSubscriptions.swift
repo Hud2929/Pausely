@@ -47,35 +47,51 @@ enum DemoSubscriptions {
     static func varied(now: Date = Date(), currency home: String = CurrencyManager.shared.selectedCurrency) -> [Subscription] {
         let calendar = Calendar.billing
         func inDays(_ days: Int) -> Date? { calendar.date(byAdding: .day, value: days, to: now) }
-        func monthly(_ name: String, _ category: SubscriptionCategory, _ amount: Decimal, in days: Int?) -> Subscription {
-            Subscription(name: name, category: category.displayName, amount: amount, currency: home,
+        // The figures are a dollar's; where the currency counts in hundredths of one, see `priceLevel`.
+        let level = priceLevel(in: home)
+        func price(_ figure: String) -> Decimal { Decimal(string: figure)! * level }
+        func monthly(_ name: String, _ category: SubscriptionCategory, _ figure: String, in days: Int?) -> Subscription {
+            Subscription(name: name, category: category.displayName, amount: price(figure), currency: home,
                          billingFrequency: .monthly, nextBillingDate: days.flatMap(inDays))
         }
         let abroad = home == "EUR" ? "GBP" : "EUR"
         return [
-            monthly("iCloud+", .cloudStorage, Decimal(string: "2.99")!, in: 1),
-            monthly("Apple One", .productivity, Decimal(string: "32.95")!, in: 2),
+            monthly("iCloud+", .cloudStorage, "2.99", in: 1),
+            monthly("Apple One", .productivity, "32.95", in: 2),
             Subscription(name: "Disney+", category: SubscriptionCategory.entertainment.displayName,
-                         amount: Decimal(string: "7.99")!, currency: home, billingFrequency: .monthly,
+                         amount: price("7.99"), currency: home, billingFrequency: .monthly,
                          nextBillingDate: inDays(3), trialEndsAt: inDays(3), status: .trial),
-            monthly("Netflix", .entertainment, Decimal(string: "15.99")!, in: 5),
-            monthly("Notion", .productivity, 10, in: 8),
-            monthly("Spotify", .music, Decimal(string: "10.99")!, in: 12),
-            monthly("Peloton", .healthFitness, 44, in: 15),
-            monthly("ChatGPT Plus", .aiTools, 20, in: 18),
+            monthly("Netflix", .entertainment, "15.99", in: 5),
+            monthly("Notion", .productivity, "10", in: 8),
+            monthly("Spotify", .music, "10.99", in: 12),
+            monthly("Peloton", .healthFitness, "44", in: 15),
+            monthly("ChatGPT Plus", .aiTools, "20", in: 18),
             Subscription(name: "Audible", category: SubscriptionCategory.entertainment.displayName,
-                         amount: Decimal(string: "44.85")!, currency: home, billingFrequency: .quarterly,
+                         amount: price("44.85"), currency: home, billingFrequency: .quarterly,
                          nextBillingDate: inDays(20)),
-            monthly("YouTube Premium", .entertainment, Decimal(string: "13.99")!, in: 24),
-            monthly("Max", .entertainment, Decimal(string: "9.99")!, in: 27),
+            monthly("YouTube Premium", .entertainment, "13.99", in: 24),
+            monthly("Max", .entertainment, "9.99", in: 27),
             Subscription(name: "Duolingo", category: SubscriptionCategory.education.displayName,
                          amount: Decimal(string: "59.99")!, currency: abroad, billingFrequency: .yearly,
                          nextBillingDate: inDays(40)),
-            monthly("Adobe Creative Cloud", .productivity, Decimal(string: "54.99")!, in: nil),
+            monthly("Adobe Creative Cloud", .productivity, "54.99", in: nil),
             Subscription(name: "Hulu", category: SubscriptionCategory.entertainment.displayName,
-                         amount: Decimal(string: "18.99")!, currency: home, billingFrequency: .monthly,
+                         amount: price("18.99"), currency: home, billingFrequency: .monthly,
                          nextBillingDate: inDays(-9), status: .cancelled),
         ]
+    }
+
+    /// How many of a currency's units stand where a dollar would: a hundred for the yen and the won,
+    /// fifteen for the Mexican peso, three for the Saudi riyal, one everywhere else. A dollar's
+    /// figures read as a mistake there: Netflix at ¥16 a month, or at 16 pesos, on a picture for
+    /// the App Store in that country.
+    static func priceLevel(in currency: String) -> Decimal {
+        switch currency {
+        case "JPY", "KRW": return 100
+        case "MXN": return 15
+        case "SAR": return 3
+        default: return 1
+        }
     }
 
     /// The history that goes with `varied`: Spotify went up three months ago, Hulu was cancelled
@@ -89,7 +105,7 @@ enum DemoSubscriptions {
         if let spotify = list.first(where: { $0.name == "Spotify" }) {
             events.append(LifecycleEvent(kind: .priceChanged, subscription: spotify,
                                          date: calendar.date(byAdding: .month, value: -3, to: now) ?? now,
-                                         previousAmount: spotify.amount - 1, renewalDate: nil))
+                                         previousAmount: spotify.amount - priceLevel(in: spotify.currency), renewalDate: nil))
         }
         if let max = list.first(where: { $0.name == "Max" }) {
             // As it was when it was cancelled: its next charge was five days away.
