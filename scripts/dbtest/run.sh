@@ -484,7 +484,9 @@ if ! docker ps --format '{{.Names}}' 2>/dev/null | grep -qx "$CONTAINER"; then
   docker rm -f "$CONTAINER" >/dev/null 2>&1
   docker run -d --name "$CONTAINER" -e POSTGRES_PASSWORD=localonly "$IMAGE" >/dev/null || { echo "Could not start Postgres. Is Docker running?"; exit 1; }
 fi
-for _ in $(seq 1 30); do docker exec "$CONTAINER" pg_isready -U postgres >/dev/null 2>&1 && break; sleep 1; done
+# Asked over TCP: while the image sets itself up it runs a first server on the socket only, then
+# restarts, and a state built in that gap is lost (the "minimal" state failed that way on a cold start).
+for _ in $(seq 1 60); do docker exec "$CONTAINER" pg_isready -h 127.0.0.1 -U postgres >/dev/null 2>&1 && break; sleep 1; done
 
 printf 'Applying %s\n\n' "$(basename "$APPLY")"
 
