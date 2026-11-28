@@ -2,7 +2,7 @@
   "app_info": {
     "bundle_id": "com.pausely.app.Pausely",
     "app_name": "Pausely",
-    "version": "1.0.4"
+    "version": "1.0.5"
   },
   "subscription_group": {
     "reference_name": "Pausely Pro Subscriptions",
