@@ -98,4 +98,23 @@ final class PrivacyManifestTests: XCTestCase {
         }
         XCTAssertEqual(listed.sorted(), declared.sorted())
     }
+
+    /// The same answers in the form `asc web privacy apply` takes, `docs/app_privacy_declaration.json`:
+    /// one entry for each type the manifest declares, each for App Functionality and linked to the
+    /// account. On 2026-11-28 the App Store page read "Data Not Collected" while the manifest declared
+    /// five types: the answers had been written down and never entered.
+    func testTheDeclarationForAppStoreConnectListsWhatTheManifestDeclares() throws {
+        let app = try manifest("Pausely/PrivacyInfo.xcprivacy")
+        let declared = (app["NSPrivacyCollectedDataTypes"] as? [[String: Any]] ?? [])
+            .compactMap { ($0["NSPrivacyCollectedDataType"] as? String)?.replacingOccurrences(of: "NSPrivacyCollectedDataType", with: "") }
+        let file = try Data(contentsOf: root.appendingPathComponent("docs/app_privacy_declaration.json"))
+        let usages = try XCTUnwrap((JSONSerialization.jsonObject(with: file) as? [String: Any])?["dataUsages"] as? [[String: Any]])
+        // App Store Connect's "EMAIL_ADDRESS" is the manifest's "EmailAddress", and "USER_ID" its "UserID".
+        let listed = usages.compactMap { ($0["category"] as? String)?.replacingOccurrences(of: "_", with: "").lowercased() }
+        XCTAssertEqual(listed.sorted(), declared.map { $0.lowercased() }.sorted())
+        for usage in usages {
+            XCTAssertEqual(usage["purposes"] as? [String], ["APP_FUNCTIONALITY"])
+            XCTAssertEqual(usage["dataProtections"] as? [String], ["DATA_LINKED_TO_YOU"])
+        }
+    }
 }

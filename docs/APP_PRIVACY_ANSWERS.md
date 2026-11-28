@@ -9,6 +9,18 @@ says; `PrivacyManifestTests` fails when this table and the manifest list differe
 advertising or analytics software in it, and does not use the advertising identifier. No tracking
 domains.
 
+**Entering them.** The same answers, in the form the `asc` tool takes, are in
+`docs/app_privacy_declaration.json` (`PrivacyManifestTests` holds that file to the manifest too). They
+are entered with the Apple account's own web sign-in, which only the account's owner can give:
+
+    asc web auth login --apple-id <the Apple Account email>
+    asc web privacy plan --app 6759973158 --file docs/app_privacy_declaration.json --pretty
+    asc web privacy apply --app 6759973158 --file docs/app_privacy_declaration.json --allow-deletes --confirm
+    asc web privacy publish --app 6759973158 --confirm
+
+On 2026-11-28 the public App Store page for 1.0.4 read "Data Not Collected": the answers below had
+been written down and never entered. Until they are published the page understates what the app keeps.
+
 ## Data collected (each linked to the account, each for App Functionality only, none for tracking)
 
 | Apple category → type | What it is in Pausely | Purpose |
