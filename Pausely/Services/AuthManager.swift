@@ -162,7 +162,7 @@ class AuthManager: ObservableObject {
         }
     }
 
-    private func syncRemoteProfileState(userId: String) async {
+    func syncRemoteProfileState(userId: String) async {
         struct ProfileRow: Decodable {
             let is_pro: Bool?
             let age_confirmed_at: String?

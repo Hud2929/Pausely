@@ -66,6 +66,40 @@ struct PauselyApp: App {
     }
 }
 
+/// The moment it takes to read an account's own answer to the age check from the server. An account that
+/// had answered on another iPhone was shown the question for a second after signing in, until its answer
+/// arrived and the question vanished (seen on 2026-11-28, signing in to an existing account on a fresh
+/// install). The screen stays empty for that moment; a slow answer gets a spinner, and after four
+/// seconds the question is put, as it is with no signal at all.
+private struct AgeAnswerLookup: View {
+    let userId: String
+    let onRead: () -> Void
+    @State private var isSlow = false
+
+    var body: some View {
+        ProgressView()
+            .tint(Color.inkText)
+            .opacity(isSlow ? 1 : 0)
+            .accessibilityHidden(!isSlow)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .inkScreen()
+            .task(id: userId) {
+                // Whichever comes first: the account's row, or four seconds.
+                await withTaskGroup(of: Void.self) { group in
+                    group.addTask { await AuthManager.shared.syncRemoteProfileState(userId: userId) }
+                    group.addTask { try? await Task.sleep(for: .seconds(4)) }
+                    await group.next()
+                    group.cancelAll()
+                }
+                onRead()
+            }
+            .task(id: userId) {
+                try? await Task.sleep(for: .milliseconds(700))
+                isSlow = !Task.isCancelled
+            }
+    }
+}
+
 // MARK: - Root View
 struct RootView: View {
     @ObservedObject private var authManager = AuthManager.shared
@@ -78,6 +112,8 @@ struct RootView: View {
     /// "Create your account" and "Sign in", when the first run asks for them.
     @State private var signingUp = false
     @State private var signingIn = false
+    /// The account whose own answer to the age check has been read from the server since it signed in.
+    @State private var ageAnswerReadFor: String?
     @Environment(\.scenePhase) private var scenePhase
 
     // DEBUG only: a release build never reads a launch argument (see `LaunchFlag`).
@@ -113,6 +149,9 @@ struct RootView: View {
                     NewPasswordView()
                         .readableWidth()
                         .preferredColorScheme(.dark)
+                        .transition(.opacity)
+                } else if needsAgeGate, let uid = authManager.currentUser?.id, ageAnswerReadFor != uid {
+                    AgeAnswerLookup(userId: uid) { ageAnswerReadFor = uid }
                         .transition(.opacity)
                 } else if needsAgeGate, let uid = authManager.currentUser?.id {
                     AgeGateView(
